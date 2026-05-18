@@ -278,6 +278,7 @@
   <!-- Main Content -->
   <div class="main-content" id="mainContent">
 
+
     <!-- TOP NAVBAR -->
     <div class="top-navbar justify-content-between">
 
@@ -303,7 +304,8 @@
               <i class="bi bi-search text-muted"></i>
             </span>
 
-            <input type="text" id="globalSearch" class="form-control border-0 bg-light shadow-none" placeholder="Search anything...">
+            <input type="text" id="globalSearch" class="form-control border-0 bg-light shadow-none"
+              placeholder="Search anything...">
 
           </div>
 
@@ -490,17 +492,17 @@
     });
 
     // ===============================
-// GLOBAL PAGE SEARCH
-// ===============================
+    // GLOBAL PAGE SEARCH
+    // ===============================
 
-const globalSearch = document.getElementById("globalSearch");
+    const globalSearch = document.getElementById("globalSearch");
 
-globalSearch.addEventListener("keyup", function () {
+    globalSearch.addEventListener("keyup", function () {
 
-    const searchValue = this.value.toLowerCase();
+      const searchValue = this.value.toLowerCase();
 
-    // SEARCH ONLY CONTENT AREA
-    const searchableItems = document.querySelectorAll(
+      // SEARCH ONLY CONTENT AREA
+      const searchableItems = document.querySelectorAll(
         ".content-wrapper .card, \
          .content-wrapper table tbody tr, \
          .content-wrapper p, \
@@ -510,21 +512,21 @@ globalSearch.addEventListener("keyup", function () {
          .content-wrapper h4, \
          .content-wrapper h5, \
          .content-wrapper h6"
-    );
+      );
 
-    searchableItems.forEach(item => {
+      searchableItems.forEach(item => {
 
         const text = item.innerText.toLowerCase();
 
         if (text.includes(searchValue)) {
-            item.style.display = "";
+          item.style.display = "";
         } else {
-            item.style.display = "none";
+          item.style.display = "none";
         }
 
-    });
+      });
 
-});
+    });
 
   </script>
 
