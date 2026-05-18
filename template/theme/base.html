@@ -51,6 +51,20 @@
     <!-- Menu Start  -->
     <ul class="nav flex-column mt-0">
 
+        <!-- DASHBOARD -->
+      <li class="nav-item nav-category">
+        <span class="nav-link text-info">Navbar</span>
+      </li>
+
+   
+
+      <li class="nav-item">
+        <a href="{% url 'topmenu' %}" class="nav-link">
+          <i class="bi bi-grid-fill"></i>
+          <span>Top Navbar</span>
+        </a>
+      </li>
+
       <!-- DASHBOARD -->
       <li class="nav-item nav-category">
         <span class="nav-link text-info">Dashboard</span>
@@ -60,6 +74,13 @@
         <a href="/" class="nav-link">
           <i class="bi bi-grid-fill"></i>
           <span>Dashboard</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{% url 'topmenu' %}" class="nav-link">
+          <i class="bi bi-grid-fill"></i>
+          <span>Top Menu</span>
         </a>
       </li>
 
