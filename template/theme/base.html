@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 {% load static %}
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -22,35 +23,68 @@
   <!-- Sidebar -->
   <div class="sidebar" id="sidebar">
 
+    <!-- SIDEBAR HEADER -->
+    <!-- SIDEBAR HEADER -->
     <div class="sidebar-header d-flex justify-content-between align-items-center">
-      <span class="sidebar-title">My Admin</span>
-      <button class="btn btn-sm btn-light d-lg-none" id="closeSidebar">
+
+      <a href="/" class="logo-wrapper text-decoration-none">
+
+        <!-- LOGO -->
+        <div class="logo-icon">
+          <img src="{% static 'img/logo.jpg' %}" alt="Company Logo">
+        </div>
+
+        <!-- COMPANY NAME -->
+        <div class="logo-text">
+          My Admin
+        </div>
+
+      </a>
+
+      <!-- MOBILE CLOSE -->
+      <button class="text-white btn btn-outline-dark d-lg-none" id="closeSidebar">
         <i class="bi bi-x-lg"></i>
       </button>
+
     </div>
 
     <!-- Menu Start  -->
     <ul class="nav flex-column mt-0">
 
+      <!-- DASHBOARD -->
+      <li class="nav-item nav-category">
+        <span class="nav-link text-info">Dashboard</span>
+      </li>
+
       <li class="nav-item">
-        <a href="#" class="nav-link">
+        <a href="/" class="nav-link">
           <i class="bi bi-grid-fill"></i>
           <span>Dashboard</span>
         </a>
       </li>
 
+      <!-- MANAGEMENT -->
+      <li class="nav-item nav-category">
+        <span class="nav-link text-info">Management</span>
+      </li>
+
       <li class="nav-item">
-        <a href="#" class="nav-link">
+        <a href="{% url 'list' %}" class="nav-link">
           <i class="bi bi-people-fill"></i>
-          <span>Users</span>
+          <span>List</span>
         </a>
       </li>
 
       <li class="nav-item">
         <a href="#" class="nav-link">
           <i class="bi bi-upload"></i>
-          <span>Uplod</span>
+          <span>Upload</span>
         </a>
+      </li>
+
+      <!-- SECURITY -->
+      <li class="nav-item nav-category">
+        <span class="nav-link text-info">Security</span>
       </li>
 
       <li class="nav-item">
@@ -60,11 +94,61 @@
         </a>
       </li>
 
+      <!-- SETTINGS -->
+      <li class="nav-item nav-category">
+        <span class="nav-link text-info">System</span>
+      </li>
+
       <li class="nav-item">
         <a href="#" class="nav-link">
           <i class="bi bi-gear-fill"></i>
           <span>Settings</span>
         </a>
+      </li>
+
+      <!-- REPORTS -->
+      <li class="nav-item">
+
+        <!-- TOGGLE -->
+        <a class="nav-link reports-toggle" data-bs-toggle="collapse" href="#reportsMenu" role="button"
+          aria-expanded="false">
+
+          <div class="d-flex align-items-center">
+            <i class="bi bi-bar-chart-line-fill"></i>
+            <span>MTD Reports</span>
+          </div>
+
+          <i class="bi bi-chevron-down submenu-arrow"></i>
+
+        </a>
+
+        <!-- SUBMENU -->
+        <div class="collapse submenu" id="reportsMenu">
+
+          <ul class="nav flex-column sub-menu">
+
+            <li class="nav-item">
+              <a class="nav-link" href="#">
+                Lead Status History
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="#">
+                MTD Report
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="#">
+                WIP Report
+              </a>
+            </li>
+
+          </ul>
+
+        </div>
+
       </li>
 
     </ul>
@@ -215,25 +299,9 @@
     </div>
 
     <!-- Content -->
-    <div class="content-wrapper">
-
-      <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body">
-          <h3>Responsive Sidebar</h3>
-
-          <p>
-            Large screen:
-            Sidebar collapses like Jazzmin admin.
-          </p>
-
-          <p>
-            Small screen:
-            Sidebar opens as overlay drawer.
-          </p>
-
-        </div>
-      </div>
-
+    <div class="content-wrapper container-fluid">
+      {% block content %} {% endblock content %}
+  
     </div>
 
   </div>
