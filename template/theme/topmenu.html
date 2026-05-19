@@ -19,123 +19,174 @@
 <body>
 
 
-  <nav class="navbar navbar-expand-lg bg-body-tertiary py-3" data-bs-theme="dark">
-    <div class="container-fluid px-1">
-      <a class="navbar-brand ms-5 me-5" href="#"><img src="/static/img/logo.webp" alt="" width="30" height="24"
-          class="d-inline-block align-text-top">
-        LOGO</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
-        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+  <nav class="navbar navbar-expand-lg bg-body-tertiary py-2" data-bs-theme="dark">
+
+    <div class="container-fluid px-2">
+
+      <!-- Logo -->
+      <a class="navbar-brand ms-lg-4 me-lg-4" href="#">
+        <img src="/static/img/logo.webp" width="30" height="24" class="d-inline-block align-text-top" alt="">
+        LOGO
+      </a>
+
+      <!-- Toggle -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+
         <span class="navbar-toggler-icon"></span>
+
       </button>
+
       <div class="collapse navbar-collapse" id="navbarSupportedContent">
+
+        <!-- Left Menu -->
         <ul class="navbar-nav">
+
           <li class="nav-item">
-            <a class="nav-link active" aria-current="page" href="/">Home</a>
+            <a class="nav-link active" href="/">
+              Home
+            </a>
           </li>
+
           <li class="nav-item">
-            <a class="nav-link" href="#">About</a>
+            <a class="nav-link" href="#">
+              About
+            </a>
           </li>
+
           <li class="nav-item">
-            <a class="nav-link" href="#">Services</a>
+            <a class="nav-link" href="#">
+              Services
+            </a>
           </li>
+
+          <!-- Product -->
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+
               Product
             </a>
+
             <ul class="dropdown-menu">
-              <li><a class="dropdown-item" href="#">Insurance</a></li>
-              <li><a class="dropdown-item" href="#">Card</a></li>
-              <!-- <li><hr class="dropdown-divider"></li> -->
-              <li><a class="dropdown-item" href="#">Loan</a></li>
-              <li><a class="dropdown-item" href="#">Investments</a></li>
-              <li><a class="dropdown-item" href="#">Account</a></li>
+
+              <li>
+                <a class="dropdown-item" href="#">
+                  Insurance
+                </a>
+              </li>
+
+              <li>
+                <a class="dropdown-item" href="#">
+                  Card
+                </a>
+              </li>
+
+              <li>
+                <a class="dropdown-item" href="#">
+                  Loan
+                </a>
+              </li>
+
             </ul>
+
           </li>
 
-
+          <!-- Blog -->
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+
+            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+
               Blog
             </a>
+
             <ul class="dropdown-menu">
-              <li class="dropdown-submenu"><a class="dropdown-item dropdown-toggle" href="#">Insurance</a>
+
+              <li class="dropdown-submenu">
+
+                <a class="dropdown-item dropdown-toggle" href="#">
+                  Insurance
+                </a>
+
                 <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="#">Health Insurance</a></li>
-                  <li><a class="dropdown-item" href="#">Car Insurance</a></li>
-                  <li><a class="dropdown-item" href="#">Life Insurance</a></li>
+
+                  <li>
+                    <a class="dropdown-item" href="#">
+                      Health Insurance
+                    </a>
+                  </li>
+
+                  <li>
+                    <a class="dropdown-item" href="#">
+                      Car Insurance
+                    </a>
+                  </li>
+
                 </ul>
+
               </li>
-              <li class="dropdown-submenu"><a class="dropdown-item dropdown-toggle" href="#">Card</a>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="#">Credit Cards</a></li>
-                </ul>
+
+              <li>
+                <a class="dropdown-item" href="#">
+                  Loan
+                </a>
               </li>
-              <li class="dropdown-submenu"><a class="dropdown-item dropdown-toggle" href="#">Loan</a>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="#">Personal Loan</a></li>
-                  <li><a class="dropdown-item" href="#">Bussiness Loan</a></li>
-                  <li><a class="dropdown-item" href="#">Loan Against Property</a></li>
-                  <li><a class="dropdown-item" href="#">Home Loan</a></li>
-                  <li><a class="dropdown-item" href="#">Overdraft Limit</a></li>
-                  <li><a class="dropdown-item" href="#">CA Loan</a></li>
-                  <li><a class="dropdown-item" href="#">Doctor Loan</a></li>
-                  <li><a class="dropdown-item" href="#">Car Loan</a></li>
-                </ul>
-              </li>
-              <li class="dropdown-submenu"><a class="dropdown-item dropdown-toggle" href="#">Investments</a>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="#">Fixed Deposits</a></li>
-                </ul>
-              </li>
-              <li class="dropdown-submenu"><a class="dropdown-item dropdown-toggle" href="#">Account</a>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="#">Current Account</a></li>
-                </ul>
-              </li>
+
             </ul>
+
           </li>
+
           <li class="nav-item">
-            <a class="nav-link" href="#">Contact</a>
+            <a class="nav-link" href="#">
+              Contact
+            </a>
           </li>
+
           <li class="nav-item">
-            <a class="nav-link" href="#">Jobs</a>
+            <a class="nav-link" href="#">
+              Jobs
+            </a>
           </li>
-          <!-- <li class="nav-item">
-          <a class="nav-link disabled" aria-disabled="true">Disabled</a>
-        </li> -->
+
         </ul>
 
+        <!-- RIGHT SECTION -->
+        <div class="right-navbar-section ms-auto">
 
+          <!-- Search -->
+          <form class="search-form" role="search">
 
-        <form class="d-flex ms-auto" role="search">
+            <input class="form-control" type="search" placeholder="Search">
 
-          <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" />
-          <button class="btn btn-primary" type="submit">Search</button>
+            <button class="btn btn-primary btn-sm" type="submit">
+              Search
+            </button>
 
+          </form>
 
-          <!-- RIGHT -->
-
-          <div class="d-flex align-items-center gap-3 me-5">
+          <!-- Actions -->
+          <div class="profile-section">
 
             <!-- Notification -->
-            <div class="dropdown  profile-dropdown-icon">
+            <div class="dropdown">
 
-              <button class="btn position-relative border-0 bg-transparent" data-bs-toggle="dropdown">
+              <button class="btn position-relative border-0 bg-transparent p-1 profile-dropdown-icon"
+                data-bs-toggle="dropdown">
 
                 <i class="bi bi-bell fs-5"></i>
 
-                <!-- Notification Badge -->
-                <span class="position-absolute mt-2 top-0 start-70 translate-middle badge rounded-pill bg-danger">
+                <span
+                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger notification-badge">
                   3
                 </span>
 
               </button>
 
-              <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+              <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 overflow-auto notification-menu">
 
                 <li>
-                  <h6 class="dropdown-header">Notifications</h6>
+                  <h6 class="dropdown-header">
+                    Notifications
+                  </h6>
                 </li>
 
                 <li>
@@ -150,23 +201,16 @@
                   </a>
                 </li>
 
-                <li>
-                  <a class="dropdown-item" href="#">
-                    Profile updated
-                  </a>
-                </li>
-
               </ul>
 
             </div>
 
-            <!-- Profile Dropdown -->
+            <!-- Profile -->
             <div class="dropdown">
 
-              <button class="btn d-flex align-items-center border-0 bg-transparent" data-bs-toggle="dropdown">
+              <button class="btn d-flex align-items-center border-0 bg-transparent p-1" data-bs-toggle="dropdown">
 
-                <!-- Profile Image -->
-                <img src="https://i.pravatar.cc/40" class="rounded-circle" width="40" height="40" alt="Profile">
+                <img src="https://i.pravatar.cc/40" class="rounded-circle profile-img" alt="Profile">
 
                 <div class="ms-2 text-start d-none d-md-block">
 
@@ -180,7 +224,7 @@
 
                 </div>
 
-                <i class="bi bi-chevron-down ms-2 small  profile-dropdown-icon"></i>
+                <i class="bi bi-chevron-down ms-1 small profile-dropdown-icon"></i>
 
               </button>
 
@@ -217,9 +261,12 @@
 
           </div>
 
-        </form>
+        </div>
+
       </div>
+
     </div>
+
   </nav>
   <!-- Content -->
   <div class="content-wrapper container-fluid">
@@ -228,7 +275,6 @@
   </div>
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script src="{% static 'js/topmenu.js' %}"></script>
 
 </body>
 
