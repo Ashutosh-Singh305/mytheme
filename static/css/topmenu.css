@@ -3,30 +3,122 @@
 }
 
 .dropdown-submenu .dropdown-menu {
+    position: absolute;
     top: 0;
     left: 100%;
-    margin-top: -1px;
     display: none;
-    position: absolute;
 }
 
-.dropdown-submenu:hover > .dropdown-menu {
+.dropdown-submenu:hover>.dropdown-menu {
     display: block;
 }
 
-.profile-name {
-    color: white;
-}
-
-.profile-name:hover {
-    color: white;
-}
-
-.profile-dropdown-icon {
-     color: white;
-}
-
+.profile-name,
+.profile-name:hover,
+.profile-dropdown-icon,
 .profile-dropdown-icon:hover {
-     color: white;
+    color: white;
 }
 
+.profile-img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+}
+
+.notification-menu {
+    width: 260px;
+    max-height: 300px;
+}
+
+.notification-badge {
+    font-size: 10px;
+    padding: 4px 6px;
+}
+
+
+.right-navbar-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-left: auto;
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.search-form input {
+    min-width: 220px;
+}
+
+.profile-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+
+.navbar .dropdown {
+    position: relative;
+}
+
+.navbar .dropdown-menu {
+    z-index: 1055;
+}
+
+@media (max-width: 991px) {
+
+    .navbar-collapse {
+        overflow: visible !important;
+        padding-top: 12px;
+    }
+
+    .right-navbar-section {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .search-form {
+        width: 100%;
+    }
+
+    .search-form input {
+        width: 100%;
+        min-width: unset;
+    }
+
+    .profile-section {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .profile-img {
+        width: 34px;
+        height: 34px;
+    }
+
+    .notification-menu {
+        width: 220px;
+    }
+
+    .dropdown-menu {
+        font-size: 14px;
+    }
+    
+    .dropdown-submenu .dropdown-menu {
+        position: static;
+        display: block;
+        margin-left: 15px;
+    }
+
+    .profile-section .dropdown-menu {
+        left: 0 !important;
+        right: auto !important;
+    }
+}
