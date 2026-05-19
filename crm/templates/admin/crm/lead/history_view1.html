@@ -1,0 +1,42 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block content %}
+<h2 class="mb-4">Lead History: {{ lead }}</h2>
+
+<table class="table table-striped table-hover table-bordered">
+    <thead class="thead-dark">
+        <tr>
+            <th>Date</th>
+            <th>User</th>
+            <th>Change Type</th>
+            <th>Changes</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for entry, diff in history_with_diff %}
+            <tr>
+                <td>{{ entry.history_date|date:"Y-m-d H:i" }}</td>
+                <td>{{ entry.history_user|default:"—" }}</td>
+                <td>
+                    {% if entry.history_type == "+" %} Created
+                    {% elif entry.history_type == "-" %} Deleted
+                    {% else %} Updated
+                    {% endif %}
+                </td>
+                <td>
+                    {% if diff %}
+                        <ul style="margin-bottom:0;">
+                        {% for field, vals in diff.items %}
+                            <li><strong>{{ field }}</strong>: "{{ vals.0 }}" → "{{ vals.1 }}"</li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        No changes
+                    {% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

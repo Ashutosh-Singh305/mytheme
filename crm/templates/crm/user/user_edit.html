@@ -1,0 +1,245 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+{% block title %}Update User{% endblock title %}
+{% block css %}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+{% endblock %}
+{% block body %}
+<div class="container-fluid">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-12">
+      <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-primary text-white rounded-top-4">
+          <h4 class="mb-0"><i class="bi bi-person-gear me-2"></i>Update Employee</h4>
+        </div>
+        <div class="card-body">
+          <form method="post" novalidate>
+            {% csrf_token %}
+
+            <!-- USER DETAILS -->
+            <div class="card border mb-4">
+              <div class="card-header bg-light">
+                <h5 class="mb-0">
+                  <i class="bi bi-person-fill me-2"></i>
+                  User Details
+                </h5>
+              </div>
+
+              <div class="card-body">
+
+                <div class="row">
+
+                  {% for field in user_form %}
+
+                  {% if field.field.widget.input_type == "checkbox" %}
+
+                  <!-- CHECKBOX -->
+                  <div class="col-md-6 mb-3">
+
+                    <div class="row align-items-center">
+
+                      <div class="col-md-4">
+                        <label class="fw-semibold">
+                          {{ field.label }}
+                        </label>
+                      </div>
+
+                      <div class="col-md-8">
+
+                        <div class="form-check">
+                          {{ field }}
+                        </div>
+
+                        {% if field.errors %}
+                        <div class="text-danger small">
+                          {{ field.errors|striptags }}
+                        </div>
+                        {% endif %}
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                  {% else %}
+
+                  <!-- NORMAL FIELD -->
+                  <div class="col-md-6 mb-3">
+
+                    <div class="row align-items-center">
+
+                      <div class="col-md-4">
+                        <label class="fw-semibold">
+                          {{ field.label }}
+                        </label>
+                      </div>
+
+                      <div class="col-md-8">
+
+                        <div class="input-group">
+
+                          {{ field }}
+
+                          {% if field.name == 'password1' %}
+                          <a class="input-group-text bg-white" href="javascript:void(0);" id="togglePassword1">
+                            <i class="fa fa-eye"></i>
+                          </a>
+
+                          {% elif field.name == 'password2' %}
+                          <a class="input-group-text bg-white" href="javascript:void(0);" id="togglePassword2">
+                            <i class="fa fa-eye"></i>
+                          </a>
+                          {% endif %}
+
+                        </div>
+
+                        {% if field.errors %}
+                        <div class="text-danger small">
+                          {{ field.errors|striptags }}
+                        </div>
+                        {% endif %}
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                  {% endif %}
+
+                  {% endfor %}
+
+                </div>
+
+              </div>
+            </div>
+
+
+            <!-- PROFILE DETAILS -->
+            <div class="card border mb-4">
+
+              <div class="card-header bg-light">
+                <h5 class="mb-0">
+                  <i class="bi bi-person-badge-fill me-2"></i>
+                  Profile Details
+                </h5>
+              </div>
+
+              <div class="card-body">
+
+                <div class="row">
+
+                  {% for field in profile_form %}
+
+                  <div class="col-md-6 mb-3">
+
+                    <div class="row align-items-center">
+
+                      <div class="col-md-4">
+                        <label class="fw-semibold">
+                          {{ field.label }}
+                        </label>
+                      </div>
+
+                      <div class="col-md-8">
+
+                        {{ field }}
+
+                        {% if field.errors %}
+                        <div class="text-danger small">
+                          {{ field.errors|striptags }}
+                        </div>
+                        {% endif %}
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                  {% endfor %}
+
+                </div>
+
+              </div>
+
+            </div>
+
+
+            <!-- NON FIELD ERRORS -->
+
+            {% if user_form.non_field_errors %}
+            <div class="alert alert-danger">
+
+              {% for error in user_form.non_field_errors %}
+              <div>{{ error }}</div>
+              {% endfor %}
+
+            </div>
+            {% endif %}
+
+
+            {% if profile_form.non_field_errors %}
+            <div class="alert alert-danger">
+
+              {% for error in profile_form.non_field_errors %}
+              <div>{{ error }}</div>
+              {% endfor %}
+
+            </div>
+            {% endif %}
+
+
+            <!-- BUTTONS -->
+            <div class="d-flex justify-content-between mt-4">
+
+              <a href="{% url 'user-list' %}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left-circle"></i>
+                Cancel
+              </a>
+
+              <button type="submit" class="btn btn-success btn-sm">
+                <i class="bi bi-check-circle-fill me-1"></i>
+                Update
+              </button>
+
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block Script %}
+<script>
+  $(document).ready(function () {
+
+    $('#id_groups').select2({
+      placeholder: "Select Groups",
+      allowClear: true,
+      width: '100%'
+    });
+
+    $('#id_manager').select2({
+      placeholder: "Select Manager",
+      allowClear: true,
+      width: '100%'
+    });
+
+    $('#id_branch').select2({
+      placeholder: "Select Branch",
+      allowClear: true,
+      width: '100%'
+    });
+
+  });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="/static/js/select2.js"></script>
+{% endblock %}

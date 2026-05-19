@@ -1,0 +1,39 @@
+{% extends "reports/base.html" %}
+{% block title %}New Report — Choose Type{% endblock %}
+{% block body %}
+<div class="card">
+  <div class="card-body">
+        <div class="mb-3">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          {% for label, url in breadcrumbs %}
+            {% if url %}
+              <li class="breadcrumb-item">
+                <a href="{{ url }}">{{ label }}</a>
+              </li>
+            {% else %}
+              <li class="breadcrumb-item active" aria-current="page">
+                {{ label }}
+              </li>
+            {% endif %}
+          {% endfor %}
+        </ol>
+      </nav>
+    </div>
+    <h4 class="card-title">Choose Report Type for <code>{{ model }}</code></h4>
+    <form method="post">
+      {% csrf_token %}
+      <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+          {{ form.view.label }}
+        </label>
+        <div class="col-sm-10">
+          {{ form.view }}
+        </div>
+      </div>
+      <!-- <div class="form-group">{{ form.view.label_tag }} {{ form.view }}</div> -->
+      <button class="btn btn-primary btn-sm" type="submit">Next</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

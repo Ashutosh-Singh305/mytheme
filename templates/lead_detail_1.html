@@ -1,0 +1,61 @@
+{% extends 'base' %}
+
+{% block title %} Dashboard {% endblock %}
+{% block css %}
+<link rel="stylesheet" href="/static/vendors/daterangepicker/daterangepicker.css">
+<link rel="stylesheet" href="/static/vendors/chartist/chartist.min.css">
+{% endblock %}
+
+{% block body %}
+
+<div class="page-header">
+    <h3 class="page-title"> Lead : {{ customer.name }} </h3>
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="#">Leads</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ customer.name }}</li>
+      </ol>
+    </nav>
+</div>
+<div class="row">
+    <div class="col-12 grid-margin">
+        <div class="card">
+          <div class="card-body">
+            <h4 class="card-title">Horizontal Two column</h4>
+            <form class="form-sample" method="post">
+              {% csrf_token %}
+              <p class="card-description"> Personal Info </p>
+              
+                <div class="row">
+                    {% for field in form %}
+                    <div class="col-md-6">
+                        <div class="form-group row">
+                            <label class="col-sm-3 col-form-label">{{ field.label }}</label>
+                            <div class="col-sm-9">
+                                {{ field }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+              <button type="submit" class="btn btn-primary">Save</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+</div>
+
+
+
+{% block Script %}
+<script src="/static/vendors/chart.js/Chart.min.js"></script>
+<script src="/static/vendors/moment/moment.min.js"></script>
+<script src="/static/vendors/daterangepicker/daterangepicker.js"></script>
+<script src="/static/vendors/chartist/chartist.min.js"></script>
+<script src="/static/js/dashboard.js"></script>
+
+{% endblock %}
+
+{% endblock %}

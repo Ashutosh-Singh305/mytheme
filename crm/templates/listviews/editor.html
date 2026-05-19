@@ -1,0 +1,1101 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+
+{% block title %} {{ lv.name|default:"New List View" }} {% endblock %}
+
+{% block css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<style>
+  table#filter-table th,
+  table#filter-table td {
+    white-space: nowrap;
+  }
+
+  .col-num {
+    width: 10px;
+  }
+
+  .col-value {
+    min-width: 200px;
+  }
+
+  .col-drag,
+  .col-delete {
+    width: 10px;
+  }
+
+  @media (max-width: 576px) {
+    .col-num {
+      width: 10px;
+    }
+
+    .col-field {
+      min-width: 120px;
+    }
+
+    .col-operator {
+      min-width: 120px;
+    }
+
+    .col-value {
+      min-width: 180px;
+    }
+
+    .col-drag,
+    .col-delete {
+      width: 50px;
+    }
+  }
+
+  /* small visual nicety for Select2 inside table */
+  .select2-container {
+    width: 100% !important;
+  }
+</style>
+
+{% endblock css %}
+
+
+{% block body %}
+<div class="p-0">
+  <div class="card shadow-sm">
+    <div class="card-body">
+
+      <h3 class="mb-4">{{ lv.name|default:"New List View" }}</h3>
+
+      <form method="POST" id="listview-form">
+        {% csrf_token %}
+
+        <!-- STEP 1: View Name + Object -->
+        <div class="card mb-1">
+          <div class="p-2 bg-primary text-white">STEP 1 — Enter View Name</div>
+          <div class="card-body">
+
+            <div class="form-row">
+              <div class="form-group col-md-6">
+                <label>Name</label>
+                <input type="text" class="form-control" name="name" value="{{ lv.name|default_if_none:'' }}" required>
+              </div>
+
+              <div class="form-group col-md-6">
+                <label>Object</label>
+                <select id="object_name" class="form-control" name="object_name" style="width:100%;" disabled>
+                  {% if lv.object_name %}
+                  <option selected value="{{ lv.object_name }}">{{ lv.object_name }}</option>
+                  {% endif %}
+                </select>
+                <input type="hidden" name="object_name" value="{{ lv.object_name }}" required>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- STEP 2: Filters -->
+        <div class="card mb-4">
+          <div class="p-2 bg-primary text-white">
+            STEP 2 — Filters
+          </div>
+
+
+          <div class="card-body">
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm" id="filter-table">
+                <thead>
+                  <tr>
+                    <th class="col-num">#</th>
+                    <th class="col-field">Field</th>
+                    <th class="col-operator">Operator</th>
+                    <th class="col-value">Value</th>
+                    <th class="col-drag">Drag</th>
+                    <th class="col-delete">Delete</th>
+                  </tr>
+                </thead>
+
+                <tbody id="filter-box">
+                  {# Render existing filters: we store the current saved value in data-value on the value cell #}
+                  {% for f in filters %}
+                  <tr class="filter-row">
+                    <td class="filter-row-number"></td>
+
+                    <td>
+                      <select class="form-control select2-field" name="filter_field[]">
+                        <option value="">--None--</option>
+                        {% for field,label in available_fields %}
+                        <option value="{{ field }}" {% if field == f.field_name %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                      </select>
+                    </td>
+
+                    <td>
+                      <select class="form-control select2-operator" name="filter_operator[]">
+                        {% for key,label in operators.items %}
+                        <option value="{{ key }}" {% if key == f.operator %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                      </select>
+                    </td>
+
+                    {# value cell: JS will render proper input here; we store saved value in data-value #}
+                    <td class="filter-value" data-value="{{ f.value|default:'' }}"></td>
+
+                    <td class="text-center"><span class="drag-handle btn btn-light btn-sm">☰</span></td>
+                    <td class="text-center"><button type="button"
+                        class="btn btn-danger btn-sm remove-filter-btn">×</button></td>
+                  </tr>
+                  {% endfor %}
+
+                  {# If no existing filters, show one empty row pre-rendered similar to above #}
+                  {% if filters|length == 0 %}
+                  <tr class="filter-row">
+                    <td class="filter-row-number"></td>
+
+                    <td>
+                      <select class="form-control select2-field" name="filter_field[]">
+                        <option value="">--None--</option>
+                        {% for field,label in available_fields %}
+                        <option value="{{ field }}">{{ label }}</option>
+                        {% endfor %}
+                      </select>
+                    </td>
+
+                    <td>
+                      <select class="form-control select2-operator" name="filter_operator[]">
+                        {% for key,label in operators.items %}
+                        <option value="{{ key }}">{{ label }}</option>
+                        {% endfor %}
+                      </select>
+                    </td>
+
+                    <td class="filter-value" data-value=""></td>
+
+                    <td class="text-center"><span class="drag-handle btn btn-light btn-sm">☰</span></td>
+                    <td class="text-center"><button type="button"
+                        class="btn btn-danger btn-sm remove-filter-btn">×</button></td>
+                  </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+
+            <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-filter-btn">+ Add Filter</button>
+
+            <hr>
+
+            <!-- Manual Logic Textbox Only -->
+            <div class="form-group row">
+              <div class="col-lg-6">
+                <label>Filter Logic</label>
+                <input type="text" class="form-control" id="filter-logic-text" name="filter_logic"
+                  value="{{ lv.filter_logic|default:'' }}">
+                <small class="text-muted">Example: (1 OR 2) AND NOT 3</small>
+              </div>
+
+              <div class="col-lg-6">
+                <label>Count</label>
+                <input type="number" class="form-control" name="count" value="{{lv.count|default:10}}" required>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+
+        <!-- STEP 3: Field Selector -->
+        <div class="card mb-3">
+          <div class="p-2 bg-primary text-white">STEP 3 — Select Fields</div>
+          <div class="card-body">
+
+            <div class="row align-items-center">
+              <!-- Available -->
+              <div class="col-md-4">
+                <h6>Available Fields</h6>
+                <!-- 🔍 Search box -->
+                <input type="text" id="available-search" class="form-control form-control-sm mb-2"
+                  placeholder="Search fields...">
+                <select class="form-control" id="available" multiple size="10">
+                  {% for field,label in available_fields %}
+                  <option value="{{ field }}">{{ label }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <!-- Add / Remove -->
+              <div class="col-md-1 d-flex flex-column align-items-center justify-content-center">
+                <button type="button" class="btn btn-outline-primary btn-sm my-2" id="add-field-btn">→</button>
+                <button type="button" class="btn btn-outline-danger btn-sm" id="remove-field-btn">←</button>
+              </div>
+
+              <!-- Selected -->
+              <div class="col-md-4">
+                <h6>Selected Fields</h6>
+                <!-- 🔍 Search box -->
+                <input type="text" id="selected-search" class="form-control form-control-sm mb-2"
+                  placeholder="Search selected...">
+                <select id="selected" class="form-control" multiple size="10"></select>
+                <div id="selected-holder"></div>
+              </div>
+
+              <!-- Order buttons -->
+              <div class="col-md-1 d-flex flex-column align-items-stretch">
+
+                <button type="button" class="btn btn-outline-primary btn-sm mb-2" id="btn-top">
+                  <i class="fas fa-angle-double-up"></i>
+                </button>
+
+                <button type="button" class="btn btn-outline-primary btn-sm mb-2" id="btn-up">
+                  <i class="fas fa-angle-up"></i>
+                </button>
+
+                <button type="button" class="btn btn-outline-primary btn-sm mb-2" id="btn-down">
+                  <i class="fas fa-angle-down"></i>
+                </button>
+
+                <button type="button" class="btn btn-outline-primary btn-sm" id="btn-bottom">
+                  <i class="fas fa-angle-double-down"></i>
+                </button>
+
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+
+
+        <!-- STEP 4: Visibility -->
+        <div class="card mb-4">
+          <div class="p-2 bg-primary text-white">STEP 4 — Visibility</div>
+          <div class="card-body">
+
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="visibility" value="private" {% if lv.visibility == "private" %}checked{% endif %}>
+
+              <label class="form-check-label">Visible only to me</label>
+            </div>
+
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="visibility" value="public" {% if not lv.visibility or lv.visibility == "public" %}checked{% endif %}>
+
+              <label class="form-check-label">Visible to all users</label>
+            </div>
+ 
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="visibility" value="groups" {% if lv.visibility == "groups" %}checked{% endif %}>
+              <label class="form-check-label">Visible to selected groups</label>
+            </div>
+
+          </div>
+        </div>
+
+        <div id="group-select-wrapper" style="display:none;">
+          <label>Select Groups</label>
+          <select id="group-select" class="form-control" multiple name="visible_groups[]">
+            {% for g in groups %}
+            <option value="{{ g.id }}" {% if lv and g in lv.visible_groups.all %}selected{% endif %}>
+              {{ g.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="text-right mt-2">
+          <button type="submit" class="btn btn-primary btn-sm" id="save-listview-btn">Save</button>
+          <a class="btn btn-sm btn-secondary" href="javascript:history.back()">Back</a>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block Script %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<script>
+  // LIVE NAME CHECK (debounced)
+  let nameTimer = null;
+
+  $('input[name="name"]').on('keyup change', function () {
+    clearTimeout(nameTimer);
+
+    const $input = $(this);
+    const name = $input.val().trim();
+
+    // remove previous error if empty
+    if (!name) {
+      $("#name-error").remove();
+      return;
+    }
+
+    nameTimer = setTimeout(function () {
+      let data = { name: name };
+
+      const id = "{{ lv.id|default:'' }}";
+      if (id && id !== "None") {
+        data.id = id;
+      }
+
+      $.ajax({
+        url: "{% url 'check_listview_name' %}",
+        data: data,
+        success: function (res) {
+          if (res.exists) {
+            if (!$("#name-error").length) {
+              $input.after(
+                '<div id="name-error" class="text-danger mt-1">This name already exists</div>'
+              );
+            }
+          } else {
+            $("#name-error").remove();
+          }
+        },
+        error: function () {
+          // optional: show a soft warning or ignore
+        }
+      });
+    }, 400); // debounce to avoid too many calls
+  });
+</script>
+<script>
+  const DATE_OPERATORS = [
+    "today", "yesterday", "7_days", "30_days", "this_month", "last_month", "tomorrow"
+  ];
+  // CSRF setup for AJAX (Django)
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  function applyOperatorRules($row, fieldName) {
+    const meta = (window.modelFields || []).find(f => f.name === fieldName);
+    const $operator = $row.find(".select2-operator");
+
+    const isDateField = meta && ["DateField", "DateTimeField"].includes(meta.type);
+
+    $operator.find("option").each(function () {
+      const val = $(this).val();
+
+      if (DATE_OPERATORS.includes(val)) {
+        $(this).prop("disabled", !isDateField);
+      }
+    });
+
+    // fallback if invalid operator is selected
+    if (!isDateField && DATE_OPERATORS.includes($operator.val())) {
+      $operator.val("eq");
+    }
+
+    $operator.trigger("change.select2");
+  }
+
+  const csrftoken = getCookie('csrftoken');
+
+  $.ajaxSetup({
+    beforeSend: function (xhr, settings) {
+      if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+      }
+    }
+  });
+
+  $(document).ready(function () {
+
+    // ----------------------------
+    // Globals
+    // ----------------------------
+    // modelFields = metadata for the currently selected object:
+    // [ {name:"bank", label:"Bank", type:"ForeignKey", related_model:"Bank", related_model_label:"crm.Bank"} , ... ]
+    window.modelFields = [];
+
+    /* =========================================================
+       STEP 1 — OBJECT SELECTOR (Select2 + AJAX)
+    ========================================================= */
+    $("#object_name").select2({
+      placeholder: "Select Object",
+      width: "100%",
+      ajax: {
+        url: "{% url 'crm_get_models' %}",
+        dataType: "json",
+        delay: 150,
+        processResults: function (data) {
+          return {
+            results: data.models.map(m => ({ id: m, text: m }))
+          };
+        }
+      }
+    });
+
+    // When object changes, fetch field metadata
+    $("#object_name").on("select2:select", function (e) {
+      const modelName = e.params.data.id;
+      fetchModelFields(modelName);
+    });
+
+    // Helper: fetch model fields via AJAX and apply to UI
+    function fetchModelFields(modelName, callback) {
+      $.ajax({
+        url: "{% url 'crm_get_model_fields' %}",
+        data: { model: modelName },
+        dataType: "json",
+        success: function (data) {
+          // expected: { fields: [ {name,label,type,related_model,related_model_label}, ... ] }
+          window.modelFields = data.fields || [];
+
+          // Populate Available fields list
+          $("#available").empty();
+          window.modelFields.forEach(f => {
+            $("#available").append(`<option value="${f.name}">${f.label}</option>`);
+          });
+
+          // Update each existing filter row field dropdown
+          $("#filter-box .filter-row").each(function () {
+            const $sel = $(this).find(".select2-field");
+            const selected = $sel.val();
+            $sel.empty().append(`<option value="">--None--</option>`);
+
+            window.modelFields.forEach(fd => {
+              $sel.append(`<option value="${fd.name}" ${selected === fd.name ? "selected" : ""}>${fd.label}</option>`);
+            });
+
+            $sel.select2({ width: "100%" });
+          });
+
+          if (typeof callback === "function") callback();
+        },
+        error: function (xhr) {
+          console.error("Failed to fetch model fields", xhr);
+          if (typeof callback === "function") callback(xhr);
+        }
+      });
+    }
+
+    // If an object is already selected on page load (editing existing list view),
+    // fetch its fields and then convert current rows to proper inputs.
+    const initialObject = $("#object_name").val();
+    if (initialObject) {
+      fetchModelFields(initialObject, function () {
+        $("#filter-box .filter-row").each(function () {
+          const $row = $(this);
+          const $sel = $row.find(".select2-field");
+
+          const fieldVal = $sel.val();
+          const $valueCell = $row.find(".filter-value");
+          const savedValue = $valueCell.attr("data-value") || "";
+
+          if (fieldVal) {
+            applyOperatorRules($row, fieldVal);
+            renderValueCellForField($row, fieldVal, savedValue);
+          } else {
+            $valueCell.html(`<input type="text" class="form-control" name="filter_value[]" value="">`);
+          }
+        });
+      });
+    }
+
+    // ----------------------------
+    // Utility: returns HTML for non-FK inputs from a field type
+    // Accepts optional currentValue to pre-fill
+    // ----------------------------
+    function getInputForFieldType(fieldType, currentValue, fieldMeta = {}) {
+      currentValue = typeof currentValue !== 'undefined' ? currentValue : '';
+
+      // Choices as Select2 (searchable dropdown)
+      if (fieldMeta.choices && fieldMeta.choices.length > 0) {
+
+        const operator = arguments[3]; // we will pass it
+        const isMulti = ["in", "not_in"].includes(operator);
+
+        let options = `<option value=""></option>`;
+
+        const selectedValues = isMulti
+          ? (currentValue || "").split(",")
+          : [currentValue];
+
+        fieldMeta.choices.forEach(choice => {
+          const selected = selectedValues.includes(String(choice.value))
+            ? "selected"
+            : "";
+
+          options += `
+                  <option value="${choice.value}" ${selected}>
+                      ${choice.label}
+                  </option>`;
+        });
+
+        return `<select class="form-control select2-choices" 
+                          name="filter_value[]" 
+                          ${isMulti ? "multiple" : ""}>
+                      ${options}
+                  </select>`;
+      }
+
+      // Many-to-many: return a multi-select placeholder (no name) — form submit handler will convert to CSV hidden input
+      if (fieldType === "ManyToManyField") {
+        return `<select class="form-control select2-m2m" multiple data-placeholder="Select values"></select>`;
+      }
+
+      if (!fieldType) return `<input type="text" class="form-control" name="filter_value[]" value="${escapeHtml(currentValue)}">`;
+
+      switch (fieldType) {
+
+        case "IntegerField":
+        case "PositiveIntegerField":
+        case "SmallIntegerField":
+        case "BigIntegerField":
+        case "FloatField":
+        case "DecimalField":
+          return `<input type="number" step="any" class="form-control" name="filter_value[]" value="${escapeHtml(currentValue)}">`;
+
+        case "BooleanField":
+          return `
+                    <select class="form-control" name="filter_value[]">
+                        <option value="">--Select--</option>
+                        <option value="True" ${currentValue === "True" || currentValue === "true" ? "selected" : ""}>True</option>
+                        <option value="False" ${currentValue === "False" || currentValue === "false" ? "selected" : ""}>False</option>
+                    </select>
+                `;
+
+        case "DateField":
+        case "DateTimeField":
+          // if currentValue exists in server format, browser may not accept - user may need client transform
+          return `<input type="date" class="form-control" name="filter_value[]" value="${escapeHtml(currentValue)}">`;
+
+        case "TextField":
+        case "CharField":
+        case "EmailField":
+        case "URLField":
+        default:
+          return `<input type="text" class="form-control" name="filter_value[]" value="${escapeHtml(currentValue)}">`;
+      }
+    }
+
+    // Simple HTML escape for values placed into templates
+    function escapeHtml(unsafe) {
+      if (unsafe === null || typeof unsafe === 'undefined') return '';
+      return String(unsafe)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // ----------------------------
+    // Load relation (FK or M2M) values using Select2 AJAX
+    // relatedModelLabel is full like "crm.Bank" or "auth.User"
+    // isMultiple: boolean
+    // savedValue: for FK single -> id; for M2M -> comma separated ids "1,2,3"
+    // ----------------------------
+    function loadRelationSelect($selectEl, relatedModelLabel, isMultiple, savedValue) {
+
+      // initialize select2 with AJAX
+      $selectEl.select2({
+        ajax: {
+          url: "{% url 'crm_get_fk_values' %}",
+          dataType: "json",
+          delay: 150,
+          data: function (params) {
+            return {
+              model: relatedModelLabel,
+              q: params.term || "",
+              limit: 50
+            };
+          },
+          processResults: function (data) {
+            return {
+              results: (data.results || []).map(item => ({ id: item.id, text: item.label }))
+            };
+          }
+        },
+        width: "100%",
+        multiple: !!isMultiple,
+        placeholder: $selectEl.data("placeholder") || (isMultiple ? "Select values" : "Select value"),
+        allowClear: true,
+        escapeMarkup: function (m) { return m; }
+      });
+
+      // If we have savedValue(s), prefetch them by setting options locally
+      if (savedValue) {
+        if (isMultiple) {
+          // savedValue is CSV of ids
+          const ids = String(savedValue).split(",").map(s => s.trim()).filter(Boolean);
+          if (ids.length === 0) return;
+
+          // For each id, attempt to load label via AJAX single fetch
+          // We'll call the FK endpoint with q empty but limit larger and then pick matching ids OR fetch each id directly
+          // Simpler: request the endpoint with no q and limit=200, then select matching ids (works if model small)
+          $.ajax({
+            url: "{% url 'crm_get_fk_values' %}",
+            data: { model: relatedModelLabel, q: "", limit: 200 },
+            dataType: "json",
+            success: function (data) {
+              const map = {};
+              (data.results || []).forEach(it => {
+                map[String(it.id)] = it.label;
+              });
+              // create options and select them
+              ids.forEach(id => {
+                const label = map[String(id)] || String(id);
+                const opt = new Option(label, id, true, true);
+                $selectEl.append(opt);
+              });
+              $selectEl.trigger("change");
+            },
+            error: function () {
+              // fallback — set plain values as options
+              ids.forEach(id => {
+                const opt = new Option(id, id, true, true);
+                $selectEl.append(opt);
+              });
+              $selectEl.trigger("change");
+            }
+          });
+
+        } else {
+          // single FK saved id
+          const id = String(savedValue).trim();
+          if (!id) return;
+          // request small set and pick label
+          $.ajax({
+            url: "{% url 'crm_get_fk_values' %}",
+            data: { model: relatedModelLabel, q: "", limit: 200 },
+            dataType: "json",
+            success: function (data) {
+              const found = (data.results || []).find(it => String(it.id) === id);
+              const label = found ? found.label : id;
+              const opt = new Option(label, id, true, true);
+              $selectEl.append(opt).trigger("change");
+            },
+            error: function () {
+              const opt = new Option(id, id, true, true);
+              $selectEl.append(opt).trigger("change");
+            }
+          });
+        }
+      }
+    }
+
+    // ----------------------------
+    // Render the value cell for a single row given selected field name & saved value
+    // ----------------------------
+    function renderValueCellForField($row, fieldName, savedValue) {
+      const meta = (window.modelFields || []).find(f => f.name === fieldName);
+      const operator = $row.find(".select2-operator").val();
+      const isMulti = ["in", "not_in"].includes(operator);
+      const $valueCell = $row.find(".filter-value");
+
+      // If missing metadata -> default text input
+      if (!meta) {
+        $valueCell.html(`<input type="text" class="form-control" name="filter_value[]" value="${escapeHtml(savedValue)}">`);
+        return;
+      }
+      if (["is_null", "is_not_null"].includes(operator)) {
+        $valueCell.html(""); // no input needed
+        return;
+      }
+      // DATE_OPERATORS
+      if (DATE_OPERATORS.includes(operator)) {
+        $valueCell.html(""); // no input needed
+        return;
+      }
+
+      // If ManyToMany -> multi-select (no input name) — submit handler will convert to CSV hidden input
+      if (meta.type === "ManyToManyField") {
+        $valueCell.html(getInputForFieldType(meta.type, savedValue));
+        const $sel = $valueCell.find(".select2-m2m");
+        // attach placeholder data and then initialize loader
+        $sel.data("placeholder", "Select values");
+        loadRelationSelect($sel, meta.related_model_label || meta.related_model, true, savedValue);
+        return;
+      }
+
+      // If ForeignKey -> single select named filter_value[]
+      if (meta.related_model_label) {
+
+        $valueCell.html(`
+                <select class="form-control select2-fk" 
+                        name="filter_value[]" 
+                        ${isMulti ? "multiple" : ""}>
+                </select>
+            `);
+
+        const $sel = $valueCell.find(".select2-fk");
+
+        loadRelationSelect(
+          $sel,
+          meta.related_model_label || meta.related_model,
+          isMulti,
+          savedValue
+        );
+
+        return;
+      }
+
+      // Non-related fields -> simple input with name filter_value[]
+      $valueCell.html(getInputForFieldType(meta.type, savedValue, meta, operator));
+
+      //If choices → activate select2
+      if (meta.choices && meta.choices.length > 0) {
+        const $sel = $valueCell.find(".select2-choices");
+
+        $sel.select2({
+          width: "100%",
+          placeholder: "Select value",
+          allowClear: true
+        });
+      }
+    }
+
+    /* =========================================================
+       STEP 2 — FILTER ROWS (Add / Remove / Drag)
+    ========================================================= */
+    $(".select2-field, .select2-operator").select2({ width: "100%" });
+
+    new Sortable(document.getElementById("filter-box"), {
+      handle: ".drag-handle",
+      animation: 150,
+      onEnd: renumberRows,
+    });
+
+    function renumberRows() {
+      $("#filter-box .filter-row").each(function (i) {
+        $(this).find(".filter-row-number").text(i + 1);
+      });
+    }
+    renumberRows();
+
+
+    // ADD FILTER ROW — creates a new row that matches the template structure used above
+    $("#add-filter-btn").click(function () {
+
+      let html = `
+      <tr class="filter-row">
+          <td class="filter-row-number"></td>
+
+          <td>
+            <select class="form-control select2-field" name="filter_field[]">
+              <option value="">--None--</option>
+            </select>
+          </td>
+
+          <td>
+            <select class="form-control select2-operator" name="filter_operator[]">
+              {% for key,label in operators.items %}
+              <option value="{{ key }}">{{ label }}</option>
+              {% endfor %}
+            </select>
+          </td>
+
+          <td class="filter-value" data-value=""></td>
+
+          <td class="text-center"><span class="drag-handle btn btn-light btn-sm">☰</span></td>
+          <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-filter-btn">×</button></td>
+      </tr>`;
+
+      let $row = $(html);
+      $("#filter-box").append($row);
+
+      // Populate fields dynamically
+      const $fieldSelect = $row.find(".select2-field");
+      $fieldSelect.empty().append(`<option value="">--None--</option>`);
+
+      // Use current modelFields if available
+      window.modelFields.forEach(f => {
+        $fieldSelect.append(`<option value="${f.name}">${f.label}</option>`);
+      });
+
+      // activate select2
+      $row.find(".select2-field, .select2-operator").select2({ width: "100%" });
+
+      renumberRows();
+    });
+
+
+    // REMOVE FILTER ROW
+    $(document).on("click", ".remove-filter-btn", function () {
+      $(this).closest(".filter-row").remove();
+      renumberRows();
+    });
+
+
+    // When field changes: render appropriate input in the value column
+    $(document).on("change", ".select2-field", function () {
+      const fieldName = $(this).val();
+      const row = $(this).closest("tr");
+      const $valueCell = row.find(".filter-value");
+      const $operator = row.find(".select2-operator");   // ✅ added
+      const savedValue = $valueCell.attr("data-value") || "";
+
+      // ✅ get field metadata
+      const meta = (window.modelFields || []).find(f => f.name === fieldName);
+      const isDateField = meta && ["DateField", "DateTimeField"].includes(meta.type);
+
+
+      $operator.find("option").each(function () {
+        const val = $(this).val();
+
+        if (DATE_OPERATORS.includes(val)) {
+          $(this).prop("disabled", !isDateField);  // show only for date fields
+        }
+        if (!isDateField && DATE_OPERATORS.includes($operator.val())) {
+          $operator.val("eq");  // fallback
+        }
+      });
+
+      // refresh select2 UI
+      $operator.trigger("change.select2");
+
+      // existing logic (unchanged)
+      if (!fieldName) {
+        $valueCell.html(`<input type="text" class="form-control" name="filter_value[]" value="${escapeHtml(savedValue)}">`);
+        return;
+      }
+
+      renderValueCellForField(row, fieldName, savedValue);
+    });
+
+
+    /*
+      STEP 3 — SELECTED FIELDS HANDLER
+    */
+    {% if selected_fields %}
+    {% for f in selected_fields %}
+    $('#selected').append(
+      `<option value="{{ f.name }}">{{ f.label }}</option>`
+    );
+    {% endfor %}
+    {% endif %}
+
+    $('#add-field-btn').on('click', function () {
+      $('#available option:selected').each(function () {
+        const v = $(this).val();      // field_name
+        const t = $(this).text();     // label
+
+        if ($('#selected option[value="' + v + '"]').length === 0) {
+          $('#selected').append(
+            `<option value="${v}">${t}</option>`
+          );
+        }
+      });
+      syncSelectedFieldsHidden();
+    });
+
+    $('#remove-field-btn').on('click', function () {
+      $('#selected option:selected').remove();
+      syncSelectedFieldsHidden();
+    });
+
+    function syncSelectedFieldsHidden() {
+      $('#selected-holder').html('');
+      $('#selected option').each(function () {
+        $('#selected-holder').append(
+          `<input type="hidden" name="selected_fields[]" value="${$(this).val()}">`
+        );
+      });
+    }
+
+    syncSelectedFieldsHidden();
+
+
+
+    /* =========================================================
+       FORM SUBMIT: convert any M2M selects into comma-separated hidden inputs
+    ========================================================= */
+    $("#listview-form").on("submit", function (e) {
+      // ALWAYS rebuild selected_fields[] in the exact UI order
+      $('#selected-holder').html('');
+      $('#selected option').each(function () {
+        $('#selected-holder').append(
+          `<input type="hidden" name="selected_fields[]" value="${$(this).val()}">`
+        );
+      });
+
+      // 🚫 BLOCK if duplicate error is present
+      if ($("#name-error").length) {
+        e.preventDefault();
+        alert("This name already exists.");
+        return false;
+      }
+
+      // ✅ REQUIRED CHECK
+      if ($('#selected-holder input[name="selected_fields[]"]').length === 0) {
+        e.preventDefault();
+
+        alert("Please select at least one field in STEP 3.");
+        return false;
+      }
+
+      $("#filter-box .filter-row").each(function () {
+        const $row = $(this);
+        const $select = $row.find('select[name="filter_value[]"]');
+
+        if ($select.length && $select.prop("multiple")) {
+
+          const vals = $select.val() || [];
+          const csv = vals.join(",");
+
+          // ❗ remove original multi-select name so it doesn't submit multiple values
+          $select.removeAttr("name");
+
+          // ❗ create ONE hidden input per row
+          const $hidden = $(`
+                  <input type="hidden" name="filter_value[]" value="${csv}">
+              `);
+
+          $row.find(".filter-value").append($hidden);
+        }
+      });
+
+      // Existing M2M logic (unchanged)
+      $("#filter-box .filter-row").each(function () {
+        const $row = $(this);
+        const $m2m = $row.find(".select2-m2m");
+        $row.find('input.m2m-hidden-for-row').remove();
+
+        if ($m2m.length) {
+          const vals = $m2m.val() || [];
+          const csv = vals.join(",");
+          const $hidden = $(`<input type="hidden" class="m2m-hidden-for-row" name="filter_value[]" value="${escapeHtml(csv)}">`);
+          $row.find(".filter-value").append($hidden);
+        } else {
+          if ($row.find('[name="filter_value[]"]').length === 0) {
+            const $hidden = $(`<input type="hidden" name="filter_value[]" value="">`);
+            $row.find(".filter-value").append($hidden);
+          }
+        }
+      });
+
+    });
+    /* =========================================================
+       STEP 4 — VISIBILITY OPTION (PRIVATE / PUBLIC / GROUPS)
+    ========================================================= */
+    $("#group-select").select2({ width: "100%" });
+
+    function toggleGroupBox() {
+      $("#group-select-wrapper").toggle(
+        $("input[name=visibility]:checked").val() === "groups"
+      );
+    }
+    $("input[name=visibility]").on("change", toggleGroupBox);
+    toggleGroupBox();
+
+    // To Change Input in to Multi select for in and not in
+    $(document).on("change", ".select2-operator", function () {
+      const $row = $(this).closest("tr");
+      const fieldName = $row.find(".select2-field").val();
+
+      if (!fieldName) return;
+
+      // ⛔ IMPORTANT: wait for select2 to update value
+      setTimeout(() => {
+        const savedValue = getCurrentValue($row);
+        renderValueCellForField($row, fieldName, savedValue);
+      }, 0);
+    });
+
+    function getCurrentValue($row) {
+      let val = "";
+
+      const $input = $row.find('[name="filter_value[]"]');
+
+      if ($input.is("select")) {
+        val = $input.val();
+        if (Array.isArray(val)) return val.join(",");
+        return val || "";
+      }
+
+      return $input.val() || "";
+    }
+
+  });
+</script>
+<!-- for up down button -->
+<script>
+  function moveSelectedToTop() {
+    const $selected = $('#selected option:selected');
+    if ($selected.length === 0) return;
+
+    const $all = $('#selected option').not($selected);
+    $('#selected').empty().append($selected).append($all);
+    syncSelectedFieldsHidden();
+  }
+
+  function moveSelectedToBottom() {
+    const $selected = $('#selected option:selected');
+    if ($selected.length === 0) return;
+
+    const $all = $('#selected option').not($selected);
+    $('#selected').empty().append($all).append($selected);
+    syncSelectedFieldsHidden();
+  }
+
+  function moveSelectedUp() {
+    $('#selected option:selected').each(function () {
+      const $prev = $(this).prev();
+      if ($prev.length) {
+        $(this).insertBefore($prev);
+      }
+    });
+    syncSelectedFieldsHidden();
+  }
+
+  function moveSelectedDown() {
+    $($('#selected option:selected').get().reverse()).each(function () {
+      const $next = $(this).next();
+      if ($next.length) {
+        $(this).insertAfter($next);
+      }
+    });
+    syncSelectedFieldsHidden();
+  }
+
+  // Button bindings
+  $('#btn-top').on('click', moveSelectedToTop);
+  $('#btn-bottom').on('click', moveSelectedToBottom);
+  $('#btn-up').on('click', moveSelectedUp);
+  $('#btn-down').on('click', moveSelectedDown);
+
+</script>
+<script>
+  /* =========================================================
+   STEP 3 — CLIENT SIDE SEARCH
+========================================================= */
+
+  // Available Fields Search
+  $('#available-search').on('keyup', function () {
+    const term = $(this).val().toLowerCase();
+
+    $('#available option').each(function () {
+      const text = $(this).text().toLowerCase();
+      $(this).toggle(text.includes(term));
+    });
+  });
+
+  // Selected Fields Search
+  $('#selected-search').on('keyup', function () {
+    const term = $(this).val().toLowerCase();
+
+    $('#selected option').each(function () {
+      const text = $(this).text().toLowerCase();
+      $(this).toggle(text.includes(term));
+    });
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "admin/change_form.html" %}
+
+{# Adds a "View Follow-ups" button in the object tools #}
+{% block object-tools-items %}
+  {{ block.super }}
+  {% if view_followups_url %}
+    <a href="{{ view_followups_url }}" class="btn btn-block btn-sm btn-secondary btn-sm" >
+                <i class="fa fa-list"></i> View Follow-ups
+    </a>
+  {% endif %}
+{% endblock %}

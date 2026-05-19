@@ -1,0 +1,95 @@
+{% extends "reports/base.html" %}
+{% block title %}All Reports{% endblock %}
+{% block body %}
+<div class="card">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="card-title">Reports</h4>
+      {% if perms.reports.add_report %}
+      <a class="btn btn-primary btn-sm" href="{% url 'reports:new' %}">New Report</a>
+      {% endif %}
+
+    </div>
+    <div class="table-responsive border rounded p-1">
+      <table class="table">
+        <thead>
+          <tr class="table-primary">
+            <th class="font-weight-bold">Name</th>
+            <th class="font-weight-bold">Type</th>
+            <th class="font-weight-bold">Owner</th>
+            <th class="font-weight-bold">Modified at</th>
+            <th class="text-center font-weight-bold">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in object_list %}
+          <tr>
+            <td><a class="nav-link" href="{% url 'reports:detail' r.slug %}">{{ r.name }}</a></td>
+            <td>{{ r.get_view_type_display }}</td>
+            <td>{{ r.owner }}</td>
+            <td>{{ r.modified_at }}</td>
+            <td class="text-center">
+              <!-- <a class="btn btn-sm btn-outline-primary" href="{% url 'reports:detail' r.slug %}">View</a> -->
+              {% if perms.reports.change_report %}
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'reports:edit' r.slug %}">Edit</a>
+              {% endif %}
+              <a class="btn btn-sm btn-outline-success" href="{% url 'reports:run' r.slug %}">Run</a>
+              {% if perms.reports.delete_report %}
+              <!-- <a class="btn btn-sm btn-outline-danger" href="{% url 'reports:delete' r.slug %}">Delete</a> -->
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5">No reports yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if is_paginated %}
+    <div class="d-flex justify-content-between align-items-center mt-3">
+      <div>
+        Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }} reports
+      </div>
+      <nav>
+        <ul class="pagination mb-0">
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link" href="?page=1">&laquo; First</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">&laquo; First</span></li>
+          <li class="page-item disabled"><span class="page-link">Previous</span></li>
+          {% endif %}
+
+          {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item"><a
+              class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+            </li>
+            {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+            <li class="page-item disabled"><span class="page-link">Last &raquo;</span></li>
+            {% endif %}
+        </ul>
+      </nav>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

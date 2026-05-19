@@ -1,0 +1,363 @@
+{% extends 'crm/base.html' %}
+{% load static%}
+{% load humanize %}
+{% block title %}TSE Dashboard {% endblock %}
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/tse_dashboard.css' %}">
+{% endblock css %}
+
+{% block body %}
+
+<div class="container-fluid">
+    <!-- HEADER -->
+    <div class="tse-header">
+
+        <div class="left">
+            <h4>TSE Dashboard</h4>
+            <span>
+                Welcome, {{ request.user.username }} |
+                {% if request.user.userprofile.branch %}
+                {{ request.user.userprofile.branch.name }}
+                {% else %}
+                No Branch
+                {% endif %}
+            </span>
+        </div>
+
+        <div class="right">
+            <form method="get" class="search-box">
+                <input type="text" name="search" value="{{ search }}" placeholder="Search mobile / name">
+            </form>
+
+            <span class="online-badge">Online</span>
+        </div>
+    </div>
+
+    <div class="kpi-row mt-3">
+
+        <!-- CARD 1 -->
+        <div class="kpi-card blue">
+            <div class="kpi-content">
+                <div>
+                    <p>Calls Today</p>
+                    <h3>{{ calls_today }}</h3>
+                </div>
+                <div class="kpi-icon">📞</div>
+            </div>
+        </div>
+
+        <!-- CARD 2 -->
+        <div class="kpi-card red">
+            <div class="kpi-content">
+                <div>
+                    <p>Follow-ups Due</p>
+                    <h3>{{ followups_today }}</h3>
+                </div>
+                <div class="kpi-icon">⏰</div>
+            </div>
+        </div>
+
+        <!-- CARD 3 -->
+        <div class="kpi-card orange">
+            <div class="kpi-content">
+                <div>
+                    <p>Hot Leads</p>
+                    <h3>{{ hot_leads }}</h3>
+                </div>
+                <div class="kpi-icon">🔥</div>
+            </div>
+        </div>
+
+        <!-- CARD 4 -->
+        <div class="kpi-card green">
+            <div class="kpi-content">
+                <div>
+                    <p>Interested Leads</p>
+                    <h3>{{ interested_leads }}</h3>
+                </div>
+                <div class="kpi-icon">✔</div>
+            </div>
+        </div>
+
+        <!-- CARD 5 -->
+        <div class="kpi-card blue2">
+            <div class="kpi-content">
+                <div>
+                    <p>Applications</p>
+                    <h3>{{ applications }}</h3>
+                </div>
+                <div class="kpi-icon">📄</div>
+            </div>
+        </div>
+
+        <!-- CARD 6 -->
+        <div class="kpi-card dark">
+            <div class="kpi-content">
+                <div>
+                    <p>Disbursed (MTD)</p>
+                    <h3>₹{{ disbursed_amount|intcomma }}</h3>
+                </div>
+                <div class="kpi-icon">💰</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="row">
+
+        <!-- LEFT TABLE -->
+        <div class="col-lg-8 col-md-8 col-sm-12">
+            <div class="card">
+
+                <div class="lead-card">
+
+                    <div class="lead-header">
+                        <h5>My Leads</h5>
+                        <span class="dots">•••</span>
+                    </div>
+
+                    <form method="get" class="filter-bar row">
+
+                        <div class="filter-item ">
+                            <label>Status</label>
+                            <select name="status" onchange="this.form.submit()">
+                                <option value="">All</option>
+                                {% for value,label in status_choices %}
+                                <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="filter-item ">
+                            <label>Source</label>
+                            <select name="source" onchange="this.form.submit()">
+                                <option value="">All</option>
+                                {% for value,label in source_choices %}
+                                <option value="{{ value }}" {% if source_filter == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="filter-item ">
+                            <label>Date</label>
+                            <input type="date" name="date" value="{{ date_filter }}" onchange="this.form.submit()">
+                        </div>
+
+                        <!-- <div class="d-flex align-items-end">
+                            <button class="btn btn-primary btn-sm">Apply</button>
+                        </div> -->
+
+                    </form>
+
+                    <div class="table-responsive border rounded p-1">
+                        <table class="table table-fixed">
+                            <thead>
+                                <tr class="table-secondary">
+                                    <th style="font-weight: 600;">Name</th>
+                                    <th style="font-weight: 600;">Mobile</th>
+                                    <th style="font-weight: 600;">Loan</th>
+                                    <!-- <th style="font-weight: 600;">Salary</th> -->
+                                    <th style="font-weight: 600;">Status</th>
+                                    <th style="font-weight: 600;">Action</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for lead in leads %}
+                                <tr>
+                                    <td class="font-weight-bold"><a href="?lead_id={{ lead.id }}">{{ lead.name }}</a>
+                                    </td>
+                                    <td>{{ lead.mobile_number }}</td>
+                                    <td>₹{{ lead.require_loan_amount|default:"-" }}</td>
+                                    <!-- <td>₹{{ lead.monthly_salary|default:"-" }}</td> -->
+
+                                    <td>
+                                        <span class="badge bg-warning">
+                                            {{ lead.get_status_display }}
+                                        </span>
+                                    </td>
+
+                                    <td>
+                                        <a href="?lead_id={{ lead.id }}" class="btn btn-sm btn-primary">Open</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+
+                        </table>
+                    </div> <!--table-responsive -->
+                    <!-- Pagination controls styled like Dashboard inventory -->
+                    <div class="d-flex mt-2 flex-wrap p-2">
+                        <p class="text-muted">
+                            Showing {{ leads.start_index }} to {{ leads.end_index }} of {{ leads.paginator.count }}
+                            entries
+                        </p>
+
+                        <nav class="ml-auto" aria-label="Page navigation">
+                            <ul class="pagination separated pagination-info">
+
+                                {% if leads.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link"
+                                        href="?page={{ leads.previous_page_number }}&search={{ search }}&status={{ status_filter }}&source={{ source_filter }}&date={{ date_filter }}">
+                                        <i class="icon-arrow-left"></i>
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link"><i class="icon-arrow-left"></i></span>
+                                </li>
+                                {% endif %}
+
+                                {% for num in leads.paginator.page_range %}
+                                {% if num <= 5 or num == leads.paginator.num_pages %} {% if num == leads.number %} <li
+                                    class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item">
+                                        <a class="page-link"
+                                            href="?page={{ num }}&search={{ search }}&status={{ status_filter }}&source={{ source_filter }}&date={{ date_filter }}">
+                                            {{ num }}
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                    {% elif num == 11 %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                    {% endif %}
+                                    {% endfor %}
+
+                                    {% if leads.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link"
+                                            href="?page={{ leads.next_page_number }}&search={{ search }}&status={{ status_filter }}&source={{ source_filter }}&date={{ date_filter }}">
+                                            <i class="icon-arrow-right"></i>
+                                        </a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link"><i class="icon-arrow-right"></i></span>
+                                    </li>
+                                    {% endif %}
+
+                            </ul>
+                        </nav>
+                    </div>
+                </div> <!-- ✅ card -->
+            </div> <!-- ✅ col -->
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="col-lg-4 col-md-4 col-sm-12">
+            <div class="lead-detail-card">
+
+                <!-- HEADER -->
+                <div class="lead-detail-header">
+                    <h5>Lead Details</h5>
+                    <span>⌄</span>
+                </div>
+
+                <!-- BODY -->
+                <div class="lead-detail-body">
+
+                    {% if selected_lead %}
+
+                    <!-- TOP PROFILE -->
+                    <div class="lead-profile">
+                        <div>
+                            <h6 class="mb-0">{{ selected_lead.name }}</h6>
+                            <small>{{ selected_lead.mobile_number }}</small>
+                        </div>
+
+                        <img src="https://ui-avatars.com/api/?name={{ selected_lead.name }}" class="avatar">
+                    </div>
+
+                    <!-- BADGES -->
+                    <div class="lead-badges mt-2">
+                        <span class="badge status-badge">
+                            {{ selected_lead.get_status_display }}
+                        </span>
+
+                        {% if selected_lead.cibil_score > 740 %}
+                        <span class="badge hot-badge">🔥 Hot Lead</span>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+
+                    <!-- QUICK INFO -->
+                    <div class="lead-info">
+                        <p class="font-weight-bold"><span class="text-success">✔</span>
+                            Loan: ₹{{ selected_lead.require_loan_amount }}</p>
+
+                        <p class="font-weight-bold"><span class="text-success">✔</span>
+                            Salary: ₹{{ selected_lead.monthly_salary }}</p>
+
+                        <p class="font-weight-bold"><span class="text-success">✔</span>
+                            Company: {{ selected_lead.company_name }}</p>
+
+                        <p class="font-weight-bold"><span class="text-success">✔</span>
+                            CIBIL: {{ selected_lead.cibil_score }}</p>
+
+                    </div>
+
+                    <hr>
+
+                    <!-- ACTION BUTTONS -->
+                    <div class="lead-actions">
+                        <button class="btn btn-success btn-sm ">📞 Call Now</button>
+                        <button class="btn btn-primary btn-sm">Convert Lead</button>
+                        <button class="btn btn-warning btn-sm">➕ Add Follow-up</button>
+                    </div>
+
+                    <hr>
+
+                    <!-- NOTES -->
+                    <div class="notes-box">
+                        <h6>Notes</h6>
+                        <textarea class="form-control">{{ selected_lead.description }}</textarea>
+                        <button class="btn btn-primary btn-sm mt-2 w-100">Save Note</button>
+                    </div>
+
+                    <hr>
+
+                    <!-- FOLLOW UPS -->
+                    <div class="followup-box">
+                        <h6>Follow-ups</h6>
+
+                        <ul class="list-group">
+                            {% for f in lead_followups %}
+                            <li class="list-group-item">
+                                {{ f.note }}
+                                <br>
+                                <small>{{ f.follow_up_date }}</small>
+                            </li>
+                            {% empty %}
+                            <li class="list-group-item">No follow-ups</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    {% else %}
+                    <p>Select a lead</p>
+                    {% endif %}
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock body %}
+{% block Script %}
+
+{% endblock Script %}

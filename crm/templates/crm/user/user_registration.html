@@ -1,0 +1,253 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+
+{% block title %}User Registration{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<style>
+   .form-check input {
+      margin-top: 6px;
+   }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+   <div class="row justify-content-center">
+      <div class="col-lg-12">
+         <div class="card border-0 rounded-4">
+
+            <!-- HEADER -->
+            <div class="card-header bg-primary text-white rounded-top-4">
+               <h4 class="mb-0">
+                  <i class="fa fa-user-plus me-2"></i> User Registration
+               </h4>
+            </div>
+
+            <!-- BODY -->
+            <div class="card-body">
+               <form action="" method="post" novalidate class="rounded">
+                  {% csrf_token %}
+
+                  <!-- USER DETAILS -->
+                  <div class="card mb-4 border">
+                     <div class="card-header bg-light">
+                        <h5 class="mb-0">User Details</h5>
+                     </div>
+
+                     <div class="card-body">
+                        <div class="row">
+
+                           {% for fm in user_form %}
+
+                           {% if fm.field.widget.input_type == "checkbox" %}
+
+                           <div class="col-md-6 mb-3">
+                              <div class="row align-items-center">
+
+                                 <div class="col-md-4">
+                                    {{ fm.label_tag }}
+                                 </div>
+
+                                 <div class="col-md-8">
+                                    <div class="form-check">
+                                       {{ fm }}
+                                    </div>
+
+                                    <small class="text-danger">
+                                       {{ fm.errors|striptags }}
+                                    </small>
+                                 </div>
+
+                              </div>
+                           </div>
+
+                           {% else %}
+
+                           <div class="col-md-6 mb-3">
+                              <div class="row align-items-center">
+
+                                 <div class="col-md-4">
+                                    {{ fm.label_tag }}
+                                 </div>
+
+                                 <div class="col-md-8">
+
+                                    <div class="input-group">
+
+                                       {{ fm }}
+
+                                       {% if fm.name == 'password1' %}
+                                       <a class="input-group-text bg-white" href="javascript:void(0);"
+                                          id="togglePassword1">
+                                          <i class="fa fa-eye"></i>
+                                       </a>
+
+                                       {% elif fm.name == 'password2' %}
+                                       <a class="input-group-text bg-white" href="javascript:void(0);"
+                                          id="togglePassword2">
+                                          <i class="fa fa-eye"></i>
+                                       </a>
+                                       {% endif %}
+
+                                    </div>
+
+                                    <small class="text-danger">
+                                       {{ fm.errors|striptags }}
+                                    </small>
+
+                                 </div>
+
+                              </div>
+                           </div>
+
+                           {% endif %}
+
+                           {% endfor %}
+
+                        </div>
+                     </div>
+                  </div>
+
+
+                  <!-- PROFILE DETAILS -->
+                  <div class="card mb-4 border">
+                     <div class="card-header bg-light">
+                        <h5 class="mb-0">Profile Details</h5>
+                     </div>
+
+                     <div class="card-body">
+                        <div class="row">
+
+                           {% for fm in profile_form %}
+
+                           <div class="col-md-6 mb-3">
+
+                              <div class="row align-items-center">
+
+                                 <div class="col-md-4">
+                                    {{ fm.label_tag }}
+                                 </div>
+
+                                 <div class="col-md-8">
+                                    {{ fm }}
+
+                                    <small class="text-danger">
+                                       {{ fm.errors|striptags }}
+                                    </small>
+                                 </div>
+
+                              </div>
+
+                           </div>
+
+                           {% endfor %}
+
+                        </div>
+                     </div>
+                  </div>
+
+
+                  <!-- NON FIELD ERRORS -->
+                  {% if user_form.non_field_errors %}
+                  <div class="alert alert-danger">
+                     {% for error in user_form.non_field_errors %}
+                     <div>{{ error }}</div>
+                     {% endfor %}
+                  </div>
+                  {% endif %}
+
+                  {% if profile_form.non_field_errors %}
+                  <div class="alert alert-danger">
+                     {% for error in profile_form.non_field_errors %}
+                     <div>{{ error }}</div>
+                     {% endfor %}
+                  </div>
+                  {% endif %}
+
+
+                  <!-- BUTTONS -->
+                  <div class="d-flex justify-content-between mt-4">
+
+                     <a href="{% url 'user-list' %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="fa fa-times-circle"></i> Cancel
+                     </a>
+
+                     <input type="submit" class="btn btn-primary btn-sm" value="Register">
+
+                  </div>
+
+               </form>
+            </div>
+
+         </div>
+      </div>
+   </div>
+</div>
+{% endblock %}
+
+{% block Script %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script src="{% static 'js/select2.js' %}"></script>
+
+<script>
+   // ✅ Password toggle 1
+   const togglePassword1 = document.querySelector('#togglePassword1');
+   const password1 = document.querySelector('#id_password1');
+
+   if (togglePassword1 && password1) {
+      togglePassword1.addEventListener('click', function () {
+         const type = password1.type === 'password' ? 'text' : 'password';
+         password1.type = type;
+         this.querySelector('i').classList.toggle('fa-eye');
+         this.querySelector('i').classList.toggle('fa-eye-slash');
+      });
+   }
+
+   // ✅ Password toggle 2
+   const togglePassword2 = document.querySelector('#togglePassword2');
+   const password2 = document.querySelector('#id_password2');
+
+   if (togglePassword2 && password2) {
+      togglePassword2.addEventListener('click', function () {
+         const type = password2.type === 'password' ? 'text' : 'password';
+         password2.type = type;
+         this.querySelector('i').classList.toggle('fa-eye');
+         this.querySelector('i').classList.toggle('fa-eye-slash');
+      });
+   }
+
+   // ✅ Select2 Multi Select (Groups)
+   $(document).ready(function () {
+
+      $('#id_groups').select2({
+         placeholder: "Select Groups",
+         allowClear: true,
+         width: '100%'
+      });
+
+      $('#id_manager').select2({
+         placeholder: "Select Manager",
+         allowClear: true,
+         width: '100%'
+      });
+
+      $('#id_branch').select2({
+         placeholder: "Select Branch",
+         allowClear: true,
+         width: '100%'
+      });
+
+   });
+</script>
+{% endblock %}

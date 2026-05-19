@@ -1,0 +1,161 @@
+{% extends 'crm/base.html' %}
+{% block title %} User List{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+    .loader-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100;
+    }
+
+    #tableContainer {
+        position: relative;
+    }
+
+    .sort-icon {
+        font-size: 12px;
+    }
+</style>
+{% endblock css %}
+{% block body %}
+<!-- HEADER -->
+<div class="page-header d-flex justify-content-between align-items-center mb-3">
+    <h3 class="page-title">
+        <i class="fa fa-id-badge mr-2"></i> User Profiles
+    </h3>
+
+    <a href="{% url 'user-create' %}" class="btn btn-primary btn-sm">
+        <i class="fa fa-user-plus"></i> Create User
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="d-flex align-items-center">
+
+            <!-- SEARCH (OUTSIDE FORM) -->
+            <input class="form-control form-control-sm mb-2 mr-2" id="myInput" type="text"
+                placeholder="Search .....">
+
+
+            <!-- FILTER ROW -->
+            <form method="get" id="filterForm" class="mb-2">
+
+                <!-- STATUS FILTER -->
+                <select name="role" id="roleFilter" class="form-control form-control-sm mr-2">
+                    <option value="">All Roles</option>
+                    {% for key, value in ROLE_CHOICES %}
+                    <option value="{{ key }}" {% if current_role == key %}selected{% endif %}>
+                        {{ value }}
+                    </option>
+                    {% endfor %}
+                </select>
+
+                <!-- PRESERVE SORT -->
+                <input type="hidden" name="sort" value="{{ current_sort }}">
+                <input type="hidden" name="dir" value="{{ current_dir }}">
+            </form>
+        </div>
+        <!-- TABLE -->
+        <div id="tableContainer">
+            {% include 'crm/userprofile/userprofile_table_partial.html' %}
+        </div>
+
+
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block Script %}
+<script>
+    let currentPage = 1;
+    let currentSort = "date_joined";
+    let currentDir = "desc";
+    let currentRole = "";
+    let currentSearch = "";
+
+    function updateSortIcons() {
+        $(".sort-icon")
+            .removeClass("fa-sort-up fa-sort-down")
+            .addClass("fa-sort");
+
+        $(`.sort[data-field='${currentSort}'] .sort-icon`)
+            .removeClass("fa-sort")
+            .addClass(currentDir === "asc" ? "fa-sort-up" : "fa-sort-down");
+    }
+
+    function loadData() {
+        $("#loader").show();
+
+        $.ajax({
+            url: "",
+            data: {
+                page: currentPage,
+                sort: currentSort,
+                dir: currentDir,
+                role: currentRole,
+                search: currentSearch
+            },
+            success: function (response) {
+                $("#tableContainer").html(response.html);
+                updateSortIcons();
+            },
+            complete: function () {
+                $("#loader").hide();
+            }
+        });
+    }
+
+    // FILTER
+    $("#roleFilter").change(function () {
+        currentRole = $(this).val();
+        currentPage = 1;
+        loadData();
+    });
+
+    // SEARCH (debounced)
+    let timer;
+    $("#myInput").keyup(function () {
+        clearTimeout(timer);
+        currentSearch = $(this).val();
+
+        timer = setTimeout(() => {
+            currentPage = 1;
+            loadData();
+        }, 400);
+    });
+
+    // SORT CLICK
+    $(document).on("click", ".sort", function (e) {
+        e.preventDefault();
+
+        let field = $(this).data("field");
+
+        if (currentSort === field) {
+            currentDir = currentDir === "asc" ? "desc" : "asc";
+        } else {
+            currentSort = field;
+            currentDir = "asc";
+        }
+
+        loadData();
+    });
+
+    // PAGINATION
+    $(document).on("click", ".page-link", function (e) {
+        e.preventDefault();
+        currentPage = $(this).data("page");
+        loadData();
+    });
+</script>
+{% endblock %}

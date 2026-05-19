@@ -1,0 +1,806 @@
+{% extends "reports/base.html" %}
+{% load static %}
+{% load report_tags %}
+{% block title %}{{ report.name }}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.27.2/dist/bootstrap-table.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+  .select,
+  #locale {
+    width: 100%;
+  }
+
+  .like {
+    margin-right: 10px;
+  }
+</style>
+<style>
+  .bootstrap-table .fixed-table-container .table thead th,
+  .bootstrap-table .fixed-table-header th {
+    position: sticky;
+    /* top: 0; */
+    z-index: 2;
+
+    /* background-color: #007bff !important; */
+    /* safest */
+    /* color: #fff !important; */
+    font-weight: 600 !important;
+  }
+
+  .bootstrap-table .btn {
+    padding: 0.5rem 0.5rem !important;
+    font-size: 0.875rem !important;
+  }
+
+  .bootstrap-table .search input {
+    height: 30px !important;
+    padding: 0.5rem 0.5rem !important;
+    font-size: 0.875rem !important;
+    width: 190px !important;
+    /* optional width control */
+  }
+
+  /* ===== MATRIX PRO ===== */
+
+  /* Sticky first column */
+  .bootstrap-table .table tbody td:first-child,
+  .bootstrap-table .table thead th:first-child,
+  .bootstrap-table .table tfoot td:first-child {
+    position: sticky;
+    left: 0;
+    background: #fff;
+    z-index: 3;
+    font-weight: 600;
+  }
+
+  /* Header sticky fix */
+  .bootstrap-table .table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+  }
+
+  /* Footer sticky */
+  .bootstrap-table .table tfoot td {
+    position: sticky;
+    bottom: 0;
+    background: #f8f9fa;
+    z-index: 3;
+  }
+
+  /* Heatmap base */
+
+
+  /* Smooth look */
+  .bootstrap-table td {
+    transition: background-color 0.2s ease;
+  }
+</style>
+<style>
+  #reportDetails table th {
+    width: 15%;
+    white-space: nowrap;
+    background: #f8f9fa;
+    font-weight: 600;
+  }
+
+  #reportDetails table td {
+    width: 35%;
+    word-break: break-word;
+    white-space: normal;
+  }
+
+  /* Prevent long comma lists from breaking layout */
+  #reportDetails td {
+    max-width: 300px;
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="card">
+  <div class="card-body">
+
+    <!-- HEADER -->
+
+    <div class="mb-0">
+
+      <!-- TOP ROW -->
+      <div class="d-flex justify-content-between align-items-center">
+
+        <!-- LEFT: REPORT NAME -->
+        <div data-toggle="collapse" data-target="#reportDetails" style="cursor: pointer;">
+
+          <strong>{{ report.name }}</strong>
+          <i class="fas fa-chevron-down ml-2" id="collapseIcon"></i>
+        </div>
+
+        <!-- RIGHT: ACTION BUTTONS -->
+        <div>
+          {% if perms.reports.change_report %}
+          <a href="{% url 'reports:edit' report.slug %}?step=filters" class="btn btn-sm btn-primary">
+            + Add Filters
+          </a>
+
+          <a href="{% url 'reports:edit' report.slug %}" class="btn btn-sm btn-warning">
+            Edit
+          </a>
+          {% endif %}
+
+          <!-- <a class="btn btn-sm btn-primary" href="{% url 'reports:detail' report.slug %}">Details</a> -->
+          <a class="btn btn-secondary btn-sm" href="{% url 'reports:list' %}">Back</a>
+        </div>
+
+      </div>
+
+      
+      <!-- COLLAPSIBLE SECTION -->
+      <div id="reportDetails" class="collapse mt-3">
+
+        <div class="card">
+          <div class="card-body p-2">
+
+            <div class="table-responsive">
+
+              <div class="table-responsive d-none d-md-block">
+                <!-- DESKTOP TABLE -->
+                <table class="table table-sm table-bordered mb-0">
+                  <tbody>
+
+                    <tr>
+                      <th>Model</th>
+                      <td><code>{{ report.base_model|cut:"crm." }}</code></td>
+
+                      <th>View</th>
+                      <td><small class="badge badge-info">{{ report.get_view_type_display }}</small></td>
+                    </tr>
+
+                    <tr>
+                      <th>Fields</th>
+                      <td>{{ verbose.fields|join:", "|default:"—" }}</td>
+
+                      <th>Row Groups</th>
+                      <td>{{ verbose.row_groups|join:", "|default:"—" }}</td>
+                    </tr>
+
+                    <tr>
+                      <th>Column Groups</th>
+                      <td>{{ verbose.col_groups|join:", "|default:"—" }}</td>
+
+                      <th>Measures</th>
+                      <td>{{ verbose.measures|join:", "|default:"—" }}</td>
+                    </tr>
+
+                    <tr>
+                      <th>Limit</th>
+                      <td>{{ effective_limit|default:"—" }}</td>
+
+                      <th>Owner</th>
+                      <td>{{ report.owner|default:"—" }}</td>
+                    </tr>
+
+                    <tr>
+                      <th>Filters</th>
+                      <td>{{ verbose.filters|join:", "|default:"—" }}</td>
+
+                      <th>Description</th>
+                      <td>{{ report.description }}</td>
+                    </tr>
+
+                  </tbody>
+                </table>
+              </div>
+
+
+              <!-- MOBILE VIEW -->
+              <div class="d-block d-md-none table-responsive">
+
+                <table class="table table-sm table-bordered mb-0">
+                  <tbody>
+
+                    <tr>
+                      <th>Model</th>
+                      <td><code>{{ report.base_model|cut:"crm." }}</code></td>
+                    </tr>
+
+                    <tr>
+                      <th>View</th>
+                      <td><small class="badge badge-info">{{ report.get_view_type_display }}</small></td>
+                    </tr>
+
+                    <tr>
+                      <th>Fields</th>
+                      <td>{{ verbose.fields|join:", "|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                      <th>Row Groups</th>
+                      <td>{{ verbose.row_groups|join:", "|default:"—" }}</td>
+                    </tr>
+
+                    <tr>
+                      <th>Column Groups</th>
+                      <td>{{ verbose.col_groups|join:", "|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                      <th>Measures</th>
+                      <td>{{ verbose.measures|join:", "|default:"—" }}</td>
+                    </tr>
+
+
+                    <tr>
+                      <th>Limit</th>
+                      <td>{{ effective_limit|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                      <th>Owner</th>
+                      <td>{{ report.owner|default:"—" }}</td>
+                    </tr>
+
+                    <tr>
+                      <th>Filters</th>
+                      <td>{{ verbose.filters|join:", "|default:"—" }}</td>
+                    </tr>
+                    <tr>
+                      <th>Description</th>
+                      <td>{{ report.description }}</td>
+                    </tr>
+
+                  </tbody>
+                </table>
+
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ================= TABULAR (BOOTSTRAP TABLE) ================= -->
+    {% if payload.view == "tabular" %}
+    <table id="reportTable" data-toolbar="#toolbar" data-search="true" data-show-refresh="true" data-show-toggle="true"
+      data-show-fullscreen="true" data-show-columns="true" data-show-columns-toggle-all="true" data-show-export="true"
+      data-click-to-select="true" data-detail-formatter="detailFormatter" data-minimum-count-columns="2"
+      data-show-pagination-switch="true" data-pagination="true" data-id-field="id"
+      data-page-list="[10, 25, 50, 100, 'all']" data-show-footer="true" data-side-pagination="server"
+      data-response-handler="responseHandler">
+      <!-- data-detail-view="true" -->
+    </table>
+
+    {% endif %}
+
+    <!-- ================= SUMMARY ================= -->
+    {% if payload.view == "summary" %}
+    <table id="summaryTable" data-toolbar="#toolbar" data-search="true" data-show-refresh="true" data-show-toggle="true"
+      data-show-fullscreen="true" data-show-columns="true" data-show-columns-toggle-all="true" data-show-export="true"
+      data-show-pagination-switch="true" data-pagination="true" data-page-list="[10, 25, 50, 100, 'all']"
+      data-side-pagination="server" data-response-handler="summaryResponseHandler">
+    </table>
+    <!-- data-detail-view="true" -->
+    {% endif %}
+
+    <!-- ================= MATRIX ================= -->
+    {% if payload.view == "matrix" %}
+    <table id="matrixTable" data-search="true" data-show-refresh="true" data-show-toggle="true"
+      data-show-fullscreen="true" data-show-pagination-switch="true" data-show-columns="true" data-show-export="true"
+      data-pagination="true" data-side-pagination="server" data-page-list="[10,25,50,100,'all']"
+      data-response-handler="matrixResponseHandler">
+    </table>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block Script %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.27.2/dist/bootstrap-table.min.js"></script>
+<script
+  src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.27.2/dist/extensions/export/bootstrap-table-export.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin@1.29.0/tableExport.min.js"></script>
+<!-- Api Call -->
+<script>
+  const REPORT_API_URL = "{% url 'reports:run_report_api' report.slug %}";
+</script>
+
+<script>
+  const CAN_EXPORT = {{ perms.reports.add_report|yesno:"true,false" }};
+</script>
+<!-- Tabular Section -->
+<script>
+  const $table = $('#reportTable');
+  let headerLabels = {};
+
+
+  /* ================= DETAIL VIEW ================= */
+  window.detailFormatter = (index, row) => {
+    return Object.entries(row)
+      .filter(([k]) => k !== '_selected' && k !== '0' && k !== 'id')  // ✅ hide id
+      .map(([k, v]) => {
+        const label = headerLabels[k] || k.replace(/_/g, ' ');
+        return `<p><b>${label}:</b> ${v}</p>`;
+      })
+      .join('');
+  };
+
+  /* ================= RESPONSE HANDLER ================= */
+  window.responseHandler = function (res) {
+    return {
+      total: res.total,
+      rows: res.rows.map((r, i) => ({
+        ...r,
+        id: r.id || (i + "_" + Math.random())  // safe fallback
+      }))
+    };
+  };
+
+  /* ================= BUILD COLUMNS ================= */
+  function buildColumns(headers, labels) {
+    return headers.map((h, i) => ({
+      field: h,
+      title: labels[i] || h,
+      sortable: true,   // ✅ ALL columns sortable (including first)
+      align: 'center'
+    }));
+  }
+
+  /* ================= INIT TABLE ================= */
+  function initTable(columns) {
+    $table.bootstrapTable({
+      url: REPORT_API_URL,
+      method: "get",
+
+      columns: columns,
+
+      pagination: true,
+      sidePagination: "server",
+      search: true,
+
+      pageSize: 10,
+      pageList: [10, 25, 50, 100, 'all'],
+      showRefresh: true,
+      showToggle: true,
+      showColumns: true,
+      showExport: CAN_EXPORT,
+      showColumnsToggleAll: false,
+
+      detailView: false,
+      // detailFormatter: window.detailFormatter,
+      responseHandler: window.responseHandler,
+
+      // ✅ CRITICAL (ensures correct params sent)
+      queryParams: function (params) {
+
+        // 🔥 detect "all"
+        let limit = params.limit;
+
+        if (!limit || limit === 'all') {
+          limit = 'all';
+        }
+
+        return {
+          limit: limit,
+          offset: params.offset || 0,
+          search: params.search,
+          sort: params.sort,
+          order: params.order
+        };
+      },
+
+      // ✅ fix "all" offset bug
+      onPageChange: function (number, size) {
+        if (size === 'all') {
+          $table.bootstrapTable('refreshOptions', {
+            pageNumber: 1
+          });
+        }
+      },
+
+      headerStyle: function () {
+        return {
+          classes: 'bg-primary text-white'
+        };
+      }
+    });
+  }
+
+  /* ================= INITIAL LOAD ================= */
+  $(document).ready(function () {
+
+    $.get(REPORT_API_URL, function (res) {
+
+      if (!res.headers || !res.headers.length) {
+        console.error("No headers — table cannot render");
+        return;
+      }
+
+      headerLabels = res.header_map;
+
+      const columns = buildColumns(res.headers, res.header_labels);
+
+      initTable(columns);
+    });
+
+  });
+</script>
+<!-- Summary section -->
+
+<script>
+  const $summaryTable = $('#summaryTable');
+  let summaryHeaderLabels = {};
+  let summaryMeasureFields = [];
+
+  /* ================= NORMALIZER ================= */
+  function normalizeField(f) {
+    return String(f).replace(/_/g, " ").toLowerCase().trim();
+  }
+
+  /* ================= RESPONSE ================= */
+  window.summaryResponseHandler = function (res) {
+
+    if (!res || !res.rows) {
+      return { total: 0, rows: [] };
+    }
+
+    return {
+      total: res.total ?? res.rows.length,  // 🔥 fallback fix
+      rows: res.rows.map((r, i) => ({
+        ...r,
+        id: r.id || (i + "_" + Math.random())
+      }))
+    };
+  };
+
+  /* ================= BUILD COLUMNS ================= */
+  function buildSummaryColumns(headers, labels) {
+    return headers.map((h, i) => ({
+      field: h,
+      title: labels[i] || h,
+      sortable: true,
+      align: 'center',
+
+      formatter: function (value) {
+
+        const normalized = normalizeField(h);
+        const measures = summaryMeasureFields.map(normalizeField);
+
+        // 🔥 Bold measure columns
+        if (measures.includes(normalized)) {
+          return `<b>${value}</b>`;
+        }
+
+        return value;
+      }
+    }));
+  }
+
+  /* ================= TOTAL CALC ================= */
+  function computeSummaryTotals(data, columns) {
+
+    const totals = {};
+    const measures = summaryMeasureFields.map(normalizeField);
+
+    columns.forEach((col, idx) => {
+
+      const field = col.field;
+      const normalized = normalizeField(field);
+
+      // ❌ Non-measure fields
+      if (!measures.includes(normalized)) {
+        totals[field] = (idx === 0) ? "<b>Total</b>" : "";
+        return;
+      }
+
+      let total = 0;
+
+      data.forEach(row => {
+        const raw = row[field];
+
+        // 🔥 safe parsing (handles commas)
+        const val = parseFloat(String(raw).replace(/,/g, ""));
+
+        if (!isNaN(val)) total += val;
+      });
+
+      totals[field] = `<b>${total.toLocaleString("en-IN")}</b>`;
+    });
+
+    return totals;
+  }
+
+  /* ================= INIT ================= */
+  function initSummaryTable(columns) {
+
+    $summaryTable.bootstrapTable({
+
+      url: REPORT_API_URL,
+      method: "get",
+
+      columns: columns,
+
+      pagination: true,
+      sidePagination: "server",
+      search: true,
+
+      pageSize: 10,
+      pageList: [10, 25, 50, 100, 'all'],
+
+      showRefresh: true,
+      showToggle: true,
+      showColumns: true,
+      showExport: CAN_EXPORT,
+
+      responseHandler: window.summaryResponseHandler,
+
+      queryParams: function (params) {
+
+        let limit = params.limit;
+
+        if (!limit || limit === 'all') {
+          limit = 'all';
+        }
+
+        return {
+          limit: limit,
+          offset: params.offset || 0,
+          search: params.search,
+          sort: params.sort,
+          order: params.order
+        };
+      },
+
+      /* 🔥 LIVE TOTAL (MATRIX STYLE) */
+      onLoadSuccess: function (data) {
+
+        if (!data || !data.rows) return;
+
+        const cleanRows = data.rows.filter(r => !r.__isTotal);
+
+        const totalsRow = computeSummaryTotals(cleanRows, columns);
+        totalsRow.__isTotal = true;
+
+        // 🔥 append without reload
+        $summaryTable.bootstrapTable('append', totalsRow);
+      },
+
+      headerStyle: function () {
+        return {
+          classes: 'bg-primary text-white'
+        };
+      }
+
+    });
+  }
+
+  /* ================= LOAD ================= */
+  $(document).ready(function () {
+
+    if ($('#summaryTable').length) {
+
+      $.get(REPORT_API_URL, function (res) {
+
+        if (!res.headers || !res.headers.length) {
+          console.error("No headers for summary");
+          return;
+        }
+
+        summaryHeaderLabels = res.header_map;
+
+        // 🔥 IMPORTANT: measure fields from backend
+        summaryMeasureFields = res.measure_fields || [];
+
+        const columns = buildSummaryColumns(
+          res.headers,
+          res.header_labels
+        );
+
+        initSummaryTable(columns);
+      });
+
+    }
+
+  });
+</script>
+<!-- MAtrix -->
+<script>
+  /* ================= MATRIX PRO FINAL ================= */
+
+  const $matrixTable = $('#matrixTable');
+  let matrixHeaderLabels = {};
+  let globalMax = 0;
+
+  /* ================= RESPONSE ================= */
+  window.matrixResponseHandler = function (res) {
+
+    globalMax = 0;
+
+    res.rows.forEach(row => {
+      Object.keys(row).forEach(k => {
+        if (k !== "row_label") {
+          const val = parseFloat(row[k]);
+          if (!isNaN(val)) {
+            globalMax = Math.max(globalMax, val);
+          }
+        }
+      });
+    });
+
+    return {
+      total: res.total,
+      rows: res.rows.map((r, i) => ({
+        ...r,
+        id: r.id || (i + "_" + Math.random())
+      }))
+    };
+  };
+
+  /* ================= HEATMAP ================= */
+  function getHeatClass(value) {
+    if (!value || !globalMax) return "";
+
+    const ratio = value / globalMax;
+
+    if (ratio > 0.85) return "heat-max";
+    if (ratio > 0.6) return "heat-high";
+    if (ratio > 0.3) return "heat-mid";
+    return "heat-low";
+  }
+
+  /* ================= NUMBER FORMAT ================= */
+  function formatNumber(value) {
+    if (value === null || value === undefined || value === "") return "";
+
+    const num = Number(value);
+    if (isNaN(num)) return value;
+
+    return num.toLocaleString("en-IN");
+  }
+
+  /* ================= BUILD COLUMNS ================= */
+  function buildMatrixColumns(headers, labels) {
+    return headers.map((h, i) => ({
+
+      field: h,
+      title: labels[i] || h,
+      sortable: true,
+      align: h === "row_label" ? "left" : "center",
+
+      /* ===== CELL ===== */
+      formatter: function (value, row) {
+
+        // 🔥 Row label bold
+        if (h === "row_label") {
+          return `<b>${value}</b>`;
+        }
+
+        const num = parseFloat(value);
+        const display = formatNumber(value);
+        const heat = getHeatClass(num);
+
+        // 🔥 Row total bold
+        if (h === "row_total") {
+          return `<b class="${heat}">${display}</b>`;
+        }
+
+        return `<span class="${heat}">${display}</span>`;
+      },
+
+      /* ===== FOOTER ===== */
+      footerFormatter: function (data) {
+
+        if (h === "row_label") {
+          return "<b>Total</b>";
+        }
+
+        let total = 0;
+
+        data.forEach(row => {
+          const val = parseFloat(row[h]);
+          if (!isNaN(val)) total += val;
+        });
+
+        return `<b>${formatNumber(total)}</b>`;
+      }
+
+    }));
+  }
+
+  /* ================= INIT ================= */
+  function initMatrixTable(columns) {
+    $matrixTable.bootstrapTable({
+
+      url: REPORT_API_URL,
+      method: "get",
+
+      columns: columns,
+
+      pagination: true,
+      sidePagination: "server",
+      search: true,
+
+      pageSize: 10,
+      pageList: [10, 25, 50, 100, 'all'],
+
+      showRefresh: true,
+      showToggle: true,
+      showColumns: true,
+      showExport: CAN_EXPORT,
+      showColumnsToggleAll: false,
+
+      showFooter: true,
+
+      responseHandler: window.matrixResponseHandler,
+
+      queryParams: function (params) {
+        let limit = params.limit;
+
+        if (!limit || limit === 'all') {
+          limit = 'all';
+        }
+
+        return {
+          limit: limit,
+          offset: params.offset || 0,
+          search: params.search,
+          sort: params.sort,
+          order: params.order
+        };
+      },
+
+      onPageChange: function (number, size) {
+        if (size === 'all') {
+          $matrixTable.bootstrapTable('refreshOptions', {
+            pageNumber: 1
+          });
+        }
+      },
+
+      headerStyle: function () {
+        return {
+          classes: 'bg-primary text-white'
+        };
+      }
+
+    });
+  }
+
+  /* ================= LOAD ================= */
+  $(document).ready(function () {
+
+    if ($('#matrixTable').length) {
+
+      $.get(REPORT_API_URL, function (res) {
+
+        if (!res.headers || !res.headers.length) {
+          console.error("No headers for matrix");
+          return;
+        }
+
+        matrixHeaderLabels = res.header_map;
+
+        const columns = buildMatrixColumns(
+          res.headers,
+          res.header_labels
+        );
+
+        initMatrixTable(columns);
+      });
+
+    }
+
+  });
+</script>
+<script>
+  $('#reportDetails').on('show.bs.collapse', function () {
+    $('#collapseIcon').css('transform', 'rotate(180deg)');
+  });
+
+  $('#reportDetails').on('hide.bs.collapse', function () {
+    $('#collapseIcon').css('transform', 'rotate(0deg)');
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6fb;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 20px;
+            box-sizing: border-box;
+        }
+
+        .container {
+            display: flex;
+            width: 100%;
+            max-width: 900px;
+            max-height: 100vh;
+            margin: auto;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        /* Left panel (login) */
+        .left-panel {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 35px;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .login-box h6 {
+            margin-bottom: 25px;
+            margin-top: 10px;
+            font-weight: 300;
+            font-size: 20px;
+            color: #777;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group input {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid #ccc;
+            padding: 10px 5px;
+            outline: none;
+            font-size: 15px;
+            background: transparent;
+        }
+
+        .form-group input::placeholder {
+            color: #aaa;
+        }
+
+        .form-group input:focus {
+            border-color: #3498db;
+            /* light blue focus */
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .toggle-password {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #aaa;
+            font-size: 16px;
+        }
+
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .remember-forgot input {
+            margin-right: 6px;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #3498db, #5dade2);
+            /* light blue gradient */
+            border: none;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            border-radius: 30px;
+            transition: background 0.3s ease;
+        }
+
+        .login-btn:hover {
+            background: linear-gradient(135deg, #2e86c1, #5499c7);
+            /* darker on hover */
+        }
+
+        /* Right panel (decorative/video) */
+        .right-panel {
+            flex: 1;
+            background: linear-gradient(135deg, #3498db, #5dade2);
+            /* light blue gradient */
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .right-panel::before,
+        .right-panel::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .right-panel::before {
+            width: 220px;
+            height: 220px;
+            top: -40px;
+            right: -40px;
+        }
+
+        .right-panel::after {
+            width: 150px;
+            height: 150px;
+            bottom: -30px;
+            left: -30px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .right-panel {
+                order: 1;
+                height: auto;
+                padding: 40px 30px;
+                position: relative;
+                background-color: #007bff;
+                /* Optional: ensure the blue section stays distinct */
+                color: white;
+                /* Optional: make text readable */
+                text-align: center;
+            }
+
+            .left-panel {
+                order: 2;
+                padding: 20px;
+            }
+
+            .right-panel::before,
+            .right-panel::after {
+                content: '';
+                position: absolute;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.1);
+                z-index: 0;
+            }
+
+            .right-panel::before {
+                width: 120px;
+                height: 180px;
+                top: 0;
+                right: -30px;
+            }
+
+            .right-panel::after {
+                width: 100px;
+                height: 100px;
+                bottom: 0;
+                left: -20px;
+            }
+
+            .right-panel>* {
+                position: relative;
+                z-index: 1;
+                /* Ensure content appears above decorative shapes */
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <!-- Left Panel -->
+        <div class="left-panel">
+            <div class="login-box">
+                <h6>Welcome Back,Please login to your account.</h6>
+
+                <form method="post" action="{% url 'login' %}?next={{ request.GET.next }}">
+                    {% csrf_token %}
+
+                    <div class="form-group">
+                        <input type="text" name="username" placeholder="Username" autocomplete="username">
+
+                        <small class="text-danger">{{ form.username.errors|striptags }}</small>
+                    </div>
+
+                    <div class="form-group password-wrapper">
+                        <input type="password" name="password" placeholder="Password" id="passwordField"
+                            autocomplete="current-password">
+                        <span class="toggle-password" id="togglePassword">
+                            <i class="fas fa-eye"></i>
+                        </span>
+                        <small class="text-danger">{{ form.password.errors|striptags }}</small>
+                    </div>
+
+                    <div class="remember-forgot">
+                        <div class="remember-checkbox">
+                            <label>
+                                <input type="checkbox" name="remember_me"> Remember me
+                            </label>
+                        </div>
+                        <div class="forgot-password">
+                            <a href="{% url 'password_reset' %}">Forgot password?</a>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="login-btn">Login</button>
+
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger mt-3">
+                        {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="right-panel">
+            <div class="content">
+
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Toggle password visibility -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordField = document.getElementById('passwordField');
+
+            togglePassword.addEventListener('click', function () {
+                const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+                passwordField.setAttribute('type', type);
+                this.querySelector('i').classList.toggle('fa-eye');
+                this.querySelector('i').classList.toggle('fa-eye-slash');
+            });
+        });
+    </script>
+</body>
+
+</html>

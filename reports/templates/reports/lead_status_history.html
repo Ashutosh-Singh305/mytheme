@@ -1,0 +1,307 @@
+{% extends "reports/base.html" %}
+{% load static %}
+
+{% block title %}Lead Status History{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.27.2/dist/bootstrap-table.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<style>
+    /* BASE FORM CONTROLS */
+    .form-control,
+    .select2-container .select2-selection--single,
+    .bootstrap-table .search input {
+        height: 34px !important;
+        padding: 6px 10px !important;
+        font-size: 0.875rem !important;
+        border-radius: 4px !important;
+    }
+
+    /* Focus state */
+    .form-control:focus,
+    .select2-container--default .select2-selection--single:focus,
+    .bootstrap-table .search input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.1rem rgba(13, 110, 253, 0.25);
+        outline: none;
+    }
+
+    /* SELECT2 */
+    .select2-container {
+        width: 100% !important;
+    }
+
+    .select2-container .select2-selection--single {
+        display: flex;
+        align-items: center;
+    }
+
+    .select2-selection__rendered {
+        line-height: normal !important;
+    }
+
+    .select2-selection__arrow {
+        height: 100% !important;
+    }
+
+    /* BUTTONS */
+    .btn {
+        height: 34px;
+        padding: 6px 10px;
+        font-size: 0.875rem;
+    }
+
+    /* BOOTSTRAP TABLE */
+
+    /* Table buttons */
+    .bootstrap-table .btn {
+        height: 34px !important;
+        padding: 6px 10px !important;
+    }
+
+    /* Smooth hover */
+    .bootstrap-table td {
+        transition: background-color 0.2s ease;
+    }
+
+    /* CONSISTENT INPUT WIDTH */
+    .select,
+    #locale,
+    .form-control {
+        width: 100%;
+    }
+</style>
+{% endblock %}
+{% block body %}
+<div class="card">
+    <div class="card-body">
+        <h4 class="mb-3">Lead Status History</h4>
+
+        <form id="filterForm" class="row mb-3">
+
+            <!-- USER -->
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">User</label>
+                <select name="user_id" id="user_id" class="form-control select2">
+                    <option value="">All Users</option>
+                    {% for u in users %}
+                    <option value="{{ u.id }}" {% if selected_user == u.id|stringformat:"s" %}selected{% endif %}>
+                        {{ u.get_full_name|default:u.username }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- NEW STATUS -->
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">New Status</label>
+                <select name="new_status" id="new_status" class="form-control select2" multiple>
+                    <option value="">All Status</option>
+                    {% for key, label in status_choices %}
+                    <option value="{{ key }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- START DATE -->
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Start Date</label>
+                <input type="date" id="start_date" name="start_date" value="{{ start_date }}" class="form-control">
+            </div>
+
+            <!-- END DATE -->
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">End Date</label>
+                <input type="date" id="end_date" name="end_date" value="{{ end_date }}" class="form-control">
+            </div>
+
+            <!-- BUTTON -->
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary btn-sm">Run Report</button>
+            </div>
+
+        </form>
+        <!-- INFO -->
+        <div id="infoBox" class="alert alert-info">
+            Please select any one filter to view report.
+        </div>
+
+        <!-- TABLE -->
+        <table id="reportTable" data-search="true" data-show-refresh="true" data-show-toggle="true"
+            data-show-fullscreen="true" data-show-pagination-switch="true" data-show-columns="true"
+            data-show-export="true" data-pagination="true" data-page-list="[10, 25, 50, 100]"
+            data-side-pagination="server" class="table table-bordered">
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block Script %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.27.2/dist/bootstrap-table.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap-table@1.27.2/dist/extensions/export/bootstrap-table-export.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tableexport.jquery.plugin@1.29.0/tableExport.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#user_id').select2({
+            placeholder: "Select User",
+            allowClear: true,
+            width: '100%'
+        });
+
+        $('#new_status').select2({
+            placeholder: "Select Status",
+            allowClear: true,
+            width: '100%',
+            closeOnSelect: true  
+        });
+    });
+</script>
+
+<script>
+    let API_URL = "";
+
+    /* RESPONSE HANDLER */
+    function responseHandler(res) {
+        return {
+            total: res.total,
+            rows: res.rows
+        };
+    }
+
+    /* FORMATTERS */
+
+    // Status badge
+    function statusFormatter(value) {
+        if (!value) return "";
+
+        const v = value.toLowerCase();
+
+        if (v.includes("approved")) return `<span class="badge bg-success">${value}</span>`;
+        if (v.includes("declined")) return `<span class="badge bg-danger">${value}</span>`;
+        if (v.includes("underwriting")) return `<span class="badge bg-warning text-dark">${value}</span>`;
+
+        return `<span class="badge bg-secondary">${value}</span>`;
+    }
+
+    // Date formatter
+    function dateFormatter(value) {
+        if (!value) return "";
+        return new Date(value).toLocaleString("en-IN");
+    }
+
+    // Lead link
+    function leadLinkFormatter(value, row) {
+        if (!value) return "";
+        return `<a href="/crm/Lead/${row.lead_id}/" class="text-primary fw-semibold">${value}</a>`;
+    }
+
+    /* INIT TABLE */
+    function loadTable() {
+
+        $('#reportTable').bootstrapTable('destroy');
+
+        $('#reportTable').bootstrapTable({
+            url: API_URL,
+
+            columns: [
+                { field: 'lead_id', title: 'ID', sortable: true },
+                {
+                    field: 'lead_name',
+                    title: 'Lead',
+                    sortable: true,
+                    formatter: leadLinkFormatter
+                },
+                { field: 'old_status', title: 'Old Status', sortable: true, formatter: statusFormatter },
+                { field: 'new_status', title: 'New Status', sortable: true, formatter: statusFormatter },
+                { field: 'changed_by', title: 'Changed By', sortable: true },
+                { field: 'changed_at', title: 'Date', sortable: true, formatter: dateFormatter }
+            ],
+
+            pagination: true,
+            search: true,
+            sidePagination: "server",
+            pageSize: 10,
+
+            responseHandler: responseHandler,
+
+            queryParams: function (params) {
+                return {
+                    limit: params.limit,
+                    offset: params.offset,
+                    search: params.search,
+                    sort: params.sort,
+                    order: params.order
+                };
+            },
+
+            headerStyle: function () {
+                return {
+                    classes: 'bg-primary text-white'
+                };
+            }
+        });
+
+        document.getElementById("infoBox").style.display = "none";
+    }
+
+    /* FORM SUBMIT */
+    document.getElementById("filterForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const user = $('#user_id').val();
+        const start = $('#start_date').val();
+        const end = $('#end_date').val();
+        const statuses = $('#new_status').val();   // 🔥 FIX: array
+
+        // Date validation
+        if ((start && !end) || (!start && end)) {
+            alert("Please select both Start Date and End Date");
+            return;
+        }
+
+        // At least one filter
+        if (!user && !start && !end && (!statuses || statuses.length === 0)) {
+            alert("Please select at least one filter");
+            return;
+        }
+
+        // BUILD PARAMS
+        let params = new URLSearchParams();
+
+        if (user) params.append("user_id", user);
+        if (start) params.append("start_date", start);
+        if (end) params.append("end_date", end);
+
+        // MULTI STATUS
+        if (statuses && statuses.length > 0) {
+            statuses.forEach(s => params.append("new_status", s));
+        }
+
+        API_URL = `/reports/lead-status-history/api/?${params.toString()}`;
+
+        loadTable();
+    });
+
+
+    /* AUTO LOAD */
+    {% if show_data %}
+    let params = new URLSearchParams();
+
+    if (user) params.append("user_id", user);
+    if (start) params.append("start_date", start);
+    if (end) params.append("end_date", end);
+
+    let statuses = $('#new_status').val();
+
+    if (statuses && statuses.length > 0) {
+        statuses.forEach(s => params.append("new_status", s));
+    }
+
+    API_URL = `/reports/lead-status-history/api/?${params.toString()}`;
+    loadTable();
+    {% endif %}
+</script>
+{% endblock %}

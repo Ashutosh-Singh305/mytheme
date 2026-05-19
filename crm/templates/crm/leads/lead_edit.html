@@ -1,0 +1,280 @@
+{% extends 'crm/base.html' %}
+
+{% block title %} Dashboard {% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="/static/vendors/daterangepicker/daterangepicker.css">
+<link rel="stylesheet" href="/static/vendors/chartist/chartist.min.css">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+<style>
+    .card {
+        border-radius: 1rem;
+        box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+    }
+    .section-title {
+        border-bottom: 2px solid #0d6efd;
+        padding-bottom: 0.5rem;
+        margin-bottom: 1rem;
+        font-weight: 600;
+        color: #0d6efd;
+    }
+    .form-floating > label {
+        pointer-events: none;
+        font-weight: 500;
+    }
+    .form-control:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .btn-sm {
+        padding: 0.4rem 1rem;
+        font-size: 0.9rem;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-lg-12 col-xl-12">
+      <div class="card bg-light p-2">
+          <div class="card-body">
+            <h4 class="card-title mb-4">{% if lead.id %}Edit{% else %}Create{% endif %} Lead</h4>
+            
+            <form method="post">
+                {% csrf_token %}
+
+                <!-- Personal Details -->
+                <h5 class="section-title">Personal Details</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="text" class="form-control" id="name" name="name" value="{{ lead.name|default_if_none:'' }}" placeholder="Applicant Name" />
+                          <label for="name">Applicant Name</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="text" class="form-control" id="father_name" name="father_name" value="{{ lead.father_name|default_if_none:'' }}" placeholder="Father's Name" />
+                          <label for="father_name">Father's Name</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Gender</label>
+                        <select class="form-select" name="gender">
+                            <option value="" disabled {% if not lead.gender %}selected{% endif %}>Select Gender</option>
+                            {% for value, label in GENDER_CHOICES %}
+                                <option value="{{ value }}" {% if lead.gender == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Marital Status</label>
+                        <select class="form-select" name="marital_status">
+                            <option value="" disabled {% if not lead.marital_status %}selected{% endif %}>Select Marital Status</option>
+                            {% for value, label in MARITAL_STATUS_CHOICES %}
+                                <option value="{{ value }}" {% if lead.marital_status == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="date" class="form-control" id="dob" name="dob"
+                                 value="{{ lead.dob|date:'Y-m-d'|default_if_none:'' }}" placeholder="Date of Birth" required />
+                          <label for="dob">Date of Birth</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="text" class="form-control" id="mobile_number" name="mobile_number" value="{{ lead.mobile_number|default_if_none:'' }}" placeholder="Mobile No." />
+                          <label for="mobile_number">Mobile No.</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="text" class="form-control" id="alternate_number" name="alternate_number" value="{{ lead.alternate_number|default_if_none:'' }}" placeholder="Alternate Mobile No." />
+                          <label for="alternate_number">Alternate Mobile No.</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="email" class="form-control" id="email" name="email" value="{{ lead.email|default_if_none:'' }}" placeholder="Email" />
+                          <label for="email">Email</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="text" class="form-control" id="pan" name="pan" value="{{ lead.pan|default_if_none:'' }}" placeholder="PAN" />
+                          <label for="pan">PAN</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="text" class="form-control" id="adhar_number" name="adhar_number" value="{{ lead.adhar_number|default_if_none:'' }}" placeholder="Aadhar Number" />
+                          <label for="adhar_number">Aadhar Number</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <textarea class="form-control" id="present_address" name="present_address" placeholder="Present Address">{{ lead.present_address|default_if_none:'' }}</textarea>
+                          <label for="present_address">Present Address</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <textarea class="form-control" id="permanent_address" name="permanent_address" placeholder="Permanent Address">{{ lead.permanent_address|default_if_none:'' }}</textarea>
+                          <label for="permanent_address">Permanent Address</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Occupational Details -->
+                <h5 class="section-title">Occupational Details</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="text" class="form-control" id="company_name" name="company_name" value="{{ lead.company_name|default_if_none:'' }}" placeholder="Company Name" />
+                          <label for="company_name">Company Name</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="text" class="form-control" id="office_address" name="office_address" value="{{ lead.office_address|default_if_none:'' }}" placeholder="Office Address" />
+                          <label for="office_address">Office Address</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="text" class="form-control" id="landline_number" name="landline_number" value="{{ lead.landline_number|default_if_none:'' }}" placeholder="Landline No." />
+                          <label for="landline_number">Landline No.</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="email" class="form-control" id="office_email" name="office_email" value="{{ lead.office_email|default_if_none:'' }}" placeholder="Office Email" />
+                          <label for="office_email">Office Email</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Company Type</label>
+                        <select class="form-select" name="company_type">
+                            <option value="" disabled {% if not lead.company_type %}selected{% endif %}>Select Company Type</option>
+                            {% for value, label in COMPANY_TYPE_CHOICES %}
+                                <option value="{{ value }}" {% if lead.company_type == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Company Listing</label>
+                        <select class="form-select" name="company_listing">
+                            <option value="" disabled {% if not lead.company_listing %}selected{% endif %}>Select Company Listing</option>
+                            {% for value, label in COMPANY_LISTING_CHOICES %}
+                                <option value="{{ value }}" {% if lead.company_listing == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Job Details -->
+                <h5 class="section-title">Job Details</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="text" class="form-control" id="current_position" name="current_position" value="{{ lead.current_position|default_if_none:'' }}" placeholder="Current Position" />
+                          <label for="current_position">Current Position</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="text" class="form-control" id="designation" name="designation" value="{{ lead.designation|default_if_none:'' }}" placeholder="Designation" />
+                          <label for="designation">Designation</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="date" class="form-control" id="doj" name="doj" value="{{ lead.doj|date:'Y-m-d'|default_if_none:'' }}" placeholder="Date of Joining" required />
+                          <label for="doj">Date of Joining</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="number" min="0" class="form-control" id="current_exp" name="current_exp" value="{{ lead.current_exp|default_if_none:'' }}" placeholder="Current Experience (years)" required />
+                          <label for="current_exp">Current Experience (years)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="number" min="0" class="form-control" id="total_exp" name="total_exp" value="{{ lead.total_exp|default_if_none:'' }}" placeholder="Total Experience (years)" required />
+                          <label for="total_exp">Total Experience (years)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="text" class="form-control" id="monthly_salary" name="monthly_salary" value="{{ lead.monthly_salary|default_if_none:'' }}" placeholder="Net Monthly Salary" />
+                          <label for="monthly_salary">Net Monthly Salary</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bank Details -->
+                <h5 class="section-title">Bank Details</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label">Bank Name</label>
+                        <select class="form-select" name="bank">
+                            <option value="">-- Select Bank --</option>
+                            {% for bank in banks %}
+                                <option value="{{ bank.id }}" {% if lead.bank and lead.bank.id == bank.id %}selected{% endif %}>{{ bank.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="text" class="form-control" id="account_number" name="account_number" value="{{ lead.account_number|default_if_none:'' }}" placeholder="Account No." />
+                          <label for="account_number">Account No.</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="text" class="form-control" id="cutomer_id" name="cutomer_id" value="{{ lead.cutomer_id|default_if_none:'' }}" placeholder="Customer ID" />
+                          <label for="cutomer_id">Customer ID</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Details -->
+                <h5 class="section-title">Additional Details</h5>
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <textarea class="form-control" id="description" name="description" placeholder="Description" style="height: 100px;">{{ lead.description|default_if_none:'' }}</textarea>
+                          <label for="description">Description</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-floating">
+                          <input type="date" class="form-control" id="date" name="date" value="{{ lead.date|date:'Y-m-d'|default_if_none:'' }}" placeholder="Date" required />
+                          <label for="date">Date</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm px-4">Save Changes</button>
+                    <a href="{% if lead.id %}{% url 'lead_detail' lead.id %}{% else %}{% url 'lead_list' %}{% endif %}" class="btn btn-outline-secondary btn-sm px-4">Cancel</a>
+                </div>
+                
+            </form>
+ 
+          </div>
+      </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block Script %}
+<script src="/static/vendors/chart.js/Chart.min.js"></script>
+<script src="/static/vendors/moment/moment.min.js"></script>
+<script src="/static/vendors/daterangepicker/daterangepicker.js"></script>
+<script src="/static/vendors/chartist/chartist.min.js"></script>
+<script src="/static/js/dashboard.js"></script>
+{% endblock %}

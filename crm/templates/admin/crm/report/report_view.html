@@ -1,0 +1,40 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">{{ report.name }}</h3>
+    </div>
+   <div style="width: 100%; height: 500px;">
+  <canvas id="reportChart"></canvas>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('reportChart');
+
+const chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: {{ labels|safe }},
+        datasets: [
+            {% for dataset in datasets %}
+            {
+                label: '{{ dataset.label }}',
+                data: {{ dataset.data|safe }},
+                backgroundColor: '{{ "rgba(54, 162, 235, 0.5)" if forloop.counter0|divisibleby:2 else "rgba(255, 99, 132, 0.5)" }}',
+                borderColor: 'rgba(0, 0, 0, 0.1)',
+                borderWidth: 1
+            },
+            {% endfor %}
+        ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: { beginAtZero: true }
+        }
+    }
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,996 @@
+{% extends 'crm/base.html' %}
+{% load static%}
+{% block title %} HR Dashboard {% endblock %}
+{% block css %}
+<link rel="stylesheet" href="/static/vendors/daterangepicker/daterangepicker.css">
+<link rel="stylesheet" href="/static/vendors/chartist/chartist.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style id="cardstyle01">
+    .candidate-row.active {
+        border: 1px solid #007bff;
+        background: #f0f8ff;
+    }
+
+    .label-font {
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+
+<!-- HEADER -->
+<div class="row mb-3">
+
+    <div class="col-md-12">
+        <div class="card p-3 d-flex flex-wrap flex-row justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-0">HR Dashboard</h4>
+                <small>Welcome {{ request.user.username }} | {{ request.user.userprofile.branch.name }}</small>
+            </div>
+
+            <div class="d-flex align-items-center">
+                <input type="text" id="candidateSearch" class="form-control form-control-sm mr-2"
+                    placeholder="Search mobile / name / emp code" style="width:250px;">
+
+                <button class="btn btn-primary btn-sm mr-2" type="button" onclick="applycandidateSearchh()">
+                    Search
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KPI CARDS -->
+<div class="row text-center">
+    <div class="col-lg-2 col-md-2 col-6 grid-margin">
+        <div class="card bg-primary text-white p-2">
+            <h6>New Candidate</h6>
+            <h4>{{ new_candidates|default:0 }}</h4>
+        </div>
+    </div>
+
+    <div class="col-lg-2 col-md-2 col-6 grid-margin">
+        <div class="card bg-warning text-white p-2">
+            <h6>Contacted Today</h6>
+            <h4>{{ contacted_today|default:0 }}</h4>
+        </div>
+    </div>
+
+    <div class="col-lg-2 col-md-2 col-6 grid-margin">
+        <div class="card bg-danger text-white p-2">
+            <h6>Interview Today</h6>
+            <h4>{{ interviews_today|default:0 }}</h4>
+        </div>
+    </div>
+
+    <div class="col-lg-2 col-md-2 col-6 grid-margin">
+        <div class="card bg-info text-white p-2">
+            <h6>Shortlisted</h6>
+            <h4>{{ shortlisted|default:0 }}</h4>
+        </div>
+    </div>
+
+    <div class="col-lg-2 col-md-2 col-6 grid-margin">
+        <div class="card bg-dark text-white p-2">
+            <h6>Joining Soon</h6>
+            <h4>{{ joining_soon|default:0 }}</h4>
+        </div>
+    </div>
+
+    <div class="col-lg-2 col-md-2 col-6 grid-margin">
+        <div class="card bg-success text-white p-2">
+            <h6>Training Pending</h6>
+            <h4>{{ training_pending|default:0 }}</h4>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN -->
+<div class="row">
+    <!-- Left PANEL -->
+    <div class="col-md-7 grid-margin stretch-card" id="lead_details_left">
+        <div class="card position-relative">
+
+            <div class="card-header d-flex justify-content-between mb-0">
+                <h5>Candidate Details</h5>
+            </div>
+
+            <!-- STATIC STRUCTURE (IMPORTANT FIX) -->
+            <div class="p-2">
+
+                <!-- Header Section -->
+                <div class="d-flex justify-content-between mb-0">
+
+                    <p class="justify-content">
+                        <a href="#" id="callLink">
+                            📞 <span id="ld_mobile">-</span>
+                        </a>
+                        <span class="badge badge-warning" id="ld_status">-</span>
+
+                    </p>
+                    
+                        <button type="button" id="newBtn"
+                            class="btn btn-outline-primary btn-sm"
+                            onclick="handleNewCancel()"
+                            title="New" style="height: 33px;">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                        <button id="editBtn" style="height: 33px;" class="btn btn-sm btn-outline-primary" onclick="toggleEdit()">Edit</button>
+                </div>
+                <hr class="mb-0 mt-0">
+                <!-- Two Column Layout -->
+                <div class="row">
+
+                    <!-- LEFT -->
+                    <div class="col-md-6">
+
+                        <div class=" row align-items-center">
+                            <label class="col-5 label-font">Name</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_name" style="height: 33px;" type="text"
+                                    class="form-control form-control-sm" disabled>
+                            </div>
+                        </div>
+                        
+
+                        <div class=" row align-items-center">
+                            <label class="col-5 label-font">Applied For</label>
+                            <div class="col-7 mt-1">
+                                <select id="ld_applied_for" class="form-control form-control-sm" style="height: 33px;"
+                                    disabled>
+                                    {% for key, label in position_applied_for_choices %}
+                                    <option value="{{ key }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class=" row align-items-center">
+                            <label class="col-5 label-font">Experience</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_experince" style="height: 33px;" class="form-control form-control-sm"
+                                    disabled>
+                            </div>
+                        </div>
+
+                        <div class="row align-items-center">
+                            <label class="col-5 label-font">Area</label>
+                            <div class="col-7 mt-1">
+                                <input id="id_candidate_area" style="height: 33px;" type="text"
+                                    class="form-control form-control-sm" disabled>
+                            </div>
+                        </div>
+
+                        <div class="row align-items-center">
+                            <label class="col-5 label-font">Calling Date</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_calling_date" style="height: 33px;" type="text"
+                                    class="form-control form-control-sm" placeholder="DD/MM/YYYY" autocomplete="off"
+                                    disabled>
+                            </div>
+                        </div>
+
+                        <div class="row align-items-center">
+                            <label class="col-5 label-font">DOJ</label>
+                            <div class="col-7 mt-1">
+                                <input id="id_doj" type="text" style="height: 33px;"
+                                    class="form-control form-control-sm" placeholder="DD/MM/YYYY" autocomplete="off"
+                                    disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT -->
+                    <div class="col-md-6">
+                        <div class="row align-items-center" id="mobileFieldRow">
+                            <label class="col-5 label-font">Mobile No.</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_mobile_form" style="height: 33px;" type="number"
+                                    class="form-control form-control-sm" disabled>
+                            </div>
+                        </div>
+                        <div class="row align-items-center">
+                            <label class="col-5 label-font">Interview Date</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_interview_date" style="height: 33px;" type="text" placeholder="DD/MM/YYYY"
+                                    class="form-control form-control-sm" autocomplete="off" disabled>
+                            </div>
+                        </div>
+                        <div class="row align-items-center">
+                            <label class="col-5 label-font">Source</label>
+                            <div class="col-7 mt-1">
+                                <select id="ld_source" class="form-control form-control-sm" style="height: 33px;"
+                                    disabled>
+                                    {% for key, label in source_choices %}
+                                    <option value="{{ key }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row align-items-center">
+                            <label class="col-5 label-font">Recruiter</label>
+                            <div class="col-7 mt-1">
+                                <select id="ld_recruiter" class="form-control form-control-sm" style="height: 33px;" disabled>
+                                    <option value="">Select Recruiter</option>
+                                    {% for user in recruiters %}
+                                        <option value="{{ user.id }}">
+                                            {% if user.first_name or user.last_name %}
+                                                {{ user.first_name }} {{ user.last_name }}
+                                            {% else %}
+                                                {{ user.username }}
+                                            {% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <div class="row align-items-center" id="assignRow">
+                            <label class="col-5 label-font">Assigned To</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_assign_to" style="height: 33px;" type="text"
+                                    class="form-control form-control-sm" readonly>
+                            </div>
+                        </div>
+                        <div class="row align-items-center" id="modifiedRow">
+                            <label class="col-5 label-font">Modified by</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_modified_by" style="height: 33px;" type="text"
+                                    class="form-control form-control-sm" readonly>
+                            </div>
+                        </div>
+
+                        <div class=" row align-items-center label-font" id="lastUpdatedRow">
+                            <label class="col-5 ">Last Updt.</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_modified_date" type="text" style="height: 33px;"
+                                    class="form-control form-control-sm" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <hr class="mb-1 mt-1">
+                <div class="row">
+                    <label class="col-3 label-font">Status</label>
+                    <div class="col-9 mt-1">
+                        <select id="ld_candidate_status" class="form-control form-control-sm" style="height: 33px;">
+                            {% for key, label in candidate_status_choices %}
+                            <option value="{{ key }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+
+                    </div>
+
+                    <div class="col-12 mt-2">
+                        <!-- Notes -->
+                        <textarea id="note" class="form-control" style="resize: vertical;"></textarea>
+                        <hr class="mb-1 mt-1">
+                    </div>
+
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="">
+                        <button id="prevBtn" class="btn btn-outline-primary btn-sm" onclick="preCandidate()">⬅ Previous</button>
+                    </div>
+                    <div class=" ">
+                        <button class="btn btn-outline-success btn-sm" onclick="saveCandidate()">Save</button>
+                    </div>
+                    <div class="">
+                        <button id="nextBtn" class="btn btn-outline-primary btn-sm" onclick="nextCandidate()">Next ➡</button>
+                    </div>
+                </div>
+            </div><!-- card body -->
+
+            <div id="candidateLoader" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; 
+                        background:rgba(255,255,255,0.7); z-index:10; 
+                        align-items:center; justify-content:center;">
+
+                <div class="spinner-border text-primary" role="status"></div>
+            </div><!-- loader -->
+
+        </div> <!-- card -->
+
+    </div>
+
+    <!-- Right -->
+    <div class="col-md-5 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-header">
+
+                <!-- TITLE (TOP ROW) -->
+                <div class="mb-2">
+                    <h5 class="mb-0">My Candidates</h5>
+                </div>
+
+                <!-- FILTER ROW -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center ml-0">
+                    <div class="mb-0">
+                        <!-- APPLIED FOR -->
+                        <select id="appliedForFilter" class="form-control form-control-sm" style="width: 160px;"
+                            onchange="applyFilter()">
+                            <option value="" {% if not request.GET.applied_for %}selected{% endif %}>
+                                All Applied For
+                            </option>
+                            {% for key, label in position_applied_for_choices %}
+                            <option value="{{ key }}" {% if request.GET.applied_for == key %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="text-right mb-0">
+                        <!-- STATUS -->
+                        <select id="candidateStatusfilter" class="form-control form-control-sm ml-1"
+                            style="width: 150px;" onchange="applyFilter()">
+                            <option value="" {% if not request.GET.status %}selected{% endif %}>
+                                All Status
+                            </option>
+                            {% for key, label in candidate_status_choices %}
+                            <option value="{{ key }}" {% if request.GET.status == key %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="table-responsive border rounded p-1 d-md-block d-none">
+                <table class="table table-fixed">
+                    <thead>
+                        <tr class="table-secondary">
+                            <!-- <th onclick="sortTable('name')" style="font-weight: 600;">Name</th> -->
+                            <th style="font-weight: 600;">Name</th>
+                            <th style="font-weight: 600;">Status</th>
+                            <!-- <th style="font-weight: 600;">Interview Date</th> -->
+                            <th class="text-center" style="font-weight: 600;">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for candidate in candidates %}
+                        <tr class="h-100 candidate-row" data-id="{{ candidate.id }}" style="cursor:pointer;">
+
+                            <!-- NAME -->
+                            <td>
+                                {{ candidate.full_name }}
+                            </td>
+
+                            <!-- STATUS -->
+                            <td>
+                                <span class="badge bg-warning">
+                                    {{ candidate.get_candidate_status_display }}
+                                </span>
+                            </td>
+
+                            <!-- INTERVIEW DATE -->
+                            <!-- <td>
+                                {{ candidate.interview_date|date:"d/m/Y"|default:"-" }}
+                            </td> -->
+
+                            <!-- ACTIONS -->
+                            <td class="text-center">
+
+                                <!-- CALL -->
+                                <a href="tel:{{ candidate.phone }}" class="btn btn-success btn-sm w-48">
+                                    Call
+                                </a>
+
+                                <!-- OPEN -->
+                                <a class="btn btn-primary btn-sm open-btn w-48"
+                                    href="/crm/CandidateOnboarding/{{ candidate.id }}">
+                                    Open
+                                </a>
+
+                            </td>
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div> <!--  table-responsive -->
+
+            <div class="row d-md-none d-lg-none">
+
+                {% for candidate in candidates %}
+
+                <div class="col-md-12 mb-0">
+                    <div class="card h-100 candidate-row {% if forloop.first %}active{% endif %}"
+                        data-id="{{ candidate.id }}" style="cursor:pointer;">
+
+                        <div class="p-2 d-flex flex-column">
+
+                            <!-- Header -->
+                            <div class="d-flex justify-content-between align-items-start flex-wrap">
+
+                                <h6 class="mb-0 text-truncate" style="max-width: 70%;">
+                                    {{ candidate.full_name }}
+                                </h6>
+
+                                <span class="badge badge-warning ml-2" style="white-space: nowrap;">
+                                    {{ candidate.get_candidate_status_display }}
+                                </span>
+
+                            </div>
+                            <!-- Info -->
+                            <div class="mb-1 d-flex justify-content-between">
+                                <span>
+                                    <small class="text-muted">Interview Date</small> :
+                                    <small>{{ candidate.interview_date|date:"d/m/Y"|default:"-" }}</small>
+                                </span>
+                            </div>
+
+                            <!-- 👇 PUSH ACTIONS TO BOTTOM -->
+                            <div class="mt-1 text-center">
+                                <div class="d-flex justify-content-between">
+
+                                    <a href="tel:{{ candidate.phone }}" class="btn btn-success btn-sm">
+                                        Call
+                                    </a>
+
+                                    <a class="btn btn-primary btn-sm open-btn"
+                                        href="/crm/CandidateOnboarding/{{ candidate.id }}">
+                                        Open
+                                    </a>
+
+                                </div>
+                                <hr class="my-1">
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+            <!-- Pagination controls -->
+            <div class="d-flex p-2 flex-wrap">
+                <p class="text-muted">
+                    Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+                    products
+                </p>
+                <nav class="ml-auto">
+                    <ul class="pagination separated pagination-primary">
+                        <!-- Previous -->
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a href="?page={{ page_obj.previous_page_number }}&status={{ request.GET.status }}&search={{ request.GET.search }}"
+                                class="page-link">
+                                <i class="icon-arrow-left"></i>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link"><i class="icon-arrow-left"></i></a>
+                        </li>
+                        {% endif %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a href="?page={{ page_obj.next_page_number }}&status={{ request.GET.status }}&search={{ request.GET.search }}"
+                                class="page-link">
+                                <i class="icon-arrow-right"></i>
+                            </a>
+
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link"><i class="icon-arrow-right"></i></a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            <!-- End pagination controls -->
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block Script %}
+<!-- DateRangePikar -->
+<script src="/static/vendors/moment/moment.min.js"></script>
+<script src="/static/vendors/daterangepicker/daterangepicker.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/inputmask/5.0.8/jquery.inputmask.min.js"></script>
+<script>
+    let candidateIds = [];
+    let currentIndex = 0;
+    let currentCandidateId = null;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        initCandidateNavigation();
+
+        let firstRow = document.querySelector(".candidate-row");
+        if (firstRow) {
+            selectCandidate(firstRow.dataset.id);  // CORRECT
+        }
+        document.getElementById("mobileFieldRow").style.display = "none";
+    });
+
+    // Date Picker Initialization
+    function initDatePicker(selector, isRange = false) {
+        $(selector).daterangepicker({
+            singleDatePicker: !isRange,
+            showDropdowns: true,
+            autoUpdateInput: false,
+            locale: {
+                format: 'DD/MM/YYYY'
+            }
+        });
+
+        $(selector).on('apply.daterangepicker', function (ev, picker) {
+            if (isRange) {
+                $(this).val(
+                    picker.startDate.format('DD/MM/YYYY') + ' - ' +
+                    picker.endDate.format('DD/MM/YYYY')
+                );
+            } else {
+                $(this).val(picker.startDate.format('DD/MM/YYYY'));
+            }
+        });
+    }
+
+    function applyDateMask(selector) {
+        $(selector).inputmask("99/99/9999", {
+            placeholder: "DD/MM/YYYY",
+            clearIncomplete: true
+        });
+    }
+
+    $(document).ready(function () {
+        initDatePicker('#ld_calling_date');
+        initDatePicker('#id_doj');
+        initDatePicker('#ld_interview_date');
+
+        // Apply mask
+        applyDateMask('#ld_calling_date');
+        applyDateMask('#id_doj');
+        applyDateMask('#ld_interview_date');
+    });
+
+    function convertToBackendDate(dateStr) {
+        if (!dateStr) return '';
+        return moment(dateStr, "DD/MM/YYYY").format("YYYY-MM-DD");
+    }
+
+    function isValidDate(dateStr) {
+        return moment(dateStr, "DD/MM/YYYY", true).isValid();
+    }
+
+    function formatToUI(dateStr) {
+        if (!dateStr) return '';
+        return moment(dateStr, "YYYY-MM-DD").format("DD/MM/YYYY");
+    }// Date Range Picker Logic End
+
+    // INIT LIST
+    function initCandidateNavigation() {
+        candidateIds = Array.from(document.querySelectorAll(".candidate-row"))
+            .map(el => el.dataset.id);
+    }
+    function selectCandidate(id) {
+        currentCandidateId = id;
+
+        highlightCandidate(id);   // KEY FIX
+
+        loadCandidate(id);
+    }
+
+    // CLICK ROW
+    document.querySelectorAll(".candidate-row").forEach(card => {
+        card.addEventListener("click", function () {
+            selectCandidate(this.dataset.id);  // ALWAYS use this
+        });
+    });
+
+    function highlightCandidate(id) {
+        document.querySelectorAll(".candidate-row")
+            .forEach(r => r.classList.remove("active", "table-primary"));
+
+        document.querySelectorAll(`[data-id='${id}']`)
+            .forEach(row => {
+                row.classList.add("active");
+                row.classList.add("table-primary");
+            });
+    }
+
+    //SINGLE SOURCE FUNCTION (IMPORTANT)
+
+
+    // LOAD
+    function loadCandidate(id) {
+        document.getElementById("candidateLoader").style.display = "flex";
+
+        currentIndex = candidateIds.indexOf(String(id));
+
+        fetch(`/crm/candidate/${id}/`)
+            .then(res => res.json())
+            .then(data => {
+
+                // HEADER
+                setValue("ld_name", data.name);
+                setValue("ld_mobile", data.mobile);
+                setValue("ld_mobile_form", data.mobile);
+                setValue("ld_applied_for", data.position_applied_for);
+                setValue("ld_experince", data.experince);
+
+                // LEFT
+                // setValue("ld_emp_status", data.employement_status);
+                setValue("ld_candidate_status", data.candidate_status);
+                setValue("id_candidate_area", data.candidate_area);
+                setValue("ld_calling_date", formatToUI(data.calling_date));
+                setValue("ld_source", data.source);
+
+                // RIGHT
+                setValue("ld_interview_date", formatToUI(data.interview_date));
+                setValue("id_doj", formatToUI(data.date_of_joining));
+                setValue("ld_modified_date", data.modified_date);
+                setValue("ld_status", data.candidate_status);
+                setValue("ld_assign_to", data.assigned_to);
+                setValue("ld_modified_by", data.modified_by);
+                setValue("ld_recruiter", data.recruiter_id);
+
+                document.getElementById("note").value = data.note || '';
+                document.getElementById("callLink").href = `tel:${data.mobile}`;
+            })
+            .finally(() => {
+                document.getElementById("candidateLoader").style.display = "none";
+            });
+    }
+
+    // NEXT
+    function nextCandidate() {
+        if (currentIndex < candidateIds.length - 1) {
+            currentIndex++;
+            selectCandidate(candidateIds[currentIndex]);
+        }
+    }
+    // PREVIOUS
+    function preCandidate() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            selectCandidate(candidateIds[currentIndex]);
+        }
+    }
+
+    // SAFE SETTER
+    function setValue(id, value) {
+        let el = document.getElementById(id);
+        if (!el) return;
+
+        if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+            el.value = value || '';
+        } else if (el.tagName === "SELECT") {
+            el.value = value || '';
+        } else {
+            el.innerText = value || '-';
+        }
+    }
+
+    function handleNewCancel() {
+
+        const btn = document.getElementById("newBtn");
+
+        // ===== IF CLICKING "NEW" =====
+        if (!btn.classList.contains("is-cancel")) {
+
+            previousCandidateId = currentCandidateId;  // save state
+
+            resetCandidateForm();
+            
+
+            btn.classList.add("is-cancel");
+            btn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+            btn.classList.remove("btn-outline-primary");
+            btn.classList.add("btn-outline-danger");
+
+        } 
+        // ===== IF CLICKING "CANCEL" =====
+        else {
+
+            if (previousCandidateId) {
+                selectCandidate(previousCandidateId);
+            }
+
+            // ===== RESET MODE =====
+            isEditMode = false;
+
+            // ===== DISABLE ALL EDITABLE FIELDS =====
+            document.querySelectorAll(
+                "#id_doj,#ld_calling_date,#ld_interview_date,#ld_modified_date,#ld_source,#id_candidate_area,#ld_experince,#ld_applied_for,#ld_name"
+            ).forEach(el => el.setAttribute("disabled", true));
+
+            // recruiter should always stay disabled
+            document.getElementById("ld_recruiter").setAttribute("disabled", true);
+            // Show again in view mode
+            document.getElementById("assignRow").style.display = "flex";
+            document.getElementById("modifiedRow").style.display = "flex";
+            document.getElementById("lastUpdatedRow").style.display = "flex";
+
+            // ===== RESET BUTTONS =====
+            const editBtn = document.getElementById("editBtn");
+            editBtn.innerText = "Edit";
+            editBtn.classList.remove("btn-outline-danger");
+            editBtn.classList.add("btn-outline-primary");
+
+            document.getElementById("editBtn").disabled = false;
+            document.getElementById("prevBtn").disabled = false;
+            document.getElementById("nextBtn").disabled = false;
+
+            // ===== HIDE CREATE-ONLY FIELDS =====
+            document.getElementById("mobileFieldRow").style.display = "none";
+
+            // ===== RESET NEW BUTTON =====
+            btn.classList.remove("is-cancel");
+            btn.innerHTML = '<i class="fa-solid fa-plus"></i>';
+            btn.classList.remove("btn-outline-danger");
+            btn.classList.add("btn-outline-primary");
+
+            currentCandidateId = previousCandidateId;
+            previousCandidateId = null;
+        }
+    }
+
+    function resetCandidateForm() {
+
+        document.getElementById("mobileFieldRow").style.display = "flex";
+        // ===== STATE RESET =====
+        previousCandidateId = currentCandidateId;  // store for cancel
+        currentCandidateId = null;
+        currentIndex = -1;
+        isEditMode = true;
+
+        // ===== CLEAR INPUT FIELDS =====
+        document.querySelectorAll(
+            "#id_doj,#ld_calling_date,#ld_mobile_form,#ld_recruiter,#ld_interview_date,#ld_modified_date,#ld_source,#id_candidate_area,#ld_experince,#ld_applied_for,#ld_name,#note,#ld_candidate_status"
+        ).forEach(el => {
+            if (el.tagName === "SELECT") {
+                el.selectedIndex = 0;
+            } else {
+                el.value = "";
+            }
+        });
+        // Hide non-create fields
+        document.getElementById("assignRow").style.display = "none";
+        document.getElementById("modifiedRow").style.display = "none";
+        document.getElementById("lastUpdatedRow").style.display = "none";
+
+        // ===== CLEAR HEADER =====
+        document.getElementById("ld_mobile").innerText = "-";
+        document.getElementById("ld_status").innerText = "-";
+        document.getElementById("ld_assign_to").value = "";
+        document.getElementById("ld_modified_by").value = "";
+
+        // ===== REMOVE SELECTION =====
+        document.querySelectorAll(".candidate-row")
+            .forEach(r => r.classList.remove("active", "table-primary"));
+
+        // ===== ENABLE FIELDS =====
+        document.querySelectorAll(
+            "#id_doj,#ld_calling_date,#ld_mobile_form,#ld_interview_date,#ld_modified_date,#ld_source,#id_candidate_area,#ld_experince,#ld_applied_for,#ld_name"
+        ).forEach(el => el.removeAttribute("disabled"));
+        document.getElementById("ld_recruiter").removeAttribute("disabled");
+        // ===== UPDATE BUTTONS =====
+        const newBtn = document.getElementById("newBtn");
+        if (newBtn) {
+            newBtn.classList.add("is-cancel");
+            newBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
+            newBtn.classList.remove("btn-outline-primary");
+            newBtn.classList.add("btn-outline-danger");
+        }
+
+        // ===== OPTIONAL UX =====
+        // Disable next/previous in create mode
+        // (recommended)
+        document.getElementById("editBtn").disabled = true;
+        document.getElementById("prevBtn").disabled = true;
+        document.getElementById("nextBtn").disabled = true;
+    }
+    // SAVE (FIXED)
+    function saveCandidate() {
+
+        let isCreate = !currentCandidateId;
+
+        let url = isCreate
+            ? "/crm/candidate/create/"
+            : "/crm/candidate/update/";
+
+        let data = new URLSearchParams();
+
+        // Only send ID in update mode
+        if (!isCreate) {
+            data.append("candidate_id", currentCandidateId);
+        }
+
+        // ===== VALIDATION =====
+        let calling_date = document.getElementById("ld_calling_date").value;
+        if (calling_date && !isValidDate(calling_date)) {
+            alert("Invalid DOB format! Use DD/MM/YYYY");
+            return;
+        }
+
+        let interviewDate = document.getElementById("ld_interview_date").value;
+        if (interviewDate && !isValidDate(interviewDate)) {
+            alert("Invalid Interview Date format!");
+            return;
+        }
+
+        let doj = document.getElementById("id_doj").value;
+        if (doj && !isValidDate(doj)) {
+            alert("Invalid DOJ format!");
+            return;
+        }
+
+        // ===== DATA =====
+        data.append("full_name", document.getElementById("ld_name").value);
+        data.append("applied_for", document.getElementById("ld_applied_for").value);
+        data.append("experience", document.getElementById("ld_experince").value);
+        data.append("candidate_status", document.getElementById("ld_candidate_status").value);
+        data.append("candidate_area", document.getElementById("id_candidate_area").value);
+        data.append("calling_date", convertToBackendDate(calling_date));
+        data.append("source", document.getElementById("ld_source").value);
+        data.append("modified_date", document.getElementById("ld_modified_date").value);
+        data.append("interview_date", convertToBackendDate(interviewDate));
+        data.append("doj", convertToBackendDate(doj));
+        data.append("phone", document.getElementById("ld_mobile_form").value);
+        data.append("note", document.getElementById("note").value);
+        data.append("recruiter", document.getElementById("ld_recruiter").value);
+
+        // ===== API CALL =====
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-CSRFToken": getCSRF()
+            },
+            body: data.toString()
+        })
+        .then(res => res.json())
+        .then((res) => {
+
+            if (res.status === "error") {
+                alert(res.message || "Something went wrong");
+                return;
+            }
+
+            alert(isCreate ? "Created successfully" : "Updated successfully");
+
+            // ===== CREATE MODE =====
+            if (isCreate) {
+                location.reload();   // simplest + safe
+                return;
+            }
+
+            // ===== UPDATE MODE UI UPDATE =====
+            document.querySelectorAll(`[data-id='${currentCandidateId}']`).forEach(row => {
+
+                let nameCell = row.querySelector("td:first-child, h6");
+                if (nameCell) nameCell.innerText = res.full_name;
+
+                let badge = row.querySelector(".badge");
+                if (badge) {
+                    badge.innerText = res.candidate_status_label;
+                }
+            });
+
+            document.getElementById("ld_status").innerText = res.candidate_status_label;
+
+            // Disable fields again
+            document.querySelectorAll(
+                "#id_doj,#ld_calling_date,#ld_interview_date,#ld_modified_date,#ld_source,#id_candidate_area,#ld_experince,#ld_applied_for,#ld_name,#ld_recruiter"
+            ).forEach(el => el.setAttribute("disabled", true));
+
+            // Reset button
+            const btn = document.getElementById("editBtn");
+            btn.innerText = "Edit";
+            btn.classList.remove("btn-outline-danger");
+            btn.classList.add("btn-outline-primary");
+
+            isEditMode = false;
+
+            // 🔓 Re-enable NEW button (FIX)
+            const newBtn = document.getElementById("newBtn");
+            newBtn.disabled = false;
+            newBtn.classList.remove("disabled");
+
+            // Reload current candidate
+            loadCandidate(currentCandidateId);
+        });
+    }
+
+    // CSRF
+    function getCSRF() {
+        return document.cookie.split('; ')
+            .find(row => row.startsWith('csrftoken'))
+            .split('=')[1];
+
+    }
+    // SEARCH
+    function applycandidateSearchh() {
+        let val = document.getElementById("candidateSearch").value;
+        window.location.href = `?search=${val}`;
+    }
+    // FILTER
+    function applyFilter() {
+        // let status = document.getElementById("statusFilter").value;
+        let applied_for = document.getElementById("appliedForFilter").value;
+        let statusFilter = document.getElementById("candidateStatusfilter").value;
+        window.location.href = `?applied_for=${applied_for}&status=${statusFilter}`;
+    }
+
+    let isEditMode = false;
+
+    function toggleEdit() {
+
+        const fields = document.querySelectorAll(
+            "#id_doj,#ld_recruiter,#ld_calling_date,#ld_interview_date,#ld_modified_date,#id_candidate_area,#ld_emp_status,#ld_experince,#ld_applied_for,#ld_name"
+        );
+
+        const btn = document.getElementById("editBtn");
+        const newBtn = document.getElementById("newBtn");   // ✅ ADD THIS
+
+        if (!isEditMode) {
+
+            // ===== ENABLE EDIT =====
+            fields.forEach(el => el.removeAttribute("disabled"));
+
+            btn.innerText = "Cancel";
+            btn.classList.remove("btn-outline-primary");
+            btn.classList.add("btn-outline-danger");
+
+            // 🔒 Disable NEW button
+            newBtn.disabled = true;
+            newBtn.classList.add("disabled");
+
+            isEditMode = true;
+
+        } else {
+
+            // ===== CANCEL EDIT =====
+            fields.forEach(el => el.setAttribute("disabled", true));
+
+            // restore original data
+            loadCandidate(currentCandidateId);
+
+            btn.innerText = "Edit";
+            btn.classList.remove("btn-outline-danger");
+            btn.classList.add("btn-outline-primary");
+
+            // 🔓 Enable NEW button again
+            newBtn.disabled = false;
+            newBtn.classList.remove("disabled");
+
+            isEditMode = false;
+        }
+    }
+
+</script>
+<!-- Script for call -->
+<!-- <script>
+    document.getElementById("callLink").addEventListener("click", function (e) {
+        e.preventDefault(); // stop default tel behavior (important)
+
+        fetch("/crm/api/call/", {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                console.log("API Response:", data);
+
+                alert(data.message);  // optional UI feedback
+            })
+            .catch(err => {
+                console.error("API Error:", err);
+                alert("API call failed");
+            });
+    });
+</script> -->
+{% endblock %}

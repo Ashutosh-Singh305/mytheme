@@ -1,0 +1,136 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}IP Range Details{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <h3 class="page-title">
+      <i class="fa fa-network-wired mr-2"></i> IP Range Details
+    </h3>
+  </div>
+
+  <div class="row">
+
+    <!-- TOP CARD -->
+    <div class="col-12 grid-margin stretch-card mb-1">
+      <div class="card">
+        <div class="card-body d-flex justify-content-between align-items-center">
+
+          <div>
+            <h4 class="card-title text-primary mb-0">
+              {{ ip.start_ip }} - {{ ip.end_ip }}
+            </h4>
+          </div>
+
+          <div>
+            {% if ip.is_active %}
+              <span class="badge badge-success">Active</span>
+            {% else %}
+              <span class="badge badge-secondary">Inactive</span>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- BASIC INFO -->
+    <div class="col-md-6 grid-margin stretch-card mb-1">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Basic Information</h4>
+
+          <div class="row mb-2">
+            <div class="col-5 text-muted">Start IP</div>
+            <div class="col-7">{{ ip.start_ip }}</div>
+          </div>
+
+          <div class="row mb-2">
+            <div class="col-5 text-muted">End IP</div>
+            <div class="col-7">{{ ip.end_ip }}</div>
+          </div>
+
+          <div class="row mb-2">
+            <div class="col-5 text-muted">Status</div>
+            <div class="col-7">
+              {% if ip.is_active %}
+                <span class="badge badge-success">Active</span>
+              {% else %}
+                <span class="badge badge-secondary">Inactive</span>
+              {% endif %}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT INFO -->
+    <div class="col-md-6 grid-margin stretch-card mb-1">
+      <div class="card">
+        <div class="card-body">
+          <h4 class="card-title">Audit Trail</h4>
+
+          <div class="row mb-2">
+            <div class="col-6 text-muted">Created By</div>
+            <div class="col-6">{{ ip.created_by|default:"-" }}</div>
+          </div>
+
+          <div class="row mb-2">
+            <div class="col-6 text-muted">Modified By</div>
+            <div class="col-6">{{ ip.modified_by|default:"-" }}</div>
+          </div>
+
+          <div class="row mb-2">
+            <div class="col-6 text-muted">Created At</div>
+            <div class="col-6">
+              {{ ip.created_date|date:"d M Y, H:i"|default:"-" }}
+            </div>
+          </div>
+
+          <div class="row mb-2">
+            <div class="col-6 text-muted">Modified At</div>
+            <div class="col-6">
+              {{ ip.modified_at|date:"d M Y, H:i"|default:"-" }}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTION BUTTONS -->
+    <div class="col-12 grid-margin">
+      <div class="card">
+        <div class="card-body d-flex justify-content-between">
+
+          <a href="{% url 'ip-list' %}" class="btn btn-light btn-sm">
+            <i class="fa fa-arrow-left"></i> Back
+          </a>
+
+          <div>
+            <a href="{% url 'ip-edit' ip.pk %}" class="btn btn-primary btn-sm">
+              <i class="fa fa-edit"></i> Edit
+            </a>
+
+            <a href="{% url 'ip-delete' ip.pk %}"
+               class="btn btn-danger btn-sm"
+                onclick="return confirm('Are you sure you want to delete this record?');">
+               <i class="fa fa-trash"></i> Delete
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

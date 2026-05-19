@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Company name | {% block title %} {% endblock title %}</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  {% block css %} {% endblock css %}
+</head>
+
+<body>
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+
+    <!-- SIDEBAR HEADER -->
+    <!-- SIDEBAR HEADER -->
+    <div class="sidebar-header d-flex justify-content-between align-items-center">
+
+      <a href="/" class="logo-wrapper text-decoration-none">
+
+        <!-- LOGO -->
+        <div class="logo-icon">
+          <img src="{% static 'img/logo.jpg' %}" alt="Company Logo">
+        </div>
+
+        <!-- COMPANY NAME -->
+        <div class="logo-text">
+          My Admin
+        </div>
+
+      </a>
+
+      <!-- MOBILE CLOSE -->
+      <button class="text-white btn btn-outline-dark d-lg-none" id="closeSidebar">
+        <i class="bi bi-x-lg"></i>
+      </button>
+
+    </div>
+
+    <!-- Menu Start  -->
+    <ul class="nav flex-column mt-0">
+
+      <!-- DASHBOARD -->
+      <li class="nav-item nav-category">
+        <span class="nav-link text-info">Navbar</span>
+      </li>
+
+
+
+      <li class="nav-item">
+        <a href="#" class="nav-link">
+          <i class="bi bi-grid-fill"></i>
+          <span>Top Navbar</span>
+        </a>
+      </li>
+
+      {% if request.user.is_superuser %}
+      <li class="nav-item nav-category">
+        <span class="nav-link text-info">Admin</span>
+      </li>
+
+      <li class="nav-item">
+        <a href="{% url 'user-list' %}" class="nav-link">
+         <i class="bi bi-people"></i>   
+          <span>User</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{% url 'ip-list' %}" class="nav-link">
+          <i class="bi bi-globe"></i>
+          <span>Network Management</span>
+        </a>
+      </li>
+
+      
+      <li class="nav-item">
+        <a href="{% url 'field_access_control' %}" class="nav-link">
+          <i class="bi bi-shield "></i>
+          <span>Field Access Controls</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'crm-data-upload' %}" class="nav-link">
+          <i class="bi bi-cloud-upload"></i>
+          <span>Data Upload</span>
+        </a>
+      </li>
+      {% endif %}
+
+      <!-- DASHBOARD -->
+      <li class="nav-item nav-category">
+        <span class="nav-link text-info">Dashboard</span>
+      </li>
+
+      <li class="nav-item">
+        <a href="/" class="nav-link">
+          <i class="bi bi-grid-fill"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+
+      <!-- MANAGEMENT -->
+      <li class="nav-item nav-category">
+        <span class="nav-link text-info">Management</span>
+      </li>
+
+      <li class="nav-item">
+        <a href="#" class="nav-link">
+          <i class="bi bi-people-fill"></i>
+          <span>List</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="#" class="nav-link">
+          <i class="bi bi-upload"></i>
+          <span>Upload</span>
+        </a>
+      </li>
+
+      <!-- SECURITY -->
+      <li class="nav-item nav-category">
+        <span class="nav-link text-info">Security</span>
+      </li>
+
+      <li class="nav-item">
+        <a href="#" class="nav-link">
+          <i class="bi bi-shield-lock-fill"></i>
+          <span>Candidate Onboarding</span>
+        </a>
+      </li>
+
+      <!-- SETTINGS -->
+      <li class="nav-item nav-category">
+        <span class="nav-link text-info">System</span>
+      </li>
+
+      <li class="nav-item">
+        <a href="#" class="nav-link">
+          <i class="bi bi-gear-fill"></i>
+          <span>Settings</span>
+        </a>
+      </li>
+
+      <!-- REPORTS -->
+      <li class="nav-item">
+
+        <!-- TOGGLE -->
+        <a class="nav-link reports-toggle" data-bs-toggle="collapse" href="#reportsMenu" role="button"
+          aria-expanded="false">
+
+          <div class="d-flex align-items-center">
+            <i class="bi bi-bar-chart-line-fill"></i>
+            <span>MTD Reports</span>
+          </div>
+
+          <i class="bi bi-chevron-down submenu-arrow"></i>
+
+        </a>
+
+        <!-- SUBMENU -->
+        <div class="collapse submenu" id="reportsMenu">
+
+          <ul class="nav flex-column sub-menu">
+
+            <li class="nav-item">
+              <a class="nav-link" href="#">
+                Lead Status History
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="#">
+                MTD Report
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="#">
+                WIP Report
+              </a>
+            </li>
+
+          </ul>
+
+        </div>
+
+      </li>
+
+    </ul>
+
+  </div>
+
+  <!-- Main Content -->
+
+  <div class="main-content" id="mainContent">
+
+    <!-- TOP NAVBAR -->
+
+    <div class="top-navbar justify-content-between">
+
+      <!-- LEFT -->
+
+      <div class="d-flex align-items-center">
+
+        <button class="toggle-btn" id="toggleSidebar">
+          <i class="bi bi-list"></i>
+        </button>
+
+        <h5 class="mb-0 ms-3">Dashboard</h5>
+
+      </div>
+
+      <!-- CENTER : GLOBAL SEARCH -->
+
+      <div class="global-search-wrapper flex-grow-1 mx-lg-4 mx-2 d-none d-lg-block">
+
+        <form>
+
+          <div class="input-group global-search">
+
+            <span class="input-group-text border-0 bg-light">
+              <i class="bi bi-search text-muted"></i>
+            </span>
+
+            <input type="text" id="globalSearch" class="form-control border-0 bg-light shadow-none"
+              placeholder="Search anything...">
+
+          </div>
+
+        </form>
+
+      </div>
+
+
+
+      <!-- RIGHT -->
+
+      <div class="d-flex align-items-center gap-1">
+
+        <!-- Notification -->
+        <div class="dropdown">
+
+          <button class="btn position-relative border-0 bg-transparent" data-bs-toggle="dropdown">
+
+            <i class="bi bi-bell fs-5"></i>
+
+            <!-- Notification Badge -->
+            <span class="position-absolute mt-2 top-0 start-70 translate-middle badge rounded-pill bg-danger">
+              3
+            </span>
+
+          </button>
+
+          <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+
+            <li>
+              <h6 class="dropdown-header">Notifications</h6>
+            </li>
+
+            <li>
+              <a class="dropdown-item" href="#">
+                New user registered
+              </a>
+            </li>
+
+            <li>
+              <a class="dropdown-item" href="#">
+                Data uploaded successfully
+              </a>
+            </li>
+
+            <li>
+              <a class="dropdown-item" href="#">
+                Profile updated
+              </a>
+            </li>
+
+          </ul>
+
+        </div>
+
+        <!-- Profile Dropdown -->
+        <div class="dropdown">
+
+          <button class="btn d-flex align-items-center border-0 bg-transparent" data-bs-toggle="dropdown">
+
+            <!-- Profile Image -->
+            <img src="https://i.pravatar.cc/40" class="rounded-circle" width="40" height="40" alt="Profile">
+
+            <div class="ms-2 text-start d-none d-md-block">
+
+              <div class="fw-semibold small">
+                Ashutosh
+              </div>
+
+              <div class="text-muted small">
+                Admin
+              </div>
+
+            </div>
+
+            <i class="bi bi-chevron-down ms-2 small"></i>
+
+          </button>
+
+          <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+
+            <li>
+              <a class="dropdown-item" href="#">
+                <i class="bi bi-person me-2"></i>
+                My Profile
+              </a>
+            </li>
+
+            <li>
+              <a class="dropdown-item" href="#">
+                <i class="bi bi-gear me-2"></i>
+                Settings
+              </a>
+            </li>
+
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <a class="dropdown-item text-danger" href="#">
+                <i class="bi bi-box-arrow-right me-2"></i>
+                Logout
+              </a>
+            </li>
+
+          </ul>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Content -->
+    <div class="content-wrapper container-fluid">
+      {% block body %} {% endblock body %}
+
+    </div>
+
+  </div>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{% static 'js/base.js' %}"></script>
+  {% block Script %} {% endblock Script %}
+</body>
+
+</html>

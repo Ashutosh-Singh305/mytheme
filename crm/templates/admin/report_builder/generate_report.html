@@ -1,0 +1,111 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% load report_tags %}
+
+{% block content %}
+<div class="container" style="max-width: 95%;">
+    <div class="card mt-4 shadow">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Generated Report</h4>
+        </div>
+
+        <div class="card-body">
+            <div class="mb-3">
+                <a href="{% url 'select_report_filters' %}" class="btn btn-secondary">Back</a>
+                <a href="{% url 'export_report_csv' %}" class="btn btn-outline-success">Export to CSV</a>
+                <a href="{% url 'select_report_filters' %}" class="btn btn-outline-info">Add More Filters</a>
+            </div>
+
+            {% if filters %}
+                <div class="alert alert-info">
+                    <h6>Applied Filters:</h6>
+                    <ul class="mb-0">
+                        {% for f in filters %}
+                            <li><strong>{{ f.field|capfirst }}</strong> {{ f.condition|upper }} "{{ f.value }}"</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+
+            {% if columns and data %}
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                {% for col in columns %}
+                                    {% if sort_field == col %}
+                                        {% if sort_order == "asc" %}
+                                            <th>
+                                                <a href="?sort={{ col }}&order=desc">{{ col|capfirst }} ▲</a>
+                                            </th>
+                                        {% else %}
+                                            <th>
+                                                <a href="?sort={{ col }}&order=asc">{{ col|capfirst }} ▼</a>
+                                            </th>
+                                        {% endif %}
+                                    {% else %}
+                                        <th>
+                                            <a href="?sort={{ col }}&order=asc">{{ col|capfirst }}</a>
+                                        </th>
+                                    {% endif %}
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in data %}
+                                <tr>
+                                    {% for col in columns %}
+                                        <td>{{ row|get_item:col }}</td>
+                                    {% endfor %}
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="{{ columns|length }}" class="text-center">No data found.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if sort_field %}&sort={{ sort_field }}&order={{ sort_order }}{% endif %}">Previous</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Previous</span>
+                            </li>
+                        {% endif %}
+
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if sort_field %}&sort={{ sort_field }}&order={{ sort_order }}{% endif %}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if sort_field %}&sort={{ sort_field }}&order={{ sort_order }}{% endif %}">Next</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Next</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            {% else %}
+                <p>No data to display.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

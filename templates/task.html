@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %} Tasks {% endblock %}
+{% block css %}
+
+{% endblock %}
+
+{% block body %}
+    <div class="page-header">
+        <h3 class="page-title">  Tasks </h3>
+        <nav aria-label="breadcrumb">
+            <a  href="/task/new/create" class="btn btn-primary btn-fw">Create New Task</a>
+        </nav>
+    </div>
+    {% if request.path == "/task/all/view" %}
+    <div class="row">
+      <div class="col-lg-12 stretch-card grid-margin">
+        <div class="card">  
+          <div class="card-body">
+            <h4 class="card-title">All Tasks</h4>
+            <p class="card-description"> Add class <code>.table-hover</code>
+            </p>
+            <div style="overflow:scroll">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Task Name</th>
+                    <th>Description</th>
+                    <th>Crreated By</th>
+                    <th>Created Date</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for task in tasks %}
+                  <tr>
+                    <td>{{ task.name }}</td>
+                    <td>{{ task.description }}</td>
+                    <td> {{ task.created_by }}</td>
+                    <td>{{task.created_date}}</td>
+                    <td>
+                      <a type="button" href="/task/{{task.pk}}/update" class="btn btn-primary btn-sm">Edit</a>
+                      <a type="button" href="/task/{{task.pk}}/delete" onClick='return confirm("Are you sure you want to delete the data")' class="btn btn-danger btn-sm">Delete</a>
+                     
+                      
+                    </td>
+                  </tr>
+                  {% endfor %}
+              
+              
+                </tbody>
+              </table>
+            </div> 
+          </div>
+        </div>
+      </div>  
+    </div>
+    {%else%}<!---else block for create/update -->
+    <div class="row">
+
+      <div class="col-lg-12 stretch-card grid-margin">
+          <div class="card">
+            <div class="card-body">
+              <h4 class="card-title">{% if task %} Update Task : {{task.name}} {% else %} Create Task {% endif %}</h4>
+              <p class="card-description"> Add class <code>.table-hover</code>
+              </p>
+              
+              <p class="card-description"> Basic form layout </p>
+              <form class="forms-sample" method="POST">
+                  {% csrf_token %}
+                  <div class="form-group">
+                      <label for="exampleInputUsername1">Name</label>
+                      <input type="text" class="form-control" id="exampleInputUsername1" name="name"
+                            placeholder="Name" value="{% if task %}{{ task.name }}{% endif %}">
+                  </div>
+                  <div class="form-group">
+                      <label for="exampleInputEmail1">Description</label>
+                      <input type="text" class="form-control" id="exampleInputEmail1" name="description"
+                            placeholder="Description" value="{% if task %}{{ task.description }}{% endif %}">
+                  </div>
+                  <button type="submit" class="btn btn-primary mr-2">Submit</button>
+                  <a href="/task/all/view" class="btn btn-light">Cancel</a>
+              </form>
+            </div>
+          </div>
+      </div> 
+    </div>
+  {%endif%} 
+
+
+{% block Script %}
+
+
+{% endblock %}
+
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends "reports/base.html" %}
+{% block title %}New Report — Select Fields{% endblock %}
+
+{% block body %}
+<div class="card">
+  <div class="card-body">
+
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+      <ol class="breadcrumb bg-white px-3 py-2 border rounded">
+        {% for label, url in breadcrumbs %}
+          {% if url %}
+            <li class="breadcrumb-item"><a href="{{ url }}">{{ label }}</a></li>
+          {% else %}
+            <li class="breadcrumb-item active" aria-current="page">{{ label }}</li>
+          {% endif %}
+        {% endfor %}
+      </ol>
+    </nav>
+
+    <h4 class="card-title">Select Fields</h4>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <!-- 🔍 SEARCH BOX -->
+      <div class="form-group mb-2">
+        <input type="text"
+               id="field-search"
+               class="form-control form-control-sm"
+               placeholder="Search fields...">
+      </div>
+
+      <!-- SELECT ALL -->
+      <div class="d-flex align-items-center mb-2">
+        <input type="checkbox" id="select-all-fields" class="mr-2">
+        <label for="select-all-fields" class="mb-0 font-weight-bold">
+          Select All
+        </label>
+      </div>
+
+      <!-- SCROLLABLE FIELD LIST -->
+      <div style="
+          border: 1px solid #ddd;
+          padding: 10px;
+          border-radius: 4px;
+          max-height: 300px;
+          overflow-y: auto;
+        ">
+
+        <div class="custom-checkbox-list" id="field-list">
+
+          {% for checkbox in form.fields %}
+            <div class="field-item">
+              <label>
+                {{ checkbox.tag }} {{ checkbox.choice_label }}
+              </label>
+            </div>
+          {% endfor %}
+
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <button class="btn btn-primary btn-sm" type="submit">Next</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block Script %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+  const selectAll = document.getElementById("select-all-fields");
+  const checkboxes = document.querySelectorAll('input[name="fields"]');
+
+  // ✅ SELECT ALL LOGIC
+  selectAll.addEventListener("change", function () {
+    checkboxes.forEach(cb => cb.checked = selectAll.checked);
+  });
+
+  checkboxes.forEach(cb => {
+    cb.addEventListener("change", function () {
+      if (!cb.checked) {
+        selectAll.checked = false;
+      } else if ([...checkboxes].every(c => c.checked)) {
+        selectAll.checked = true;
+      }
+    });
+  });
+
+  // 🔍 SEARCH FILTER LOGIC
+  const searchInput = document.getElementById("field-search");
+  const items = document.querySelectorAll(".field-item");
+
+  searchInput.addEventListener("keyup", function () {
+    const query = this.value.toLowerCase().trim();
+
+    items.forEach(item => {
+      const text = item.innerText.toLowerCase();
+
+      if (text.includes(query)) {
+        item.style.display = "";
+      } else {
+        item.style.display = "none";
+      }
+    });
+  });
+
+});
+</script>
+{% endblock Script %}

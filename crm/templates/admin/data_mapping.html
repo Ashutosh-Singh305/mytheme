@@ -1,0 +1,51 @@
+{% extends 'crm/base.html' %}
+
+{% load static %}
+
+{% block title %}Data Mapping{% endblock %}
+
+{% block body %}
+<div class="card" style="max-width: 100%; padding: 30px;">
+    <h2 class="card-header text-xl font-semibold mb-5">🧩 Map Excel Columns to Model Fields</h2>
+
+    <form method="post" class="form" novalidate>
+        {% csrf_token %}
+
+        {% if form.errors %}
+            <div class="alert alert-danger bg-red-100 text-red-800 p-4 rounded mb-4">
+                <strong>⚠️ Error:</strong>
+                {% if form.non_field_errors %}
+                    {{ form.non_field_errors|join:"<br>"|safe }}
+                {% else %}
+                    Some required fields are not mapped correctly. Please fix them below.
+                {% endif %}
+            </div>
+        {% endif %}
+
+
+        <div class="table-responsive">
+            <table class="table table-bordered w-full text-sm">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="p-3">📄 Excel Column</th>
+                        <th class="p-3">📦 Model Field Mapping</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for field in form.visible_fields %}
+                        <tr>
+                            <td class="p-2 font-medium text-gray-800">{{ field.label }}</td>
+                            <td class="p-2">{{ field }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 d-flex justify-content-end">
+            <button type="submit" class="btn btn-primary btn-sm">📥 Import Data</button>
+            <a href="{% url 'crm-data-upload' %}" class="btn btn-secondary ml-2 btn-sm">⬅ Back to Upload</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

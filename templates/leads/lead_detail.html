@@ -1,0 +1,435 @@
+{% extends 'base' %}
+
+{% block title %} Dashboard {% endblock %}
+{% block css %}
+<link rel="stylesheet" href="/static/vendors/daterangepicker/daterangepicker.css">
+<link rel="stylesheet" href="/static/vendors/chartist/chartist.min.css">
+{% endblock %}
+
+{% block body %}
+
+
+<div class="row">
+  <div class="col-12 grid-margin">
+    <div class="card">
+        <div class="card-body">
+            <h4 class="card-title">Lead Details</h4>
+            <p class="card-description">Detailed information about the lead</p>
+
+            <!-- Personal Details Section -->
+            <h4 class="section-title">Personal Details</h4>
+            <div class="row">
+                {% if 'name' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Applicant Name</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.name|default_if_none:'' }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if 'father_name' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Father's Name</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.father_name|default_if_none:'' }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% if 'gender' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Gender</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.get_gender_display|default_if_none:'' }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% if 'marital_status' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Marital Status</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.get_marital_status_display }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            
+                {% if 'dob' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Date of Birth</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.dob }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            
+                {% if 'mobile_number' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Mobile No</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.mobile_number }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            
+                {% if 'alternate_number' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Alternate Mobile No</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.alternate_number }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            
+                {% if 'email' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Email</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.email }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            
+                {% if 'pan' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">PAN</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.pan }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            
+                {% if 'adhar_number' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Aadhar Number</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.adhar_number }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            
+                {% if 'present_address' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Present Address</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.present_address }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            
+                {% if 'permanent_address' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Permanent Address</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.permanent_address }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            
+                {% if 'residence_type' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Residence Type</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.get_residence_type_display }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            
+                {% if 'location' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Location</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.location }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div> 
+            <!-- End of Personal Details--> 
+            <!-- Occupational Details Section -->
+            <h4 class="section-title">Occupational Details</h4>
+            <div class="row">
+                {% if 'company_name' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Company Name</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.company_name }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if 'office_address' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Office Address</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.office_address }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if 'landline_number' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Landline No.</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.landline_number }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if 'office_email' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Office Email</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.office_email }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if 'company_type' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Company Type</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.get_company_type_display }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if 'company_listing' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Company Listing</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.get_company_listing_display }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <!-- End Occupational Details Section -->
+            
+            <!-- Job Details Section -->
+            <h4 class="section-title">Job Details</h4>
+            <div class="row">
+                {% if 'current_position' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Current Position</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.current_position }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if 'designation' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Designation</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.designation }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if 'doj' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Date of Joining</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.doj }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if 'current_exp' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Current Experience</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.current_exp }} years" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if 'total_exp' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Total Experience</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.total_exp }} years" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if 'monthly_salary' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Net Monthly Salary</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="${{ lead.monthly_salary }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <!-- End Job Details Section -->
+            
+            <!-- Bank Details Section -->
+            <h3 class="section-title">Bank Details</h3>
+            <div class="row">
+                {% if 'bank' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Bank</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.bank }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if 'account_number' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Account No.</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.account_number }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if 'cutomer_id' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Customer ID</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.cutomer_id }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <!-- End Bank Details Section -->
+            
+            <!-- Additional Details Section -->
+            <h3 class="section-title">Additional Details</h3>
+            <div class="row">
+                {% if 'description' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Description</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.description }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if 'date' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Date</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.date }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if 'dos' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Date of Submission</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.dos }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if 'sm' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Sales Manager</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.sm }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if 'team_lead' in viewable_fields %}
+                <div class="col-md-6">
+                    <div class="form-group row">
+                        <label class="col-sm-4 col-form-label">Team Leader</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" value="{{ lead.team_lead }}" readonly />
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <!-- End Additional Details Section -->
+
+            
+            <a href="{% url 'lead_edit' lead.id %}" class="btn btn-primary">Edit</a>
+            <a href="{% url 'lead_delete' lead.id %}" class="btn btn-danger">Delete</a>
+        </div>
+    </div>
+</div>
+
+</div>
+
+
+
+{% block Script %}
+<script src="/static/vendors/chart.js/Chart.min.js"></script>
+<script src="/static/vendors/moment/moment.min.js"></script>
+<script src="/static/vendors/daterangepicker/daterangepicker.js"></script>
+<script src="/static/vendors/chartist/chartist.min.js"></script>
+<script src="/static/js/dashboard.js"></script>
+
+{% endblock %}
+
+{% endblock %}

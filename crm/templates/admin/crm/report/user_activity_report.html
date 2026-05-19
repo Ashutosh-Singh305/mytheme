@@ -1,0 +1,132 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<h2>User Activity Report</h2>
+
+<!-- Filter Form -->
+<form method="get" class="form-inline mb-3">
+    <label>User:</label>
+    <select name="user" class="form-control mx-2">
+        <option value="all">All</option>
+        {% for user in users %}
+            <option value="{{ user.id }}" {% if filter_user|default:'' == user.id|stringformat:"s" %}selected{% endif %}>
+                {{ user.get_full_name|default:user.username }}
+            </option>
+        {% endfor %}
+    </select>
+
+    <label>Start Date:</label>
+    <input type="date" name="start_date" value="{{ filter_start }}" class="form-control mx-2" />
+
+    <label>End Date:</label>
+    <input type="date" name="end_date" value="{{ filter_end }}" class="form-control mx-2" />
+
+    <label>Action:</label>
+    <select name="action" class="form-control mx-2">
+        <option value="">All</option>
+        <option value="+" {% if filter_action == "+" %}selected{% endif %}>Created</option>
+        <option value="~" {% if filter_action == "~" %}selected{% endif %}>Updated</option>
+        <option value="-" {% if filter_action == "-" %}selected{% endif %}>Deleted</option>
+    </select>
+
+    <button type="submit" class="btn btn-primary mx-2">Filter</button>
+
+    {% if filter_user or filter_start or filter_end or filter_action %}
+        {% with request.GET.urlencode as query %}
+            <a class="btn btn-success" href="?{{ query }}&export=excel">Export to Excel</a>
+        {% endwith %}
+    {% endif %}
+</form>
+
+<!-- Only show table if filters were applied -->
+{% if history_list %}
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Lead</th>
+                <th>Mobile</th>
+                <th>Status</th>
+                <th>Changes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in history_list %}
+            <tr>
+                <td>{{ item.record.history_date }}</td>
+                <td>{{ item.record.history_user.get_full_name|default:item.record.history_user.username }}</td>
+                <td>
+                    {% if item.record.history_type == "+" %}Created
+                    {% elif item.record.history_type == "~" %}Updated
+                    {% elif item.record.history_type == "-" %}Deleted
+                    {% endif %}
+                </td>
+                <td>
+                    {% if item.record.instance.id %}
+                        <a href="/admin/crm/lead/{{ item.record.instance.id }}/change/" target="_blank">
+                            {{ item.record.name }}
+                        </a>
+                    {% else %}
+                        {{ item.record.name }}
+                    {% endif %}
+                </td>
+                <td>{{ item.record.mobile_number }}</td>
+                <td>{{ item.status_label|default:"-" }}</td>
+                <td>
+                    {% if item.diff %}
+                        <ul>
+                            {% for field, change in item.diff.items %}
+                                <li><strong>{{ field }}:</strong> {{ change.0 }} → {{ change.1 }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        No changes
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Pagination Controls -->
+    {% if page_obj.has_other_pages %}
+    <nav aria-label="Page navigation">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if filter_user %}user={{ filter_user }}&{% endif %}
+                                                {% if filter_start %}start_date={{ filter_start }}&{% endif %}
+                                                {% if filter_end %}end_date={{ filter_end }}&{% endif %}
+                                                {% if filter_action %}action={{ filter_action }}&{% endif %}
+                                                page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>
+            {% endif %}
+
+            <li class="page-item disabled">
+                <span class="page-link">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+            </li>
+
+            {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?{% if filter_user %}user={{ filter_user }}&{% endif %}
+                                                {% if filter_start %}start_date={{ filter_start }}&{% endif %}
+                                                {% if filter_end %}end_date={{ filter_end }}&{% endif %}
+                                                {% if filter_action %}action={{ filter_action }}&{% endif %}
+                                                page={{ page_obj.next_page_number }}">Next</a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+{% elif filter_user or filter_start or filter_end or filter_action %}
+    <div class="alert alert-warning mt-4">No results found for the selected filters.</div>
+{% else %}
+    <div class="alert alert-info mt-4">Please apply filters above to view user activity.</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "reports/base.html" %}
+{% block title %}Leads of {{ user.get_full_name }}{% endblock %}
+
+{% block body %}
+<div class="page-header">
+    <h3 class="page-title">
+        Leads of {{ user.get_full_name }}
+        {% if assignment_label %} ({{ assignment_label }}){% endif %}
+        {% if status_label %} - {{ status_label }}{% endif %}
+    </h3>
+
+    <nav aria-label="breadcrumb">
+        <a href="{% url 'reports:mtd_reports' %}" class="btn btn-primary btn-sm">
+            <i class="icon-arrow-left"></i> Back
+        </a>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 stretch-card grid-margin">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive border rounded p-1">
+                    <table class="table text-nowrap align-middle">
+                        <thead class="table-primary fw-bold font-weight-bold">
+                            <tr>
+                                <!-- Dynamic Sortable Columns -->
+                                {% for col in sortable_fields %}
+                                <th class="font-weight-bold">
+                                    <a href="?sort={{ col.field }}&order={% if sort_field == col.field and order == 'asc' %}desc{% else %}asc{% endif %}{% if assignment_type %}&assignment_type={{ assignment_type }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}">
+                                        {{ col.label }}
+                                        {% if sort_field == col.field %}
+                                            {% if order == 'asc' %}▲{% else %}▼{% endif %}
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                {% endfor %}
+                               
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for lead in leads %}
+                            <tr>
+                                <td><a href="/admin/crm/lead/{{ lead.id }}/change/">{{ lead.id }}</a></td>
+                                <td>{{ lead.name }}</td>
+                                <td>{{ lead.get_status_display }}</td>
+                                <td>{{ lead.approved_amount|default:"0" }}</td>
+                                <td>{{ lead.gross_disbursed|default:"0" }}</td>
+                                <td>{{ lead.net_disbursed|default:"0" }}</td>
+                                <td>{{ lead.login_amount|default:"0" }}</td>
+                                <td>{{ lead.lender_name|default:"-" }}</td>
+                                <td>{% if lead.business_head %}{{ lead.business_head.get_full_name|default:lead.business_head.username }}{% else %}-{% endif %}</td>
+                                <td>{% if lead.business_manager %}{{ lead.business_manager.get_full_name|default:lead.business_manager.username }}{% else %}-{% endif %}</td>
+                                <td>{% if lead.sm %}{{ lead.sm.get_full_name|default:lead.sm.username }}{% else %}-{% endif %}</td>
+                                <td>{% if lead.team_lead %}{{ lead.team_lead.get_full_name|default:lead.team_lead.username }}{% else %}-{% endif %}</td>
+                                <td>{% if lead.tele_sales_executive %}{{ lead.tele_sales_executive.get_full_name|default:lead.tele_sales_executive.username }}{% else %}-{% endif %}</td>
+                                <td>{{lead.dos|default:"0"}}</td>
+                                <td>{{lead.dod|default:"-"}}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="13" class="text-center">No leads found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+
+                        {% if totals %}
+                        <tfoot class="fw-bold bg-light border-top">
+                            <tr>
+                                <td colspan="3" class="text-end font-weight-bold">Grand Total</td>
+                                <td class="font-weight-bold">{{ totals.total_approved|default:0|floatformat:2 }}</td>
+                                <td class="font-weight-bold">{{ totals.total_gross_disbursed|default:0|floatformat:2 }}</td>
+                                <td class="font-weight-bold">{{ totals.total_net_disbursed|default:0|floatformat:2 }}</td>
+                                <td class="font-weight-bold">{{ totals.total_login|default:0|floatformat:2 }}</td>
+                                <td colspan="7"></td>
+                                <td class="font-weight-bold">{{ totals.grand_total|default:0|floatformat:2 }}</td>
+                            </tr>
+                        </tfoot>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

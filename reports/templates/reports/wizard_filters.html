@@ -1,0 +1,635 @@
+{% extends "reports/base.html" %}
+{% block title %}New Report — Add filters{% endblock %}
+
+{% block css %}
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<style>
+    table#filter-table th,
+    table#filter-table td {
+        white-space: nowrap;
+    }
+
+    .col-num {
+        width: 10px;
+    }
+
+    .col-value {
+        min-width: 200px;
+    }
+
+    .col-drag,
+    .col-delete {
+        width: 10px;
+    }
+
+    @media (max-width: 576px) {
+        .col-num {
+            width: 10px;
+        }
+
+        .col-field {
+            min-width: 120px;
+        }
+
+        .col-operator {
+            min-width: 120px;
+        }
+
+        .col-value {
+            min-width: 180px;
+        }
+
+        .col-drag,
+        .col-delete {
+            width: 50px;
+        }
+    }
+
+    /* small visual nicety for Select2 inside table */
+    .select2-container {
+        width: 100% !important;
+    }
+</style>
+
+{% endblock css %}
+
+{% block body %}
+<h3 class="mb-4">Filters</h3>
+
+<nav class="mb-4">
+    <ol class="breadcrumb bg-white px-3 py-2 border rounded">
+        {% for label, url in breadcrumbs %}
+        {% if url %}
+        <li class="breadcrumb-item"><a href="{{ url }}">{{ label }}</a></li>
+        {% else %}
+        <li class="breadcrumb-item active">{{ label }}</li>
+        {% endif %}
+        {% endfor %}
+    </ol>
+</nav>
+{% if request.path == "/reports/new/" and request.GET.step == "filters" %}
+<div class="alert alert-warning py-2 px-3 mb-3" id="reset-warning-msg">
+    ⚠️ Please reset the form once before adding filters to ensure a clean start.
+</div>
+{% endif %}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-primary text-white py-2">
+        <strong>STEP 4 — Filters</strong>
+    </div>
+
+    <div class="card-body">
+
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                <li>{{ error }}</li>
+                {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <form id="filterForm" method="POST">
+            {% csrf_token %}
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-sm" id="filter-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Field</th>
+                            <th>Operator</th>
+                            <th>Value</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="filter-box">
+
+                        {% for f in filters %}
+                        <tr class="filter-row">
+                            <td class="row-number"></td>
+
+                            <td>
+                                <select name="field[]" class="form-control select2-field">
+                                    <option value="">--Select--</option>
+                                    {% for v,l in form.field.field.choices %}
+                                    <option value="{{ v }}" {% if v == f.field %}selected{% endif %}>{{ l }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+
+                            <td>
+                                <select name="condition[]" class="form-control select2-operator">
+                                    {% for v,l in form.condition.field.choices %}
+                                    <option value="{{ v }}" {% if v == f.op %}selected{% endif %}>{{ l }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+
+                            <td class="value-cell" data-value="{{ f.value }}">
+                                <input type="hidden" name="value[]" class="value-input">
+                            </td>
+
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm remove-row">×</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+
+                        {% if not filters %}
+                        <tr class="filter-row">
+                            <td class="row-number"></td>
+
+                            <td>
+                                <select name="field[]" class="form-control select2-field">
+                                    {% for v,l in form.field.field.choices %}
+                                    <option value="{{ v }}">{{ l }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+
+                            <td>
+                                <select name="condition[]" class="form-control select2-operator">
+                                    {% for v,l in form.condition.field.choices %}
+                                    <option value="{{ v }}">{{ l }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+
+                            <td class="value-cell" data-value="">
+                                <input type="hidden" name="value[]" class="value-input">
+                            </td>
+
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm remove-row">×</button>
+                            </td>
+                        </tr>
+                        {% endif %}
+
+                    </tbody>
+                </table>
+            </div>
+
+            <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-row">
+                + Add Filter
+            </button>
+
+            <div class="form-group row mt-3">
+
+                <!-- Filter Logic -->
+                <div class="col-md-6">
+                    <label>Filter Logic</label>
+                    <input type="text"
+                        name="filter_logic"
+                        class="form-control"
+                        value="{{ filter_logic|default:'' }}"
+                        placeholder="(1 OR 2) AND NOT 3">
+
+                    <small class="text-muted">
+                        Example: (1 OR 2) AND NOT 3
+                    </small>
+                </div>
+
+                <!-- Limit -->
+                <div class="col-md-6">
+                    <label>Limit</label>
+                    <input type="number"
+                        name="limit"
+                        class="form-control"
+                        value="{{ limit|default:5000 }}"
+                        min="1">
+                </div>
+
+            </div>
+            
+
+            <div class="mt-3">
+                
+                {% if request.path == "/reports/new/" %}
+                    <a href="?step=filters&reset=1" class="btn btn-danger btn-sm">Reset</a>
+                {% endif %}
+                <button type="submit" class="btn btn-success btn-sm float-right">Continue → Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock body %}
+
+{% block Script %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+$(document).ready(function () {
+
+    // hide after user starts interacting
+    $(document).on("change", '[name="field[]"], [name="condition[]"]', function () {
+        $("#reset-warning-msg").fadeOut();
+    });
+
+    // optional auto hide after 5 sec
+    setTimeout(() => {
+        $("#reset-warning-msg").fadeOut();
+    }, 5000);
+
+});
+</script>
+<script>
+    let modelFields = [];
+    const modelLabel = "{{ model_label }}";
+
+    const DATE_OPERATORS = [
+        "today", "yesterday", "7_days", "30_days", "this_month", "last_month"
+    ];
+
+    function getMetaForField(fieldName) {
+
+        if (!fieldName) return null;
+
+        // direct match
+        let meta = modelFields.find(f => f.name === fieldName);
+        if (meta) return meta;
+
+        // handle lookup: bank__name → name
+        const parts = fieldName.split("__");
+
+        // try reverse search (important)
+        for (let i = parts.length - 1; i >= 0; i--) {
+            const part = parts[i];
+
+            meta = modelFields.find(f => f.name === part);
+            if (meta) return meta;
+        }
+
+        return null;
+    }
+    // FETCH MODEL FIELDS
+    function fetchModelFields() {
+        return $.get("{% url 'crm_get_model_fields' %}", { model: modelLabel }, function (data) {
+            modelFields = data.fields || [];
+        });
+    }
+
+    // LOAD FK / M2M SELECT2
+    function loadRelationSelect($el, model, isMultiple, savedValue) {
+
+        $el.select2({
+            ajax: {
+                url: "{% url 'crm_get_fk_values' %}",
+                dataType: "json",
+                delay: 150,
+                data: params => ({
+                    model: model,
+                    q: params.term || "",
+                    limit: 50
+                }),
+                processResults: data => ({
+                    results: data.results.map(x => ({
+                        id: x.id,
+                        text: x.label
+                    }))
+                })
+            },
+            width: "100%",
+            multiple: isMultiple
+        });
+
+        // PREFILL
+        if (savedValue) {
+            const ids = String(savedValue).split(",");
+
+            $.ajax({
+                url: "{% url 'crm_get_fk_values' %}",
+                data: { model: model, q: "", limit: 200 },
+                dataType: "json",
+                success: function (data) {
+
+                    const map = {};
+                    data.results.forEach(x => map[String(x.id)] = x.label);
+
+                    ids.forEach(id => {
+                        const label = map[id] || id;
+                        const option = new Option(label, id, true, true);
+                        $el.append(option);
+                    });
+
+                    $el.trigger("change");
+                }
+            });
+        }
+    }
+
+    // INPUT GENERATOR
+    function getInput(meta, operator, savedValue) {
+
+        const isMulti = ["in", "not_in"].includes(operator);
+
+        // DATE OPS
+        if (DATE_OPERATORS.includes(operator)) {
+            return $('<input class="form-control" disabled placeholder="No value required">');
+        }
+
+        // CHOICES
+        if (meta.choices && meta.choices.length > 0) {
+            let html = `<select class="form-control" ${isMulti ? "multiple" : ""}></select>`;
+            const $el = $(html);
+
+            meta.choices.forEach(c => {
+                $el.append(`<option value="${c.value}">${c.label}</option>`);
+            });
+
+            if (savedValue) {
+                $el.val(isMulti ? savedValue.split(",") : savedValue);
+            }
+
+            setTimeout(() => $el.select2({ width: "100%" }), 0);
+            return $el;
+        }
+
+        // FK
+        if (meta.related_model_label) {
+            const $el = $(`<select class="form-control" ${isMulti ? "multiple" : ""}></select>`);
+            loadRelationSelect($el, meta.related_model_label, isMulti, savedValue);
+            return $el;
+        }
+
+        // M2M
+        if (meta.type === "ManyToManyField") {
+            const $el = $('<select class="form-control" multiple></select>');
+            loadRelationSelect($el, meta.related_model_label, true, savedValue);
+            return $el;
+        }
+
+        // NORMAL TYPES
+        switch (meta.type) {
+            case "IntegerField":
+            case "FloatField":
+            case "DecimalField":
+                return $(`<input type="number" class="form-control" value="${savedValue || ""}">`);
+
+            case "BooleanField":
+                return $(`
+                <select class="form-control">
+                    <option value="">--Select--</option>
+                    <option value="True">True</option>
+                    <option value="False">False</option>
+                </select>
+            `).val(savedValue);
+
+            case "DateField":
+            case "DateTimeField":
+                return $(`<input type="date" class="form-control" value="${savedValue || ""}">`);
+
+            default:
+                return $(`<input type="text" class="form-control" value="${savedValue || ""}">`);
+        }
+    }
+
+    // RENDER VALUE CELL (PER ROW)
+    function renderRowValue($row) {
+
+        const field = $row.find('[name="field[]"]').val();
+        const operator = $row.find('[name="condition[]"]').val();
+        const savedValue = $row.find('.value-cell').data("value") || "";
+
+        const meta = getMetaForField(field);
+        const $cell = $row.find('.value-cell');
+
+        // 🔥 ALWAYS CLEAR FIRST
+        $cell.empty();
+
+        // DATE OPS → NO VALUE
+        if (DATE_OPERATORS.includes(operator)) {
+            $cell.append(`<input class="form-control" disabled placeholder="No value required">`);
+            return;
+        }
+
+        if (!meta) {
+            $cell.append(`<input type="text" class="form-control" value="${savedValue}">`);
+            return;
+        }
+
+        const isMulti = ["in", "not_in"].includes(operator);
+
+        // FK (FIXED)
+        if (meta.related_model_label || meta.related_model) {
+
+            const model = meta.related_model_label || meta.related_model;
+
+            const $el = $(`<select class="form-control" ${isMulti ? "multiple" : ""}></select>`);
+
+            // 🔥 append FIRST
+            $cell.append($el);
+
+            // 🔥 THEN init select2
+            loadRelationSelect($el, model, isMulti, savedValue);
+
+            return;
+        }
+
+        // CHOICES
+        if (meta.choices && meta.choices.length > 0) {
+
+            const $el = $(`<select class="form-control" ${isMulti ? "multiple" : ""}></select>`);
+
+            meta.choices.forEach(c => {
+                $el.append(`<option value="${c.value}">${c.label}</option>`);
+            });
+
+            $cell.append($el);
+
+            if (savedValue) {
+                $el.val(isMulti ? savedValue.split(",") : savedValue);
+            }
+
+            $el.select2({ width: "100%" });
+
+            return;
+        }
+
+        // M2M
+        if (meta.type === "ManyToManyField") {
+
+            const $el = $('<select class="form-control" multiple></select>');
+
+            $cell.append($el);
+            loadRelationSelect($el, meta.related_model_label, true, savedValue);
+
+            return;
+        }
+
+        // NORMAL TYPES
+        let $input;
+
+        switch (meta.type) {
+
+            case "IntegerField":
+            case "FloatField":
+            case "DecimalField":
+                $input = $(`<input type="number" class="form-control" value="${savedValue || ""}">`);
+                break;
+
+            case "BooleanField":
+                $input = $(`
+                <select class="form-control">
+                    <option value="">--Select--</option>
+                    <option value="True">True</option>
+                    <option value="False">False</option>
+                </select>
+            `);
+                $input.val(savedValue);
+                break;
+
+            case "DateField":
+            case "DateTimeField":
+                $input = $(`<input type="date" class="form-control" value="${savedValue || ""}">`);
+                break;
+
+            default:
+                $input = $(`<input type="text" class="form-control" value="${savedValue || ""}">`);
+        }
+
+        $cell.append($input);
+    }
+    function handleDateOperators($row) {
+
+        const fieldName = $row.find('[name="field[]"]').val();
+
+        const meta = getMetaForField(fieldName);
+        const isDateField = meta && ["DateField", "DateTimeField"].includes(meta.type);
+
+        const $operator = $row.find('[name="condition[]"]');
+
+        $operator.find("option").each(function () {
+
+            const val = $(this).val();
+
+            if (DATE_OPERATORS.includes(val)) {
+                $(this).prop("disabled", !isDateField);
+            }
+        });
+
+        const currentOp = $operator.val();
+
+        if (!isDateField && DATE_OPERATORS.includes(currentOp)) {
+            $operator.val("eq");
+        }
+
+        // refresh select2
+        $operator.trigger("change.select2");
+    }
+    // EVENTS
+    $(document).on("change", '[name="field[]"]', function () {
+        const $row = $(this).closest("tr");
+        handleDateOperators($row);
+        renderRowValue($row);
+    });
+
+    $(document).on("change", '[name="condition[]"]', function () {
+        const $row = $(this).closest("tr");
+        handleDateOperators($row);
+        renderRowValue($row);
+    });
+    
+    // Renumber Rows (important for user clarity, especially after add/remove)
+    function renumberRows() {
+        $("#filter-box tr").each(function (index) {
+            $(this).find(".row-number").text(index + 1);
+        });
+    }
+
+    // ADD ROW
+    $("#add-row").click(function () {
+
+        const row = `
+    <tr class="filter-row">
+        <td class="row-number"></td>
+
+        <td>
+            <select name="field[]" class="form-control select2-field">
+                {% for v,l in form.field.field.choices %}
+                <option value="{{ v }}">{{ l }}</option>
+                {% endfor %}
+            </select>
+        </td>
+
+        <td>
+            <select name="condition[]" class="form-control select2-operator">
+                {% for v,l in form.condition.field.choices %}
+                <option value="{{ v }}">{{ l }}</option>
+                {% endfor %}
+            </select>
+        </td>
+
+        <td class="value-cell" data-value=""></td>
+
+        <td>
+            <button type="button" class="btn btn-danger btn-sm remove-row">×</button>
+        </td>
+    </tr>`;
+
+        $("#filter-box").append(row);
+        $('.select2-field, .select2-operator').select2({ width: "100%" });
+        renumberRows();
+    });
+
+    // REMOVE
+    $(document).on("click", ".remove-row", function () {
+        $(this).closest("tr").remove();
+    });
+
+    // SUBMIT (IMPORTANT)
+    $("#filterForm").on("submit", function () {
+
+        $("#filter-box tr").each(function () {
+
+            const $row = $(this);
+            const $input = $row.find(".value-cell input, .value-cell select");
+
+            let val = "";
+
+            if ($input.length) {
+                if ($input.prop("multiple")) {
+                    val = ($input.val() || []).join(",");
+                } else {
+                    val = $input.val() || "";
+                }
+            }
+
+            // append hidden input
+            if ($row.find('input[name="value[]"]').length === 0) {
+                $row.find(".value-cell").append(`<input type="hidden" name="value[]" value="${val}">`);
+            } else {
+                $row.find('input[name="value[]"]').val(val);
+            }
+        });
+    });
+
+    // INIT (EDIT MODE)
+    $(document).ready(function () {
+
+        $('.select2-field, .select2-operator').select2({ width: "100%" });
+
+        fetchModelFields().then(() => {
+
+            $("#filter-box tr").each(function () {
+                const $row = $(this);
+
+                // FIRST apply operator logic
+                handleDateOperators($row);
+
+                // THEN render value
+                renderRowValue($row);
+            });
+
+            renumberRows(); // 
+        });
+    });
+</script>
+{% endblock Script %}

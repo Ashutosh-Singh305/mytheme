@@ -1,0 +1,123 @@
+{% extends "reports/base.html" %}
+{% load static %}
+
+{% block title %}{{ report.name }} — Details{% endblock %}
+
+{% block body %}
+
+<!-- Breadcrumb -->
+<div class="mb-3">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="{% url 'reports:list' %}">All Reports</a>
+      </li>
+      <!-- <li class="breadcrumb-item"><a href="{% url 'reports:list' %}">Reports</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'reports:new' %}">New Report</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'reports:new' %}?step=type">Report Type</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'reports:new' %}?step=design">Groupings &amp; Measures</a></li>
+        <li class="breadcrumb-item active"><a href="javascript:history.back()">Save Report</a></li> -->
+
+      <li class="breadcrumb-item active" aria-current="page">
+        {{ report.name }}
+      </li>
+    </ol>
+  </nav>
+</div>
+
+<!-- Card -->
+<div class="card">
+  <div class="card-body">
+
+    <!-- Card Header Row -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="card-title mb-0">{{ report.name }}</h4>
+
+      <div>
+        {% if perms.reports.delete_report %}
+        <a href="{% url 'reports:delete' report.slug %}" class="btn btn-danger btn-sm">Delete</a>
+        {% endif %}
+        <a href="{% url 'reports:run' report.slug %}" class="btn btn-success btn-sm ">Run</a>
+        {% if perms.reports.change_report %}
+        <a href="{% url 'reports:edit' report.slug %}" class="btn btn-primary btn-sm ">Edit</a>
+        {% endif %}
+        <a href="javascript:history.back()" class="btn btn-secondary btn-sm">Back</a>
+      </div>
+    </div>
+
+    <!-- Details -->
+    {% with spec=spec %}
+    <dl class="row mb-0">
+
+      <dt class="col-sm-3">Model</dt>
+      <dd class="col-sm-9">
+        <code>{{ spec.model|cut:"crm." }}</code>
+      </dd>
+
+      <dt class="col-sm-3">View</dt>
+      <dd class="col-sm-9">{{ report.get_view_type_display }}</dd>
+
+      {% if verbose.fields %}
+      <dt class="col-sm-3">Fields</dt>
+      <dd class="col-sm-9">{{ verbose.fields|join:", " }}</dd>
+      {% endif %}
+
+      {% if verbose.row_groups %}
+      <dt class="col-sm-3">Row Groups</dt>
+      <dd class="col-sm-9">{{ verbose.row_groups|join:", " }}</dd>
+      {% endif %}
+
+      {% if verbose.col_groups %}
+      <dt class="col-sm-3">Column Groups</dt>
+      <dd class="col-sm-9">{{ verbose.col_groups|join:", " }}</dd>
+      {% endif %}
+
+      {% if verbose.measures %}
+      <dt class="col-sm-3">Measures</dt>
+      <dd class="col-sm-9">{{ verbose.measures|join:", " }}</dd>
+      {% endif %}
+
+      {% if verbose.filters %}
+      <dt class="col-sm-3">Filters</dt>
+      <dd class="col-sm-9">{{ verbose.filters|join:", " }}</dd>
+      {% endif %}
+
+      
+      <dt class="col-sm-3">Description</dt>
+      <dd class="col-sm-9">{{ report.description }}</dd>
+            
+      <dt class="col-sm-3">Limit</dt>
+      <dd class="col-sm-9">{{ effective_limit|default:"—" }}</dd>
+
+      <dt class="col-sm-3">Owner</dt>
+      <dd class="col-sm-9">{{ report.owner|default:"—" }}</dd>
+
+    </dl>
+
+
+    <hr class="my-1">
+
+    <dl class="row mb-0">
+
+      <dt class="col-sm-3">Assigned To</dt>
+      <dd class="col-sm-9">{{ report.assigned_to|default:"—" }}</dd>
+
+      <dt class="col-sm-3">Created By</dt>
+      <dd class="col-sm-9">{{ report.created_by|default:"—" }}</dd>
+
+      <dt class="col-sm-3">Created At</dt>
+      <dd class="col-sm-9">{{ report.created_date|default:"—" }}</dd>
+
+      <dt class="col-sm-3">Updated By</dt>
+      <dd class="col-sm-9">{{ report.modified_by|default:"—" }}</dd>
+
+      <dt class="col-sm-3">Updated At</dt>
+      <dd class="col-sm-9">{{ report.modified_at|default:"—" }}</dd>
+
+    </dl>
+    {% endwith %}
+
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,198 @@
+{% extends 'crm/base.html' %}
+{% load lead_extras %}
+
+{% block title %} Lead List {% endblock %}
+{% block css %}
+<link rel="stylesheet" href="/static/vendors/daterangepicker/daterangepicker.css">
+<link rel="stylesheet" href="/static/vendors/chartist/chartist.min.css">
+{% endblock %}
+
+{% block body %}
+
+<div class="page-header">
+    <h3 class="page-title"> Lead List </h3>
+    <nav aria-label="breadcrumb">
+        <a href="{% url 'lead_create' %}" class="btn btn-primary btn-sm">
+            + Create Lead</a>
+            <a href="{% url 'listview_new' 'Lead' %}" class="btn btn-primary btn-sm"> + Create ListView</a>
+            <a href="{% url 'listview_home' 'Lead' %}" class="btn btn-primary btn-sm">ListView</a>
+
+
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 stretch-card grid-margin">
+        <div class="card">
+            <div class="card-body">
+                <h4>Total Leads : {{ leads.paginator.count }}</h4>
+
+                <!-- Filters + Search -->
+                <form method="get" class="mb-3">
+                    <div class="form-row align-items-end">
+                        {% for filter in list_filter %}
+                            {% with choices=filter_choices|get_item:filter %}
+                                <div class="col-sm-6 col-md-3 mb-2">
+                                    {% if filter_is_fk|get_item:filter %}
+                                        <select name="{{ filter }}" class="form-control form-control-sm">
+                                            <option value="">All {{ filter|capfirst }}</option>
+                                            {% for obj in choices %}
+                                                <option value="{{ obj.pk }}"
+                                                    {% if filters|get_item:filter == obj.pk|stringformat:'s' %}selected{% endif %}>
+                                                    {{ obj|user_display }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    {% else %}
+                                        <select name="{{ filter }}" class="form-control form-control-sm">
+                                            <option value="">All {{ filter|capfirst }}</option>
+                                            {% for val in choices %}
+                                                <option value="{{ val }}"
+                                                    {% if filters|get_item:filter == val|stringformat:'s' %}selected{% endif %}>
+                                                    {{ val }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    {% endif %}
+                                </div>
+                            {% endwith %}
+                        {% endfor %}
+
+                        <div class="col-sm-6 col-md-3 mb-2">
+                            <input type="text" name="q" value="{{ query }}" class="form-control form-control-sm" placeholder="Search...">
+                        </div>
+                        <div class="col-sm-6 col-md-2 mb-2">
+                            <button type="submit" class="btn btn-primary btn-sm btn-block">Apply</button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Table -->
+                <div class="table-responsive border rounded p-1">
+                    <table class="table">
+                        <thead>
+                            <tr class="table-primary">
+                                {% for field in list_display %}
+                                    <th>
+                                        <a class="text-dark"
+                                           href="?sort={{ field }}&order={% if sort == field and order == 'asc' %}desc{% else %}asc{% endif %}{% if query %}&q={{ query }}{% endif %}{% for f,v in filters.items %}{% if v %}&{{ f }}={{ v }}{% endif %}{% endfor %}">
+                                            {% if field in real_fields %}
+                                                {{ field_verbose_names|get_item:field|capfirst }}
+                                            {% elif admin_field_labels|get_item:field %}
+                                                {{ admin_field_labels|get_item:field }}
+                                            {% else %}
+                                                {{ field|capfirst|replace:'_ ' }}
+                                            {% endif %}
+                                            {% if sort == field %}
+                                                {% if order == 'asc' %}▲{% else %}▼{% endif %}
+                                            {% endif %}
+                                        </a>
+                                    </th>
+                                {% endfor %}
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lead in leads %}
+                            <tr>
+                                {% for field in list_display %}
+                                    <td>
+                                        {% if field == 'name' %}
+                                            <a href="{% url 'lead_detail' lead.id %}" class="text-decoration-none text-primary">
+                                                <h5>{{ lead.name }}</h5>
+                                            </a>
+                                        {% elif field == 'id' %}
+                                            <a href="{% url 'lead_detail' lead.id %}" class="text-decoration-none text-primary">
+                                                <h5>{{ lead.id }}</h5>
+                                            </a>
+                                        {% elif lead|getattr:field %}
+                                            {{ lead|getattr:field }}
+                                        {% else %}
+                                            {{ lead|getattr:field|default_if_none:"" }}
+                                        {% endif %}
+                                    </td>
+                                {% endfor %}
+
+                                <td class="text-center">
+                                    <!-- Desktop buttons -->
+                                    <div class="d-none d-md-inline">
+                                        <a href="{% url 'lead_edit' lead.id %}" class="btn btn-warning btn-sm">Edit</a>
+                                        <a href="{% url 'lead_delete' lead.id %}" class="btn btn-danger btn-sm">Delete</a>
+                                    </div>
+
+                                    <!-- Mobile dropdown -->
+                                    <div class="dropdown d-inline-block d-md-none">
+                                        <button class="btn btn-link p-0" type="button"
+                                                id="actionDropdown{{ lead.pk }}" data-toggle="dropdown"
+                                                aria-haspopup="true" aria-expanded="false" style="font-size: 24px;">
+                                            &#x22EE;
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-right"
+                                             aria-labelledby="actionDropdown{{ lead.pk }}">
+                                           
+                                            <a class="dropdown-item text-warning"
+                                               href="{% url 'lead_edit' lead.id %}">Edit</a>
+                                            <a class="dropdown-item text-danger"
+                                               href="{% url 'lead_delete' lead.id %}">Delete</a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="{{ list_display|length|add:'1' }}" class="text-center">
+                                    No leads available
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            <!-- Pagination controls styled like Dashboard inventory -->
+            <div class="d-flex mt-4 flex-wrap">
+                <p class="text-muted">Showing {{ leads.start_index }} to {{ leads.end_index }} of {{ leads.paginator.count }} entries</p>
+                <nav class="ml-auto" aria-label="Page navigation">
+                    <ul class="pagination separated pagination-info">
+                        {% if leads.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ leads.previous_page_number }}&q={{ query }}{% for f,v in filters.items %}&{{ f }}={{ v }}{% endfor %}"><i class="icon-arrow-left"></i></a></li>
+                        {% else %}
+                        <li class="page-item disabled"><span class="page-link"><i class="icon-arrow-left"></i></span></li>
+                        {% endif %}
+
+                        {% for num in leads.paginator.page_range %}
+                            {% if num <= 10 or num == leads.paginator.num_pages %}
+                                {% if num == leads.number %}
+                                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                                {% else %}
+                                    <li class="page-item"><a class="page-link" href="?page={{ num }}&q={{ query }}{% for f,v in filters.items %}&{{ f }}={{ v }}{% endfor %}">{{ num }}</a></li>
+                                {% endif %}
+                            {% elif num == 11 %}
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if leads.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ leads.next_page_number }}&q={{ query }}{% for f,v in filters.items %}&{{ f }}={{ v }}{% endfor %}"><i class="icon-arrow-right"></i></a></li>
+                        {% else %}
+                        <li class="page-item disabled"><span class="page-link"><i class="icon-arrow-right"></i></span></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+  </div>
+</div>
+
+
+
+{% block Script %}
+<script src="/static/vendors/chart.js/Chart.min.js"></script>
+<script src="/static/vendors/moment/moment.min.js"></script>
+<script src="/static/vendors/daterangepicker/daterangepicker.js"></script>
+<script src="/static/vendors/chartist/chartist.min.js"></script>
+<script src="/static/js/dashboard.js"></script>
+
+{% endblock %}
+
+{% endblock %}

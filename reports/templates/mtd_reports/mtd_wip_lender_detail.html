@@ -1,0 +1,92 @@
+{% extends "reports/base.html" %}
+{% block title %}Bank Detail Report{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <h3 class="page-title">
+    {% if status_label %}
+    {{ status_label }} Leads - {{ lender_name }}
+    {% else %}
+    All Leads - {{ lender_name }}
+    {% endif %}
+
+  </h3>
+  <nav aria-label="breadcrumb">
+    <a href="{% url 'reports:mtd_wip_report' %}" class="btn btn-primary btn-sm">
+      <i class="icon-arrow-left"></i> Back
+    </a>
+  </nav>
+</div>
+
+<div class="row">
+  <div class="col-lg-12 stretch-card grid-margin">
+    <div class="card">
+      <div class="card-body">
+        <!-- Filters info -->
+        <p>
+          Channel: {{ channel_name|default:"All" }}<br>
+          Date Range: {{ start_date|default:"-" }} to {{ end_date|default:"-" }}
+        </p>
+
+        <div class="table-responsive border rounded p-1">
+          <table class="table">
+            <thead class="table-primary text-nowrap">
+              <tr>
+                <!-- Dynamic Sortable Columns -->
+                {% for col in sortable_fields %}
+                <th class="font-weight-bold">
+                  <a
+                    href="?sort={{ col.field }}&order={% if sort_field == col.field and order == 'asc' %}desc{% else %}asc{% endif %}{% if channel_name %}&channel_name={{ channel_name }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}">
+                    {{ col.label }}
+                    {% if sort_field == col.field %}
+                    {% if order == 'asc' %}▲{% else %}▼{% endif %}
+                    {% endif %}
+                  </a>
+                </th>
+                {% endfor %}
+               
+               
+              </tr>
+            </thead>
+            <tbody>
+              {% for lead in leads %}
+              <tr>
+                <td><a href="/admin/crm/lead/{{lead.id}}/change/">{{ lead.id }}</a></td>
+                <td>{{ lead.name }}</td>
+                <td>{{ lead.get_status_display }}</td>
+                <td>{{ lead.approved_amount|default:"0" }}</td>
+                <td>{{ lead.gross_disbursed|default:"0" }}</td>
+                <td>{{ lead.net_disbursed|default:"0" }}</td>
+                <td>{{ lead.login_amount|default:"0" }}</td>
+                <td>{{ lead.lender_name|default:"-" }}</td>
+                <td>{{ lead.channel_name|default:"-" }}</td>
+                <td>{{ lead.dos|default:"-" }}</td>
+                <td>{{ lead.dod|default:"-" }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="{% if not channel_name %}8{% else %}7{% endif %}" class="text-center">No leads found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+            {% if totals %}
+            <tfoot class="fw-bold bg-light border-top">
+              <tr>
+                <td colspan="3" class="text-end font-weight-bold">Grand Total</td>
+                <td class="font-weight-bold">{{ totals.total_approved|default:0|floatformat:2 }}</td>
+                <td class="font-weight-bold">{{ totals.total_gross_disbursed|default:0|floatformat:2 }}</td>
+                <td class="font-weight-bold">{{ totals.total_net_disbursed|default:0|floatformat:2 }}</td>
+                <td class="font-weight-bold">{{ totals.total_login|default:0|floatformat:2 }}</td>
+                
+                <td colspan="3"></td>
+                <td class="font-weight-bold">{{ totals.grand_total|default:0|floatformat:2 }}</td>
+              </tr>
+            </tfoot>
+            {% endif %}
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

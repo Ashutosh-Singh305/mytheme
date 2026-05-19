@@ -1,0 +1,140 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+    .profile-row {
+        padding: 10px 0;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    .profile-label {
+        font-weight: 600;
+        color: #6c757d;
+    }
+    .profile-value {
+        font-weight: 500;
+        color: #212529;
+    }
+</style>
+{% endblock css %}
+
+{% block body %}
+<div class="container-fluid">
+
+    <!-- Header -->
+    <div class="row mb-3">
+        <div class="col-md-12">
+            <h4 class="text-primary font-weight-bold">
+                <i class="fa fa-user"></i> My Profile
+            </h4>
+        </div>
+    </div>
+
+    <div class="row">
+         <!-- Side Card -->
+        <div class="col-md-4 grid-margin stretch-card">
+            <div class="card text-center">
+                <div class="card-body">
+
+                    <i class="fa fa-user-circle fa-4x text-primary mb-3"></i>
+
+                    <h5>{{ my_profile.user.first_name }} {{ my_profile.user.last_name }}</h5>
+                    <p class="text-muted mb-2">{{ my_profile.role }}</p>
+
+                    <hr>
+
+                    <p><strong>Emp Code:</strong> {{ my_profile.emp_code|default:"-" }}</p>
+                    <p><strong>Branch:</strong> {{ my_profile.branch.name|default:"-" }}</p>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-md-8 grid-margin stretch-card">
+            <div class="card">
+                <div class="card-body">
+
+                    <h5 class="card-title text-primary mb-4">User Details</h5>
+                    <div class="row profile-row">
+                        <div class="col-md-4 profile-label">Full Name</div>
+                        <div class="col-md-8 profile-value">
+                            {{ my_profile.user.first_name }} {{ my_profile.user.last_name }}
+                        </div>
+                    </div>
+
+                    <!-- Username -->
+                    <div class="row profile-row">
+                        <div class="col-md-4 profile-label">Username</div>
+                        <div class="col-md-8 profile-value">
+                            {{ my_profile.user.username }}
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="row profile-row">
+                        <div class="col-md-4 profile-label">Email</div>
+                        <div class="col-md-8 profile-value">
+                            {{ my_profile.user.email }}
+                        </div>
+                    </div>
+
+                    <!-- Employee Code -->
+                    <div class="row profile-row">
+                        <div class="col-md-4 profile-label">Employee Code</div>
+                        <div class="col-md-8 profile-value">
+                            {{ my_profile.emp_code|default:"-" }}
+                        </div>
+                    </div>
+
+                    <!-- Role -->
+                    <div class="row profile-row">
+                        <div class="col-md-4 profile-label">Role</div>
+                        <div class="col-md-8 profile-value">
+                            {{ my_profile.role|default:"-" }}
+                        </div>
+                    </div>
+
+                    <!-- Manager -->
+                    <div class="row profile-row">
+                        <div class="col-md-4 profile-label">Manager</div>
+                        <div class="col-md-8 profile-value">
+                            {{ my_profile.manager.username|default:"-" }}
+                        </div>
+                    </div>
+
+                    <!-- Branch -->
+                    <div class="row profile-row">
+                        <div class="col-md-4 profile-label">Branch</div>
+                        <div class="col-md-8 profile-value">
+                            {{ my_profile.branch.name|default:"-" }}
+                        </div>
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="mt-4 d-flex justify-content-end">
+                        <a href="{% url 'changepassword' %}" 
+                           class="btn btn-outline-primary mr-2 btn-sm">
+                            <i class="fa fa-key"></i> Change Password
+                        </a>
+
+
+                        <form method="post" action="{% url 'logout' %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm d-flex ">
+                                <i class="icon-power me-2"></i>
+                                 Sign Out
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block Script %}
+{% endblock %}

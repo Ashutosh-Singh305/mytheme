@@ -1,0 +1,31 @@
+
+{% extends "reports/base.html" %}
+{% block title %}Edit Report — {{ object.name }}{% endblock %}
+{% block body %}
+<div class="card">
+  <div class="card-body">
+    <h4 class="card-title mb-3">Edit “{{ object.name }}”</h4>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      <div class="mb-3">
+        <label class="form-label">Name</label>
+        {{ form.name }}
+        {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors|join:", " }}</div>{% endif %}
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Row Limit</label>
+        {{ form.limit }}
+        <div class="form-text">Maximum rows for tabular output (existing saved spec limit still applies if lower).</div>
+        {% if form.limit.errors %}<div class="text-danger small">{{ form.limit.errors|join:", " }}</div>{% endif %}
+      </div>
+      <div class="form-check mb-3">
+        {{ form.is_active }} <label class="form-check-label">Active</label>
+      </div>
+      <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" href="{{ object.get_absolute_url }}">Cancel</a>
+        <button class="btn btn-primary" type="submit">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

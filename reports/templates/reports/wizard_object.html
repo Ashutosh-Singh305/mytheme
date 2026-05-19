@@ -1,0 +1,57 @@
+{% extends "reports/base.html" %}
+{% block title %}New Report — Select Object{% endblock %}
+{% block css %}
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+{% endblock css %}
+{% block body %}
+<div class="card">
+  <div class="card-body">
+    <h4 class="card-title">Select Object</h4>
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="mb-4">
+      <ol class="breadcrumb bg-white px-3 py-2 border rounded">
+        {% for label, url in breadcrumbs %}
+        {% if url %}
+        <li class="breadcrumb-item"><a href="{{ url }}">{{ label }}</a></li>
+        {% else %}
+        <li class="breadcrumb-item active" aria-current="page">{{ label }}</li>
+        {% endif %}
+        {% endfor %}
+      </ol>
+    </nav>
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="form-group row">
+        <label class="col-sm-2 col-form-label">
+          {{ form.model.label }}
+        </label>
+        <div class="col-sm-10">
+          {{ form.model }}
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-sm" type="submit">Next</button>
+    </form>
+
+  </div>
+</div>
+{% endblock body %}
+{% block Script %}
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+  $(document).ready(function () {
+    $('.select2').select2({
+      width: '100%'
+    });
+  });
+</script>
+
+{% endblock Script %}

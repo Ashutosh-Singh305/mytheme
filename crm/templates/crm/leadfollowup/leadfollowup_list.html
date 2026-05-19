@@ -1,0 +1,403 @@
+{% extends 'crm/base.html' %}
+
+{% block title %} Lead Follow-Ups {% endblock %}
+
+{% block body %}
+<div class="page-header">
+    <h3 class="page-title"> Lead Follow-UP </h3>
+    <nav aria-label="breadcrumb">
+        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#followupNewModal">
+            Add</button>
+        <a href="javascript:history.back()" class="btn btn-secondary btn-sm">
+            Back
+        </a>
+
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-lg-12 stretch-card grid-margin">
+        <div class="card">
+            <div class="card-body">
+                <h4>Total Follow-UP : {{ followups.paginator.count }}</h4>
+
+                <div class="table-responsive border rounded p-1">
+                    <table class="table">
+                        <thead>
+                            <tr class="table-primary">
+                                <th>ID</th>
+                                <th>Lead</th>
+                                <th>User</th>
+                                <th>Follow-UP Date</th>
+                                <th>Note</th>
+                                <th>Status</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for followup in followups %}
+                            <tr>
+                                <td>{{ followup.lead.id }}</td>
+                            
+                                <td>
+                                    <a href="/crm/Lead/{{ followup.lead.id }}/">
+                                        <h6>{{ followup.lead.name|default_if_none:'' }}</h6>
+                                    </a>
+                                </td>
+                               
+                                <td>{{ followup.user.username|default_if_none:'' }}</td>
+                                <td>{{ followup.follow_up_date|date:"Y-m-d H:i" }}</td>
+                                <td>{{ followup.note|truncatewords:8|default_if_none:'' }}</td>
+                                <td>{{ followup.get_status_display|default_if_none:'' }}</td>
+
+                                <td class="text-center">
+                                    <!-- Desktop: full buttons -->
+                                    <div class="d-none d-md-inline">
+                                        <button class="btn btn-primary btn-sm followup-edit-btn" data-bs-toggle="modal"
+                                            data-bs-target="#followupEditModal" data-id="{{ followup.id }}"
+                                            data-user="{{ followup.user_id }}"
+                                            data-date="{{ followup.follow_up_date|date:'Y-m-d\\TH:i' }}"
+                                            data-status="{{ followup.status }}"
+                                            data-note="{{ followup.note|escapejs }}">
+                                            Edit
+                                        </button>
+                                        <a href="{% url 'leadfollowup_detail' followup.pk %}"
+                                            class="btn btn-info btn-sm">View</a>
+
+                                        <a href="{% url 'leadfollowup_delete' followup.pk %}"
+                                            class="btn btn-danger btn-sm">Delete</a>
+                                    </div>
+
+                                    <!-- Mobile: three dots dropdown -->
+                                    <div class="dropdown d-inline-block d-md-none">
+                                        <button class="btn btn-link p-0" type="button"
+                                            id="actionDropdown{{ followup.pk }}" data-toggle="dropdown"
+                                            aria-haspopup="true" aria-expanded="false" style="font-size: 24px;">
+                                            &#x22EE;
+                                        </button>
+                                        <div class="dropdown-menu dropdown-menu-right"
+                                            aria-labelledby="actionDropdown{{ followup.pk }}">
+                                            <button class="btn btn-primary btn-sm followup-edit-btn" data-bs-toggle="modal"
+                                            data-bs-target="#followupEditModal" data-id="{{ followup.id }}"
+                                            data-user="{{ followup.user_id }}"
+                                            data-date="{{ followup.follow_up_date|date:'Y-m-d\\TH:i' }}"
+                                            data-status="{{ followup.status }}"
+                                            data-note="{{ followup.note|escapejs }}">
+                                            Edit
+                                        </button>
+                                            <a class="dropdown-item text-danger"
+                                                href="{% url 'leadfollowup_delete' followup.pk %}">Delete</a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No follow-ups found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination start -->
+                <div class="d-flex mt-4 flex-wrap">
+                    <p class="text-muted">
+                        Showing {{ followups.start_index }} to
+                        {{ followups.end_index }} of {{ followups.paginator.count }}
+                        follow-ups
+                    </p>
+                    <nav class="ml-auto">
+                        <ul class="pagination separated pagination-primary">
+                            {% if followups.has_previous %}
+                            <li class="page-item">
+                                <a href="?page={{ followups.previous_page_number }}" class="page-link">
+                                    <i class="icon-arrow-left"></i>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link">
+                                    <i class="icon-arrow-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% for num in followups.paginator.page_range %}
+                            {% if followups.number == num %}
+                            <li class="page-item active">
+                                <a class="page-link">{{ num }}</a>
+                            </li>
+                            {% else %}
+                            <li class="page-item">
+                                <a href="?page={{ num }}" class="page-link">{{ num }}</a>
+                            </li>
+                            {% endif %}
+                            {% endfor %}
+
+                            {% if followups.has_next %}
+                            <li class="page-item">
+                                <a href="?page={{ followups.next_page_number }}" class="page-link">
+                                    <i class="icon-arrow-right"></i>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <a class="page-link">
+                                    <i class="icon-arrow-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                <!-- Pagination end -->
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Follow-Up Modal -->
+<div class="modal fade" id="followupNewModal" tabindex="-1"
+     aria-labelledby="followupNewModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content shadow-sm border-0">
+
+      <!-- Header -->
+      <div class="modal-header bg-light border-bottom">
+        <div>
+          <h5 class="modal-title mb-0" id="followupNewModalLabel">
+            New Lead Follow-Up
+          </h5>
+          <small class="text-muted">Log an interaction or reminder</small>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"
+                aria-label="Close">&times;</button>
+      </div>
+
+      <!-- Form -->
+      <form id="followupCreateForm" class="px-3 py-2">
+        {% csrf_token %}
+
+        <!-- Lead (Read-only) -->
+        <div class="mb-3">
+          <label class="form-label text-muted mb-1">Lead</label>
+          <input type="text"
+                 class="form-control form-control-sm bg-light"
+                 value="{{ lead.name }}"
+                 disabled>
+          <input type="hidden" name="lead" value="{{ lead.id }}">
+        </div>
+
+        <!-- Row: User + Date -->
+        <div class="row g-2 mb-3">
+          <div class="col-md-6">
+            <label class="form-label mb-1">User</label>
+            <select name="user"
+                    class="form-control form-control-sm select2-single"
+                    required>
+              {% for u in users %}
+              <option value="{{ u.id }}"
+                {% if u.id == request.user.id %}selected{% endif %}>
+                {{ u.get_full_name|default:u.username }}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label mb-1">Follow-up Date</label>
+            <input type="datetime-local"
+                   name="follow_up_date"
+                   class="form-control form-control-sm">
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="mb-3">
+          <label class="form-label mb-1">Status</label>
+          <select name="status"
+                  class="form-control form-control-sm select2-single">
+            {% for key, label in LEAD_STATUS_CHOICES %}
+            <option value="{{ key }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Note -->
+        <div class="mb-3">
+          <label class="form-label mb-1">
+            Note <span class="text-danger">*</span>
+          </label>
+          <textarea name="note"
+                    class="form-control form-control-sm"
+                    rows="3"
+                    placeholder="Add follow-up notes..."
+                    required></textarea>
+        </div>
+
+        <!-- Errors -->
+        <div id="followupFormErrors"
+             class="alert alert-danger d-none py-2 mb-2"></div>
+
+        <!-- Footer -->
+        <div class="modal-footer px-0 pb-0 pt-2 border-top-0">
+          <button type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  data-bs-dismiss="modal">
+            Cancel
+          </button>
+          <button type="submit"
+                  class="btn btn-primary btn-sm">
+            Submit
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>
+
+<!-- Edit Follow-Up Modal -->
+<div class="modal fade" id="followupEditModal" tabindex="-1">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content shadow-sm border-0">
+
+            <div class="modal-header bg-light">
+                <h5 class="modal-title">Edit Follow-Up</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal">&times;</button>
+            </div>
+
+            <form id="followupUpdateForm" class="p-3">
+                {% csrf_token %}
+                <input type="hidden" name="id" id="edit_id">
+
+                <div class="mb-2">
+                    <label class="form-label">User</label>
+                    <select name="user" id="edit_user" class="form-control form-control-sm">
+                        {% for u in users %}
+                        <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Follow-up Date</label>
+                    <input type="datetime-local" name="follow_up_date" id="edit_date"
+                        class="form-control form-control-sm">
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Status</label>
+                    <select name="status" id="edit_status" class="form-control form-control-sm">
+                        {% for key, label in LEAD_STATUS_CHOICES %}
+                        <option value="{{ key }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-2">
+                    <label class="form-label">Note *</label>
+                    <textarea name="note" id="edit_note" class="form-control form-control-sm" rows="3"
+                        required></textarea>
+                </div>
+
+                <div id="editErrors" class="alert alert-danger d-none mt-2"></div>
+
+                <div class="text-end mt-3">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        Update
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+{% endblock body %}
+{% block Script %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Follow up edit -->
+<script>
+    $('.followup-edit-btn').on('click', function () {
+        $('#edit_id').val($(this).data('id'));
+        $('#edit_user').val($(this).data('user'));
+        $('#edit_date').val($(this).data('date'));
+        $('#edit_status').val($(this).data('status'));
+        $('#edit_note').val($(this).data('note'));
+    });
+</script>
+
+<script>
+    $('#followupUpdateForm').on('submit', function (e) {
+        e.preventDefault();
+
+        const id = $('#edit_id').val();
+
+        $.ajax({
+            url: `/crm/leadfollowups/${id}/edit/`,
+            method: "POST",
+            data: $(this).serialize(),
+
+            success: function () {
+                location.reload(); // simple + safe
+            },
+
+            error: function (xhr) {
+                let html = '<ul>';
+                $.each(xhr.responseJSON.errors, function (k, v) {
+                    html += `<li>${v[0]}</li>`;
+                });
+                html += '</ul>';
+                $('#editErrors').removeClass('d-none').html(html);
+            }
+        });
+    });
+</script>
+
+<!-- Follow up create -->
+
+<script>
+    $('#followupCreateForm').on('submit', function (e) {
+        e.preventDefault();
+
+        const $form = $(this);
+        const $errors = $('#followupFormErrors');
+
+        $.ajax({
+            url: "{% url 'leadfollowup_create' %}",
+            method: "POST",
+            data: $form.serialize(),
+
+            success: function (response) {
+                // Hide modal
+                $('#followupNewModal').modal('hide');
+
+                // Reset form
+                $form[0].reset();
+                $errors.addClass('d-none').html('');
+
+                // Optional: refresh timeline or list
+                // location.reload();
+            },
+
+            error: function (xhr) {
+                let html = '<ul class="mb-0">';
+
+                $.each(xhr.responseJSON.errors, function (field, msgs) {
+                    html += `<li>${msgs[0]}</li>`;
+                });
+
+                html += '</ul>';
+
+                $errors.removeClass('d-none').html(html);
+            }
+        });
+    });
+</script>
+
+{% endblock %}

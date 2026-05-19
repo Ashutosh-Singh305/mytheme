@@ -1,0 +1,272 @@
+{% extends "reports/base.html" %}
+{% block title %}Channel Lender Report{% endblock %}
+{% block body %}
+<div class="row">
+    <div class="col-lg-12 stretch-card grid-margin">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="mb-3 p-2">MTD WIP Report</h4>
+
+                <!-- Filters -->
+                <div class="mb-3">
+                    <form method="get" class="d-flex flex-column">
+
+                        <div class="row">
+                            <!-- GROUP BY (Left Column) -->
+                            <div class="col-md-6 mb-3">
+                                <fieldset class="border rounded p-3">
+                                    <legend class="w-auto px-2 font-weight-bold">Group By</legend>
+
+                                    <div class="form-group mb-2">
+                                        <label for="channel_name">Channel <span class="text-danger">*</span></label>
+                                        <select name="channel_name" id="channel_name" class="form-control form-control-sm" required>
+                                            <option value="">--- Select Channel ---</option>
+                                            <option value="all" {% if channel_name == "all" %}selected{% endif %}>All</option>
+                                            {% for value, label in channel_choices %}
+                                                <option value="{{ value }}" {% if channel_name == value %}selected{% endif %}>{{ label }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="form-text text-danger">
+                                            You must select a Channel to view leads.
+                                        </small>
+                                    </div>
+
+                                    <div class="form-group mb-2">
+                                        <label for="report_type">Select Group Type</label>
+                                        <select name="report_type" id="report_type" class="form-control form-control-sm">
+                                            <option value="sum" {% if report_type == "sum" %}selected{% endif %}>Sum</option>
+                                            <option value="count" {% if report_type == "count" %}selected{% endif %}>Count</option>
+                                        </select>
+                                    </div>
+                                </fieldset>
+                            </div>
+
+                            <!-- FILTER BY (Right Column) -->
+                            <div class="col-md-6 mb-3">
+                                <fieldset class="border rounded p-3">
+                                    <legend class="w-auto px-2 font-weight-bold">Filter By</legend>
+
+                                    <div class="form-row">
+                                        <div class="col-md-6 mb-2">
+                                            <label for="assignment_field">Assignment Field</label>
+                                            <select name="assignment_field" id="assignment_field" class="form-control form-control-sm">
+                                                <option value="">-- Select Field --</option>
+                                                {% for value, label in assignment_types %}
+                                                    <option value="{{ value }}" {% if assignment_field == value %}selected{% endif %}>{{ label }}</option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <div class="col-md-6 mb-2">
+                                            <label for="assignment_value">Assignment Field Value</label>
+                                            <select name="assignment_value" id="assignment_value" class="form-control form-control-sm" data-selected="{{ assignment_value }}">
+                                                <option value="">-- Select User --</option>
+                                                {% for user in users_for_field %}
+                                                    <option value="{{ user.id }}" {% if assignment_value|stringformat:"s" == user.id|stringformat:"s" %}selected{% endif %}>
+                                                        {{ user.get_full_name|default:user.username }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-row">
+                                        <div class="col-md-6 mb-2">
+                                            <label for="start_date">DOS Start Date</label>
+                                            <input type="date" name="start_date" id="start_date" value="{{ start_date }}" class="form-control form-control-sm">
+                                        </div>
+                                        <div class="col-md-6 mb-2">
+                                            <label for="end_date">DOS End Date</label>
+                                            <input type="date" name="end_date" id="end_date" value="{{ end_date }}" class="form-control form-control-sm">
+                                        </div>
+                                    </div>
+                                </fieldset>
+                            </div>
+                        </div>
+
+                        <!-- Buttons (Below Both Columns, Centered) -->
+                        <div class="d-flex justify-content-center mt-2">
+                            <button type="submit" class="btn btn-primary btn-sm mr-2">Filter</button>
+
+                            <a href="?channel_name={{ channel_name }}&report_type={{ report_type }}&start_date={{ start_date }}&end_date={{ end_date }}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}&export=1"
+                            class="btn btn-success btn-sm">Export to Excel</a>
+                        </div>
+
+                    </form>
+
+                </div>
+
+                <!-- Report Table -->
+                <div class="table-responsive border rounded p-1">
+                    <table class="table mb-3">
+                        <thead class="table-primary text-nowrap">
+                            <tr>
+                                <th class="font-weight-bold">
+                                    <a href="?channel_name={{ channel_name }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by=lender&sort_order={% if sort_by == 'lender' and sort_order == 'asc' %}desc{% else %}asc{% endif %}">
+                                        Lender
+                                        {% if sort_by == "lender" %}
+                                            {% if sort_order == "asc" %}▲{% else %}▼{% endif %}
+                                        {% endif %}
+                                    </a>
+                                </th>
+                                {% for field in status_headers %}
+                                    {% with col_key=field|lower|slugify %}
+                                        <th class="font-weight-bold">
+                                            <a href="?channel_name={{ channel_name }}&start_date={{ start_date }}&end_date={{ end_date }}&sort_by={{ col_key }}&sort_order={% if sort_by == col_key and sort_order == 'asc' %}desc{% else %}asc{% endif %}">
+                                                {{ field }}
+                                                {% if sort_by == col_key %}
+                                                    {% if sort_order == "asc" %}▲{% else %}▼{% endif %}
+                                                {% endif %}
+                                            </a>
+                                        </th>
+                                    {% endwith %}
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for r in rows %}
+                                <tr {% if r.lender == "Grand Total" %} class="font-weight-bold table-secondary" {% endif %}>
+                                    <td>
+                                        {% if r.lender != "Grand Total" %}
+                                            <a href="{% url 'reports:mtd_lender_detail' lender_id=r.lender_id|default:0 %}?channel_name={{ channel_name }}&start_date={{ start_date }}&end_date={{ end_date }}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}">
+                                                {{ r.lender }}
+                                            </a>
+                                        {% else %}
+                                            {{ r.lender }}
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="">
+                                        {% if r.lender != "Grand Total" %}
+                                            <a href="{% url 'reports:mtd_lender_detail' lender_id=r.lender_id|default:0 %}?status=approved&channel_name={{ channel_name }}&start_date={{ start_date }}&end_date={{ end_date }}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}">
+                                                {{ r.approved|floatformat:0 }}
+                                            </a>
+                                        {% else %}
+                                            {{ r.approved|floatformat:0 }}
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="">
+                                        {% if r.lender != "Grand Total" %}
+                                            <a href="{% url 'reports:mtd_lender_detail' lender_id=r.lender_id|default:0 %}?status=ofb&channel_name={{ channel_name }}&start_date={{ start_date }}&end_date={{ end_date }}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}">
+                                                {{ r.ofb|floatformat:0 }}
+                                            </a>
+                                        {% else %}
+                                            {{ r.ofb }}
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="">
+                                        {% if r.lender != "Grand Total" %}
+                                            <a href="{% url 'reports:mtd_lender_detail' lender_id=r.lender_id|default:0 %}?status=reject_relook&channel_name={{ channel_name }}&start_date={{ start_date }}&end_date={{ end_date }}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}">
+                                                {{ r.reject_relook|floatformat:0 }}
+                                            </a>
+                                        {% else %}
+                                            {{ r.reject_relook|floatformat:0 }}
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="">
+                                        {% if r.lender != "Grand Total" %}
+                                            <a href="{% url 'reports:mtd_lender_detail' lender_id=r.lender_id|default:0 %}?status=underwriting&channel_name={{ channel_name }}&start_date={{ start_date }}&end_date={{ end_date }}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}">
+                                                {{ r.underwriting|floatformat:0 }}
+                                            </a>
+                                        {% else %}
+                                            {{ r.underwriting|floatformat:0 }}
+                                        {% endif %}
+                                    </td>
+
+                                     <td class="">
+                                        {% if r.lender != "Grand Total" %}
+                                            <a href="{% url 'reports:mtd_lender_detail' lender_id=r.lender_id|default:0 %}?status=disbursed&channel_name={{ channel_name }}&start_date={{ start_date }}&end_date={{ end_date }}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}">
+                                                {{ r.net_disbursed|floatformat:0 }}
+                                            </a>
+                                        {% else %}
+                                            {{ r.net_disbursed|floatformat:0 }}
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="">
+                                        {% if r.lender != "Grand Total" %}
+                                            <a href="{% url 'reports:mtd_lender_detail' lender_id=r.lender_id|default:0 %}?status=disbursed&channel_name={{ channel_name }}&start_date={{ start_date }}&end_date={{ end_date }}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}">
+                                                {{ r.gross_disbursed|floatformat:0 }}
+                                            </a>
+                                        {% else %}
+                                            {{ r.gross_disbursed|floatformat:0 }}
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="">{{ r.grand_total|floatformat:0 }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No data found</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block Script %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+function loadUsersForAssignmentField() {
+    const assignmentField = document.getElementById("assignment_field").value;
+    const userSelect = document.getElementById("assignment_value");
+    const currentValue = userSelect.getAttribute("data-selected") || "";
+    const channelName = document.getElementById("channel_name")?.value || "";
+
+    if (!assignmentField) {
+        userSelect.innerHTML = '<option value="">-- Select User --</option>';
+        return;
+    }
+
+    // Disable dropdown while fetching
+    userSelect.disabled = true;
+    userSelect.innerHTML = '<option value="">Loading...</option>';
+
+    fetch(`/reports/ajax/users-by-assignment/?assignment_field=${assignmentField}&channel_name=${channelName}`)
+        .then(res => res.json())
+        .then(data => {
+            userSelect.disabled = false;
+            userSelect.innerHTML = '<option value="">-- Select User --</option>';
+
+            if (data.users.length === 0) {
+                const opt = document.createElement("option");
+                opt.textContent = "No users available";
+                opt.disabled = true;
+                userSelect.appendChild(opt);
+                return;
+            }
+
+            data.users.forEach(user => {
+                const option = document.createElement("option");
+                option.value = user.id;
+                option.textContent = user.name;
+                if (user.id == currentValue) option.selected = true;
+                userSelect.appendChild(option);
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            userSelect.innerHTML = '<option disabled>Error loading users</option>';
+            userSelect.disabled = false;
+        });
+}
+
+// Run on page load
+document.addEventListener("DOMContentLoaded", function() {
+    const assignmentField = document.getElementById("assignment_field").value;
+    if (assignmentField) loadUsersForAssignmentField();
+
+    document.getElementById("assignment_field").addEventListener("change", loadUsersForAssignmentField);
+    const channelSelect = document.getElementById("channel_name");
+    if (channelSelect) channelSelect.addEventListener("change", loadUsersForAssignmentField);
+});
+</script>
+{% endblock Script %}

@@ -1,0 +1,346 @@
+{% extends 'crm/base.html' %}
+
+{% block title %} Bulk Assign Leads {% endblock %}
+
+{% block body %}
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between">
+    <h5>Bulk Lead Assignment</h5>
+
+    <div class="d-flex">
+
+      <select id="leadSourceFilter" class="form-control form-control-sm mr-2">
+        <option value="">All Lead Source</option>
+        {% for key,label in lead_source_choices %}
+        <option value="{{ key }}" {% if key == selected_lead_source %}selected{% endif %}>
+          {{ label }}
+        </option>
+        {% endfor %}
+      </select>
+
+      <select id="assignedToFilter" class="form-control form-control-sm mr-2">
+        <option value="">All Assigned To</option>
+        {% for user in users %}
+        <option value="{{ user.id }}" {% if user.id|stringformat:"s" == selected_assigned_to %}selected{% endif %}>
+          {{ user.username }}
+        </option>
+        {% endfor %}
+      </select>
+
+      <select id="statusFilter" class="form-control form-control-sm mr-2">
+        <option value="">All Status</option>
+        {% for key,label in status_choices %}
+        <option value="{{ key }}" {% if key == selected_status %}selected{% endif %}>
+          {{ label }}
+        </option>
+        {% endfor %}
+      </select>
+
+      <select id="perPage" class="form-control mr-2">
+        <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
+        <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
+        <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
+        <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
+      </select>
+
+      <button class="btn btn-primary" onclick="applyFilter()">Apply</button>
+    </div>
+  </div>
+
+  <div class="card-body">
+
+    <!-- ASSIGN -->
+    <div class="d-flex mb-3">
+      <select id="assignUser" class="form-control mr-2">
+        <option value="">Assign To</option>
+        {% for user in users %}
+        <option value="{{ user.id }}">{{ user.username }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="team_lead" class="form-control mr-2">
+        <option value="">Select TL</option>
+        {% for user in team_leads %}
+        <option value="{{ user.id }}">{{ user.username }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="business_head" class="form-control mr-2">
+        <option value="">Select BH</option>
+        {% for user in business_heads %}
+        <option value="{{ user.id }}">{{ user.username }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="business_manager" class="form-control mr-2">
+        <option value="">Select BM</option>
+        {% for user in business_managers %}
+        <option value="{{ user.id }}">{{ user.username }}</option>
+        {% endfor %}
+      </select>
+
+      <select name="tele_sales_executive" class="form-control mr-2">
+        <option value="">Select TSE</option>
+        {% for user in users %}
+        <option value="{{ user.id }}">{{ user.username }}</option>
+        {% endfor %}
+      </select>
+
+      <button class="btn btn-success btn-sm" onclick="assignLeads()">Assign Selected</button>
+    </div>
+
+    <!-- TABLE + PAGINATION -->
+    <div class="table-responsive">
+
+      <table class="table sf-table">
+
+        <thead>
+          <tr class="table-primary text-capitalize font-weight-bold">
+            <th><input type="checkbox" id="selectAll"></th>
+
+            <th class="text-capitalize font-weight-bold">
+              <a href="?sort=name&dir={% if sort == 'name' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                Name
+              </a>
+            </th>
+
+            <th class="text-capitalize font-weight-bold">
+              <a
+                href="?sort=mobile_number&dir={% if sort == 'mobile_number' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                Mobile
+              </a>
+            </th>
+
+            <th class="text-capitalize font-weight-bold">
+              <a
+                href="?sort=lead_source&dir={% if sort == 'lead_source' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                Lead Source
+              </a>
+            </th>
+
+            <th class="text-capitalize font-weight-bold">
+              <a href="?sort=status&dir={% if sort == 'status' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                Status
+              </a>
+            </th>
+            <th class="text-capitalize font-weight-bold">
+              <a
+                href="?sort=team_lead&dir={% if sort == 'team_lead' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                Team Lead
+              </a>
+            </th>
+            <th class="text-capitalize font-weight-bold">
+              <a
+                href="?sort=business_head&dir={% if sort == 'business_head' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                Business Head
+              </a>
+            </th>
+            <th class="text-capitalize font-weight-bold">
+              <a
+                href="?sort=business_manager&dir={% if sort == 'business_manager' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                Business Manager
+              </a>
+            </th>
+            <th class="text-capitalize font-weight-bold">
+              <a
+                href="?sort=tele_sales_executive&dir={% if sort == 'tele_sales_executive' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                Tele Sales Executive
+              </a>
+            </th>
+            <th class="text-capitalize font-weight-bold">
+              <a
+                href="?sort=assigned_to&dir={% if sort == 'assigned_to' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+                Assigned To
+              </a>
+            </th>
+
+          </tr>
+        </thead>
+
+        <tbody>
+          {% if page_obj.object_list %}
+          {% for lead in page_obj %}
+          <tr>
+            <td><input type="checkbox" class="rowCheck" value="{{ lead.id }}"></td>
+            <td>{{ lead.name }}</td>
+            <td>XXXXXX{{ lead.mobile_number|slice:"-4:" }}</td>
+            <td>{{ lead.get_lead_source_display|default:"-" }}</td>
+            <td>{{ lead.get_status_display }}</td>
+            <td>{{ lead.team_lead.username|default:"-" }}</td>
+            <td>{{ lead.business_head.username|default:"-" }}</td>
+            <td>{{ lead.business_manager.username|default:"-" }}</td>
+            <td>{{ lead.tele_sales_executive.username|default:"-" }}</td>
+            <td>{{ lead.assigned_to.username|default:"-" }}</td>
+          </tr>
+          {% endfor %}
+          {% else %}
+          <tr>
+            <td colspan="7" class="text-center p-4">
+              No Leads Found
+            </td>
+          </tr>
+          {% endif %}
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <!-- 🔥 PAGINATION STRICTLY BELOW TABLE -->
+    <div class="d-flex justify-content-between align-items-center mt-3">
+
+      <p class="text-muted mb-0">
+        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }}
+        of {{ page_obj.paginator.count }} entries
+      </p>
+
+      <ul class="pagination mb-0">
+
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}
+            {% if selected_status %}&status={{ selected_status }}{% endif %}
+            {% if selected_lead_source %}&lead_source={{ selected_lead_source }}{% endif %}
+            {% if selected_assigned_to %}&assigned_to={{ selected_assigned_to }}{% endif %}
+            &per_page={{ per_page }}">
+            «
+          </a>
+        </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        {% if num == page_obj.number %}
+        <li class="page-item active">
+          <span class="page-link">{{ num }}</span>
+        </li>
+        {% else %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ num }}
+                {% if selected_status %}&status={{ selected_status }}{% endif %}
+                {% if selected_lead_source %}&lead_source={{ selected_lead_source }}{% endif %}
+                {% if selected_assigned_to %}&assigned_to={{ selected_assigned_to }}{% endif %}
+                &per_page={{ per_page }}">
+            {{ num }}
+          </a>
+        </li>
+        {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}
+            {% if selected_status %}&status={{ selected_status }}{% endif %}
+            {% if selected_lead_source %}&lead_source={{ selected_lead_source }}{% endif %}
+            {% if selected_assigned_to %}&assigned_to={{ selected_assigned_to }}{% endif %}
+            &per_page={{ per_page }}">
+            »
+          </a>
+        </li>
+        {% endif %}
+
+      </ul>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+  document.getElementById("selectAll").addEventListener("change", function () {
+    document.querySelectorAll(".rowCheck").forEach(cb => cb.checked = this.checked);
+  });
+
+  function applyFilter() {
+    let status = document.getElementById("statusFilter").value;
+    let leadSource = document.getElementById("leadSourceFilter").value;
+    let assignedTo = document.getElementById("assignedToFilter").value;
+    let perPage = document.getElementById("perPage").value;
+
+    let url = `?per_page=${perPage}`;
+
+    if (status) url += `&status=${status}`;
+    if (leadSource) url += `&lead_source=${leadSource}`;
+    if (assignedTo) url += `&assigned_to=${assignedTo}`;
+
+    window.location.href = url;
+  }
+
+  function assignLeads() {
+
+   
+    let selected = [];
+    document.querySelectorAll(".rowCheck:checked").forEach(cb => {
+      selected.push(cb.value);
+    });
+
+    if (selected.length === 0) {
+      alert("Select at least one lead");
+      return;
+    }
+
+   
+    let assignedTo = document.getElementById("assignUser").value;
+
+    let teamLead = document.querySelector("[name='team_lead']").value;
+    let businessHead = document.querySelector("[name='business_head']").value;
+    let businessManager = document.querySelector("[name='business_manager']").value;
+    let tse = document.querySelector("[name='tele_sales_executive']").value; 
+              
+
+    // -------------------------------
+    // 🔥 VALIDATION
+    // -------------------------------
+    if (!assignedTo && !teamLead && !businessHead && !businessManager && !tse) {
+      alert("Select at least one assignment field");
+      return;
+    }
+
+    // -------------------------------
+    // 🔥 BUILD REQUEST BODY
+    // -------------------------------
+    let body = selected.map(id => `lead_ids[]=${id}`).join("&");
+
+    if (assignedTo) body += `&assigned_to=${assignedTo}`;
+    if (teamLead) body += `&team_lead=${teamLead}`;
+    if (businessHead) body += `&business_head=${businessHead}`;
+    if (businessManager) body += `&business_manager=${businessManager}`;
+    if (tse) body += `&tele_sales_executive=${tse}`;
+
+    // -------------------------------
+    // 🔥 API CALL
+    // -------------------------------
+    fetch("{% url 'assign_leads' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": getCSRF()
+      },
+      body: body
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+
+      alert(`✅ Updated ${data.updated} leads`);
+      location.reload();
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Something went wrong");
+    });
+  }
+
+  function getCSRF() {
+    return document.cookie.split('; ')
+      .find(row => row.startsWith('csrftoken'))
+      .split('=')[1];
+  }
+
+</script>
+
+{% endblock %}

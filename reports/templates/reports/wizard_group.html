@@ -1,0 +1,286 @@
+{% extends "reports/base.html" %}
+{% block title %}New Report — Groupings & Measures{% endblock %}
+
+{% block body %}
+
+<style>
+  .pick-table thead th {
+    background: #f8f9fa;
+    font-weight: 600;
+  }
+
+  .pick-table td {
+    vertical-align: middle !important;
+  }
+
+  .pick-table .field-label {
+    font-weight: 500;
+  }
+
+  .section-wrap {
+    border: 1px solid #dee2e6;
+    border-radius: .5rem;
+    padding: 1rem;
+    background: #fff;
+  }
+
+  .section-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: .5rem;
+  }
+
+  .scroll-box {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    max-height: 250px;
+    overflow-y: auto;
+    padding: 8px;
+  }
+
+  .check-td {
+    width: 55px;
+    text-align: center;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+  }
+
+  .position-static {
+    position: static !important;
+  }
+</style>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <!-- Breadcrumbs -->
+    <div class="mb-3">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          {% for label, url in breadcrumbs %}
+          {% if url %}
+          <li class="breadcrumb-item">
+            <a href="{{ url }}">{{ label }}</a>
+          </li>
+          {% else %}
+          <li class="breadcrumb-item active" aria-current="page">
+            {{ label }}
+          </li>
+          {% endif %}
+          {% endfor %}
+        </ol>
+      </nav>
+    </div>
+
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h4 class="card-title mb-0">
+        Groupings &amp; Measures <span class="text-muted">({{ view|title }})</span>
+      </h4>
+
+      <div class="d-none d-md-flex align-items-center small">
+        <span class="badge badge-secondary mr-1">1. Basics</span>
+        <span class="badge badge-primary mr-1">2. Groupings</span>
+        <span class="badge badge-secondary">3. Preview</span>
+      </div>
+    </div>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="row">
+
+        {% if view == "matrix" %}
+
+        <!-- COLUMN GROUPS -->
+        <div class="col-lg-6 mb-3">
+          <section class="section-wrap h-100">
+
+            <div class="section-title d-flex align-items-center">
+              Column Groups
+              <span class="badge badge-light border ml-2 text-dark">Matrix view only</span>
+            </div>
+            <div class="form-group mb-2">
+              <input type="text" id="field-search1" class="form-control form-control-sm" placeholder="Search fields...">
+            </div>
+
+            <!-- Select All -->
+            <div class="d-flex align-items-center mb-2">
+              <input type="checkbox" id="select-all-col" class="mr-2">
+              <label for="select-all-col" class="font-weight-bold mb-0">Select All</label>
+            </div>
+
+            <div class="scroll-box">
+              <table class="table table-sm table-hover pick-table mb-0">
+                <tbody id="column-search">
+                  {% for val, label in form.col_groups.field.choices %}
+                  <tr class="align-middle">
+                    <td class="check-td">
+                      <input type="checkbox" class="form-check-input position-static"
+                        name="{{ form.col_groups.html_name }}" id="cg_{{ forloop.counter }}"
+                         value="{{ val }}" {% with sel=selected_col_groups|default:form.col_groups.value %}
+                        
+                        {% if sel and val in sel %}checked{% endif %} {% endwith %}>
+                        
+                    </td>
+                    <td class="py-2">
+                      <label for="cg_{{ forloop.counter }}" class="mb-0 d-flex align-items-center">{{ label }}</label>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+          </section>
+        </div>
+
+        {% endif %}
+
+        <!-- ROW GROUPS -->
+        <div class="{% if view == 'matrix' %}col-lg-6{% else %}col-12{% endif %} mb-3">
+          <section class="section-wrap h-100">
+
+            <div class="section-title d-flex align-items-center">
+              Row Groups
+              <span class="badge badge-light border ml-2 text-dark">Choose one or more</span>
+            </div>
+
+            <div class="form-group mb-2">
+              <input type="text" id="field-search2" class="form-control form-control-sm" placeholder="Search fields...">
+            </div>
+
+            <!-- Select All -->
+            <div class="d-flex align-items-center mb-2">
+              <input type="checkbox" id="select-all-row" class="mr-2">
+              <label for="select-all-row" class="font-weight-bold mb-0">Select All</label>
+            </div>
+
+            <div class="scroll-box">
+              <table class="table table-sm table-hover pick-table mb-0">
+                <tbody id="rowSearch">
+                  {% for val, label in form.row_groups.field.choices %}
+                  <tr class="align-middle">
+                    <td class="check-td">
+                      <input type="checkbox" class="form-check-input position-static"
+                        name="{{ form.row_groups.html_name }}" id="rg_{{ forloop.counter }}"
+                         value="{{ val }}" {% with sel=selected_row_groups|default:form.row_groups.value %}
+                         {% if sel and val in sel %}checked{% endif %} {% endwith %}>
+                        
+                    </td>
+                    <td class="py-2">
+                      <label for="rg_{{ forloop.counter }}" class="mb-0 d-flex align-items-center">{{ label }}</label>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+
+          </section>
+        </div>
+
+      </div>
+
+      <!-- MEASURE SECTION -->
+      <section class="section-wrap mb-3">
+        <div class="section-title">Measure</div>
+        <div class="row">
+          <div class="col-md-4">
+            {{ form.fn }}
+          </div>
+          <div class="col-md-8">
+            {{ form.field }}
+            <small class="form-text text-muted">
+              Leave blank when using <strong>Count</strong> to count all rows.
+            </small>
+          </div>
+        </div>
+      </section>
+
+      <!-- ACTIONS -->
+      <div class="pt-3 border-top">
+        <a href="javascript:history.back()" class="btn btn-secondary btn-sm">Back</a>
+        <button class="btn btn-primary btn-sm" type="submit">Next</button>
+      </div>
+
+    </form>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block Script %}
+<!-- JS: Select All Logic -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+
+    function bindSelectAll(selectAllId, groupName) {
+      const selectAll = document.getElementById(selectAllId);
+      const boxes = document.querySelectorAll(`input[name="${groupName}"]`);
+
+      if (!selectAll || boxes.length === 0) return;
+
+      // When clicking "Select All"
+      selectAll.addEventListener("change", function () {
+        boxes.forEach(cb => cb.checked = selectAll.checked);
+      });
+
+      // Auto-updating Select All when user toggles individuals
+      boxes.forEach(cb => {
+        cb.addEventListener("change", function () {
+          selectAll.checked = [...boxes].every(c => c.checked);
+        });
+      });
+    }
+
+    bindSelectAll("select-all-row", "{{ form.row_groups.html_name }}");
+    bindSelectAll("select-all-col", "{{ form.col_groups.html_name }}");
+
+  });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.getElementById("field-search1");
+    const tableBody = document.getElementById("column-search");
+
+    if (!searchInput || !tableBody) return;
+
+    const rows = tableBody.querySelectorAll("tr");
+
+    searchInput.addEventListener("keyup", function () {
+      const query = this.value.toLowerCase().trim();
+
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+
+        row.style.display = text.includes(query) ? "" : "none";
+      });
+    });
+
+  });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.getElementById("field-search2");
+    const tableBody = document.getElementById("rowSearch");
+
+    if (!searchInput || !tableBody) return;
+
+    const rows = tableBody.querySelectorAll("tr");
+
+    searchInput.addEventListener("keyup", function () {
+      const query = this.value.toLowerCase().trim();
+
+      rows.forEach(row => {
+        const text = row.innerText.toLowerCase();
+
+        row.style.display = text.includes(query) ? "" : "none";
+      });
+    });
+
+  });
+</script>
+{% endblock Script %}

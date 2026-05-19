@@ -1,0 +1,76 @@
+{% extends 'crm/base.html' %}
+
+{% block title %} Follow-up Detail {% endblock %}
+{% block css %}
+<link rel="stylesheet" href="/static/css/profile.css">
+{% endblock css %}
+{% block body %}
+<div class="card">
+    <div class="p-2 mb-4">
+        <h3 class="mb-3 p-2 text-primary">Follow-up Details</h3>
+
+        <!-- Lead Information -->
+        <div class="profile-section">
+            <h5>Lead Information</h5>
+            <div class="profile-item">
+                <span class="profile-label">Lead Name</span>
+                <span class="profile-value">
+                    <a href="/crm/Lead/{{ followup.lead.id }}/" class="text-decoration-none">
+                        {{ followup.lead.name|default_if_none:'' }}
+                    </a>
+                </span>
+            </div>
+        </div>
+
+        <!-- Follow-up Details -->
+        <div class="profile-section">
+            <h5>Follow-up Details</h5>
+            <div class="profile-item">
+                <span class="profile-label">Note</span>
+                <span class="profile-value">{{ followup.note|default_if_none:'-' }}</span>
+            </div>
+            <div class="profile-item">
+                <span class="profile-label">Follow-up Date</span>
+                <span class="profile-value">{{ followup.follow_up_date|date:"d-m-Y H:i" }}</span>
+            </div>
+        </div>
+
+        <!-- User Info -->
+        <div class="profile-section">
+            <h5>Assigned User</h5>
+            <div class="profile-item">
+                <span class="profile-label">Handled By</span>
+                <span class="profile-value">{{ followup.user.get_full_name|default:followup.user.username }}</span>
+            </div>
+        </div>
+
+        <!-- Audit Trail -->
+        <div class="profile-section">
+            <h5>Audit Trail</h5>
+            <div class="profile-item">
+                <span class="profile-label">Created By</span>
+                <span class="profile-value">{{ followup.created_by|default_if_none:'' }}</span>
+            </div>
+            <div class="profile-item">
+                <span class="profile-label">Created At</span>
+                <span class="profile-value">{{ followup.created_date|date:"d-m-Y H:i" }}</span>
+            </div>
+            <div class="profile-item">
+                <span class="profile-label">Modified By</span>
+                <span class="profile-value">{{ followup.modified_by|default_if_none:'' }}</span>
+            </div>
+            <div class="profile-item">
+                <span class="profile-label">Modified At</span>
+                <span class="profile-value">{{ followup.modified_date|date:"d-m-Y H:i" }}</span>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-4">
+            <!-- <a href="{% url 'leadfollowup_update' followup.pk %}" class="btn btn-primary btn-sm">Edit</a> -->
+            <a href="{% url 'leadfollowup_delete' followup.pk %}" class="btn btn-danger btn-sm">Delete</a>
+            <a href="javascript:history.back()" class="btn btn-secondary btn-sm">Back</a>
+        </div>
+    </div>
+</div>
+{% endblock body %}

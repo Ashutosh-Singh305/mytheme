@@ -1,0 +1,99 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Field Access Control{% endblock %}
+
+{% block body %}
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">Manage Field Access Controls</h3>
+        </div>
+
+        <div class="card-body">
+            <form method="get" class="form-inline mb-3">
+                <label for="modelSelect" class="mr-2">Select Model:</label>
+                <select name="model" id="modelSelect" class="form-control mr-3" onchange="this.form.submit()" style="max-height: 37px;">
+                    <option value="">-- Select Model --</option>
+                    {% for name, label in model_choices %}
+                        <option value="{{ name }}" {% if selected_model == name %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="roleSelect" class="mr-2">Select Role:</label>
+                <select name="role" id="roleSelect" class="form-control" onchange="this.form.submit()" style="max-height: 37px;">
+                    <option value="">-- Select Role --</option>
+                   {% for role in roles %}
+                        <option value="{{ role.id }}"
+                            {% if selected_role == role.id|stringformat:"s" %}
+                                selected
+                            {% endif %}>
+                            {{ role.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+            </form>
+
+            {% if model_fields and selected_role %}
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="model" value="{{ selected_model }}">
+                <input type="hidden" name="role" value="{{ selected_role }}">
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>Field Name</th>
+                                <th>
+                                    Is Visible
+                                    <input type="checkbox" id="selectAllVisible" onclick="toggleColumn('view__')">
+                                </th>
+                                <th>
+                                    Is Editable
+                                    <input type="checkbox" id="selectAllEditable" onclick="toggleColumn('edit__')">
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for field in model_fields %}
+                            <tr>
+                                <td>{{ field }}</td>
+                                {% with existing_access|get_item:field as access %}
+                                    <td>
+                                        <input type="checkbox" name="view__{{ field }}"
+                                            {% if access and access.0 %}checked{% endif %}>
+                                    </td>
+                                    <td>
+                                        <input type="checkbox" name="edit__{{ field }}"
+                                            {% if access and access.1 %}checked{% endif %}>
+                                    </td>
+                                {% endwith %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+
+                    </table>
+                </div>
+                <div class="d-flex justify-content-end mt-2">
+                    <button type="submit" class="btn btn-primary btn-sm" onclick="return confirmSave()">Save Access Controls</button>
+                </div>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleColumn(prefix) {
+    const checkboxes = document.querySelectorAll(`input[type="checkbox"][name^="${prefix}"]`);
+    const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+    checkboxes.forEach(cb => cb.checked = !allChecked);
+}
+function confirmSave() {
+    return confirm("Are you sure you want to save these field access settings?");
+}
+</script>
+{% endblock %}

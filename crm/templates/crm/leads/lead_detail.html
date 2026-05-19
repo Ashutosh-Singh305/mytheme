@@ -1,0 +1,180 @@
+{% extends 'crm/base.html' %}
+{% load lead_extras %}
+
+{% block title %} Lead Details {% endblock %}
+
+{% block css %}
+<style>
+
+    /* -------------------------------------
+       COLLAPSE HEADER
+    ------------------------------------- */
+    .section-header {
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 3px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .section-arrow {
+        transition: transform 0.3s ease;
+    }
+    .section-header[aria-expanded="true"] .section-arrow {
+        transform: rotate(90deg);
+    }
+
+    /* -------------------------------------
+       PHONE UI (DEFAULT)
+       label | value box layout
+    -------------------------------------- */
+    .phone-list {
+        display: block !important; /* default */
+    }
+    .profile-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 8px;
+        border-bottom: 1px solid #f1f1f1;
+    }
+    .profile-label {
+        font-weight: 600;
+        color: #333;
+    }
+    .profile-value {
+        color: #444;
+        text-align: right;
+    }
+
+    /* -------------------------------------
+       DESKTOP UI (TABLE) - HIDDEN ON PHONE
+    -------------------------------------- */
+    .desktop-table {
+        display: none !important;
+    }
+
+    @media (min-width: 768px) {
+
+        /* hide phone layout on desktop */
+        .phone-list {
+            display: none !important;
+        }
+
+        /* show table layout on desktop */
+        .desktop-table {
+            display: block !important;
+        }
+
+        /* table styling */
+        .detail-table {
+            border: 1px solid #ddd;
+            width: 100%;
+        }
+        .detail-table td {
+            padding: 8px 12px;
+            vertical-align: middle;
+            border-color: #e0e0e0 !important;
+            background: #fff;
+        }
+        .label-cell {
+            width: 15%;
+            font-weight: 600;
+            background: #fafafa;
+            border-right: 1px solid #e0e0e0 !important;
+        }
+        .value-cell {
+            width: 35%;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block body %}
+<div class="card shadow-sm">
+    <div class="p-2 mb-2">
+
+        <h3 class="mb-3 text-primary">Lead Details</h3>
+
+        {% for s in admin_fieldsets %}
+        <div class="profile-section">
+
+            <!-- COLLAPSIBLE HEADER -->
+            <div class="section-header bg-primary text-white"
+                data-bs-toggle="collapse"
+                data-bs-target="#{{ s.id }}"
+                aria-expanded="false">
+
+                <h5 class="m-0 text-white">{{ s.title }}</h5>
+                <span class="section-arrow">
+                    <i class="bi bi-chevron-right text-white"></i>
+                </span>
+            </div>
+
+            <!-- COLLAPSE BODY -->
+            <div id="{{ s.id }}" class="collapse table-responsive">
+
+                <!-- 📱 PHONE VIEW (div rows) -->
+                <div class="phone-list">
+                    {% for field in s.fields %}
+                    {% if field in viewable_fields %}
+                        <div class="profile-item">
+                            <span class="profile-label text-right">{{ lead|get_verbose_name:field }}</span>
+                            <span class="profile-value text-wrap">{{ lead|get_field_value:field }}</span>
+                        </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- 🖥 DESKTOP VIEW (4-column table) -->
+                <div class="desktop-table table-responsive">
+                    <table class="table table-bordered detail-table mb-0">
+                        <tbody>
+
+                            {% for field in s.fields %}
+                            {% if field in viewable_fields %}
+
+                                {% if forloop.first or forloop.counter0|divisibleby:2 %}
+                                <tr>
+                                {% endif %}
+
+                                    <td class="label-cell text-right">
+                                        {{ lead|get_verbose_name:field }}
+                                    </td>
+
+                                    <td class="value-cell text-wrap">
+                                        {{ lead|get_field_value:field }}
+                                    </td>
+
+                                {% if forloop.counter|divisibleby:2 %}
+                                </tr>
+                                {% endif %}
+
+                            {% endif %}
+                            {% endfor %}
+
+                            {% if s.fields|length|divisibleby:2 == False %}
+                                </tr>
+                            {% endif %}
+                            
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+
+        <div class="mt-3">
+            <a href="{% url 'lead_edit' lead.id %}" class="btn btn-primary btn-sm">Edit</a>
+            <a href="{% url 'lead_delete' lead.id %}" class="btn btn-danger btn-sm">Delete</a>
+            <a href="{% url 'lead_list' %}" class="btn btn-secondary btn-sm">Back</a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block Script %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %}

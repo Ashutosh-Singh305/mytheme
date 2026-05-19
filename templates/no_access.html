@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Access Denied</title>
+
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+
+<body>
+<div class="container-scroller">
+  <div class="container-fluid page-body-wrapper full-page-wrapper">
+    
+    <div class="content-wrapper d-flex align-items-center text-center error-page bg-primary">
+      <div class="row flex-grow">
+        <div class="col-lg-7 mx-auto text-white">
+
+          <!-- Top Section -->
+          <div class="row align-items-center d-flex flex-row">
+            
+            <div class="col-lg-6 text-lg-right pr-lg-4">
+              <h1 class="display-1 mb-0">
+                <i class="fa fa-ban text-danger"></i>
+              </h1>
+            </div>
+
+            <div class="col-lg-6 error-page-divider text-lg-left pl-lg-4">
+              <h2 class="mb-2">Access Denied</h2>
+              <h4 class="font-weight-light">
+                You are not allowed to login from this IP address.
+              </h4>
+            </div>
+
+          </div>
+
+          <!-- IP Info -->
+          <div class="row mt-4">
+            <div class="col-12">
+              <p class="text-white-50">
+                <strong>Your IP:</strong> {{ ip }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Help Message -->
+          <div class="row mt-3">
+            <div class="col-12">
+              <div class="alert alert-light text-dark">
+                Please contact your administrator or connect from an authorized network.
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="row mt-4">
+            <div class="col-12 text-center">
+              <a href="{% url 'login' %}" class="btn btn-light btn-sm">
+                Back to Login
+              </a>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="row mt-5">
+            <div class="col-12">
+              <p class="text-white-50 text-center small">
+                If you believe this is an error, please reach out to IT support.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

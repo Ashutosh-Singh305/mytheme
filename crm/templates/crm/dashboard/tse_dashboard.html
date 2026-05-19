@@ -1,0 +1,1199 @@
+{% extends 'crm/base.html' %}
+
+{% block title %} Dashboard {% endblock %}
+{% block css %}
+<link rel="stylesheet" href="/static/vendors/daterangepicker/daterangepicker.css">
+<link rel="stylesheet" href="/static/vendors/chartist/chartist.min.css">
+<style id="cardstyle01">
+    .lead-row.active {
+        border: 1px solid #007bff;
+        background: #f0f8ff;
+    }
+
+    .label-font {
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+
+<!-- HEADER -->
+<!-- <div class="row mb-3">
+    <div class="col-md-12">
+        <div class="card p-3 d-flex flex-row justify-content-between align-items-center">
+            <div>
+                <h4 class="mb-0">TSE Dashboard</h4>
+                <small>Welcome {{ request.user.username }} | {{ request.user.userprofile.branch.name }}</small>
+            </div>
+
+            <div class="d-flex align-items-center">
+                <input type="text" id="searchInput" class="form-control form-control-sm mr-2" placeholder="Search mobile / name"
+                    style="width:250px;">
+                <button class="btn btn-primary btn-sm mr-2" onclick="applySearch()">Search</button>
+                <span class="badge badge-success">Online</span>
+            </div>
+        </div>
+    </div>
+</div> -->
+
+<!-- KPI CARDS -->
+<div class="row text-center">
+    <div class="col-lg-2 col-md-2 col-6 grid-margin">
+        <div class="card bg-primary text-white p-2">
+            <h6>Calls Today</h6>
+            <h4>{{ calls_today|default:0 }}</h4>
+        </div>
+    </div>
+
+    <div class="col-lg-2 col-md-2 col-6 grid-margin">
+        <div class="card bg-warning text-white p-2">
+            <h6>Follow-UP</h6>
+            <h4>{{ followups_today|default:0 }}</h4>
+        </div>
+    </div>
+
+    <div class="col-lg-2 col-md-2 col-6 grid-margin">
+        <div class="card bg-danger text-white p-2">
+            <h6>Hot Lead</h6>
+            <h4>{{ hot_leads|default:0 }}</h4>
+        </div>
+    </div>
+
+    <div class="col-lg-2 col-md-2 col-6 grid-margin">
+        <div class="card bg-info text-white p-2">
+            <h6>Interested</h6>
+            <h4>{{ interested_leads|default:0 }}</h4>
+        </div>
+    </div>
+
+    <div class="col-lg-2 col-md-2 col-6 grid-margin">
+        <div class="card bg-dark text-white p-2">
+            <h6>Application</h6>
+            <h4>{{ applications|default:0 }}</h4>
+        </div>
+    </div>
+
+    <div class="col-lg-2 col-md-2 col-6 grid-margin">
+        <div class="card bg-success text-white p-2">
+            <h6>Disbursed</h6>
+            <h4>₹{{ disbursed_amount|default:"0" }}</h4>
+        </div>
+    </div>
+</div>
+<!-- MAIN -->
+<div class="row">
+    <!-- Left PANEL -->
+    <div class="col-md-7 grid-margin stretch-card" id="lead_details_left">
+        <div class="card position-relative">
+
+            <div class="card-header d-flex justify-content-between mb-0">
+                <h5>Lead Details</h5>
+
+                <!-- <p class="justify-content">
+                        <a href="#" id="callLink">
+                            📞 <span id="ld_mobile">-</span>
+                        </a>
+                            <span class="badge badge-warning" id="ld_status">-</span>
+                            
+                    </p>
+                    <button id="editBtn" style="height: 35px;" class="btn btn-sm btn-outline-primary"  onclick="toggleEdit()">Edit</button> -->
+            </div>
+
+            <!-- STATIC STRUCTURE (IMPORTANT FIX) -->
+            <div class="p-2">
+
+                <!-- Header Section -->
+                <div class="d-flex justify-content-between mb-0">
+
+                    <!-- <p class="justify-content">
+                        <a href="#" id="callLink">
+                            📞 <span id="ld_mobile">-</span>
+                        </a>
+                        <span class="badge badge-warning" id="ld_status">-</span>
+
+                    </p> -->
+                    <p class="justify-content">
+                        <a href="#" id="dailercallLink">
+                            📞 <span id="ld_mobile">-</span>
+                        </a>
+                        <span class="badge badge-warning" id="ld_status">-</span>
+
+                    </p>
+                    <div class="text-right">
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-toggle="modal"
+                            data-target="#leadModal" data-whatever="@getbootstrap">New</button>
+                        <button id="editBtn" class="btn btn-sm btn-outline-primary"
+                            onclick="toggleEdit()">Edit</button>
+                    </div>
+                </div>
+                <hr class="mb-0 mt-0">
+                <!-- Two Column Layout -->
+                <div class="row">
+
+                    <!-- LEFT -->
+                    <div class="col-md-6">
+
+                        <div class=" row align-items-center">
+                            <label class="col-5 label-font">Name</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_name" style="height: 33px;" type="text"
+                                    class="form-control form-control-sm" disabled>
+                            </div>
+                        </div>
+
+                        <div class=" row align-items-center">
+                            <label class="col-5 label-font">Location</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_location" style="height: 33px;" class="form-control form-control-sm"
+                                    disabled>
+                            </div>
+                        </div>
+
+                        <div class=" row align-items-center">
+                            <label class="col-5 label-font">Company</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_company" style="height: 33px;" class="form-control form-control-sm"
+                                    disabled>
+                            </div>
+                        </div>
+                        <div class="row align-items-center">
+                            <label class="col-5 label-font">Employment Status</label>
+                            <div class="col-7 mt-1">
+                                <select id="ld_employment_type" class="form-control form-control-sm" disabled>
+
+                                    <option value="" disabled selected>
+                                        --- Select Employment Status ---
+                                    </option>
+
+                                    {% for value,label in employment_type_choices %}
+                                        <option value="{{ value }}">
+                                            {{ label }}
+                                        </option>
+                                    {% endfor %}
+
+                                </select>
+                            </div>
+                        </div>
+                        
+                    </div>
+
+                    <!-- RIGHT -->
+                    <div class="col-md-6">
+                        <div class=" row align-items-center">
+                            <label class="col-5 label-font">Salary</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_salary" style="height: 33px;" type="number"
+                                    class="form-control form-control-sm" disabled>
+                            </div>
+                        </div>
+                        
+                        <div class=" row align-items-center">
+                            <label class="col-5 label-font">Card Details</label>
+                            <div class="col-7 mt-1">
+                                <textarea id="ld_cc_details" class="form-control form-control-sm"
+                                    disabled>
+                                </textarea>
+                            </div>
+                        </div>
+                        <div class="row align-items-center">
+                            <label class="col-5 label-font">Assigned To</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_assign_to" style="height: 33px;" type="text"
+                                    class="form-control form-control-sm" readonly>
+                            </div>
+                        </div>
+
+                        <div class="row align-items-center">
+                            <label class="col-5 label-font">Last Update</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_last_updated" style="height: 33px;" type="text"
+                                    class="form-control form-control-sm" disabled readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <hr class="mb-1 mt-1">
+                <div class="row">
+                    <div class="col-6">
+                        <!-- Status Dropdown -->
+                        <label class="mb-1 label-font">Status</label>
+                        <select id="ld_status_drp" class="form-control form-control-sm">
+                            <option value="new">New</option>
+                            <option value="Not_Interested">Not Interested</option>
+                            <option value="Future Lead">Future Lead</option>
+                            <!-- <option value="not_interested">Not Interested</option>/\ -->
+                            <option value="follow_up">Follow-UP</option>
+                            <option value="waiting_for_docs">Waiting For Docs </option>
+                            <option value="OTP">OTP</option>
+                            <!-- <option value="reject">Reject</option> -->
+                            <!-- <option value="not_eligible">Not Eligible</option> -->
+                            <option value="Ringing">Ringing</option>
+                            <option value="loan_needed">Loan Needed</option>
+                            <option value="Switched_Off">Switched Off</option>
+                            <option value="invalid_number">Invalid Number</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <!-- Follow-up -->
+                        <label class="mb-1 label-font">FU Date</label>
+                        <input type="text" id="followup" class="form-control form-control-sm"
+                            placeholder="DD/MM/YYYY HH:mm" autocomplete="off">
+                    </div>
+                    <div class="col-12 mt-2">
+                        <textarea id="note" class="form-control" style="resize: vertical;"></textarea>
+                        <hr class="mb-1 mt-1">
+                    </div>
+
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="">
+                        <button class="btn btn-outline-primary btn-sm" onclick="prevLead()">⬅ Previous</button>
+                    </div>
+                    <div class=" ">
+                        <button class="btn btn-outline-success btn-sm" onclick="saveLead()">Save</button>
+                    </div>
+                    <div class="">
+                        <button class="btn btn-outline-primary btn-sm" onclick="nextLead()">Next ➡</button>
+                    </div>
+                </div>
+            </div><!-- card body -->
+
+            <div id="leadLoader" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; 
+                        background:rgba(255,255,255,0.7); z-index:10; 
+                        align-items:center; justify-content:center;">
+
+                <div class="spinner-border text-primary" role="status"></div>
+            </div><!-- loader -->
+
+        </div> <!-- card -->
+
+    </div>
+
+    <!-- Right -->
+    <div class="col-md-5 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between mb-0">
+                <h5>My Leads</h5>
+                <!-- LEAD SOURCE FILTER -->
+                <div class="mb-0">
+                    <!-- <label for="leadSourceFilter" class="mb-1">Lead Source</label> -->
+                    <select id="leadSourceFilter" class="form-control form-control-sm w-auto" onchange="applyFilter()">
+                        <option value="" {% if not request.GET.lead_source %}selected{% endif %}>All Lead Source
+                        </option>
+                        {% for key,label in lead_type_choices %}
+                        <option value="{{ key }}" {% if request.GET.lead_source == key %}selected{% endif %}>
+                            {{ label }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <!--  STATUS FILTER BACK -->
+                <div class="mb-0">
+                    <!-- <label for="statusFilter" class="mb-1">Status</label> -->
+                    <select id="statusFilter" class="form-control form-control-sm w-auto ml-1" onchange="applyFilter()">
+                        <option value="" {% if not request.GET.status %}selected{% endif %}>All Status</option>
+                        <option value="new" {% if request.GET.status == "new" %}selected{% endif %}>New</option>
+                        <option value="waiting_for_docs" {% if request.GET.status == "waiting_for_docs" %}selected{%endif%}>Waiting for Docs
+                        </option>
+                        <option value="OTP" {% if request.GET.status == "OTP" %}selected{% endif %}>OTP
+                        </option>
+                        <!-- <option value="not_interested" {% if request.GET.status == "not_interested" %}selected{% endif %}>
+                            Not
+                            Interested</option> -->
+                        <option value="follow_up" {% if request.GET.status == "follow_up" %}selected{% endif %}>Follow-UP
+                        </option>
+                        <option value="Not_Interested" {% if request.GET.status == "Not_Interested" %}selected{% endif %}>Not Interested
+                        </option>
+                        <option value="Future Lead" {% if request.GET.status == "Future Lead" %}selected{% endif %}>Future
+                            Lead
+                        </option>
+                        <!-- <option value="not_eligible" {% if request.GET.status == "not_eligible" %}selected{% endif %}>Not
+                            Eligible
+                        </option> -->
+                        <!-- <option value="reject" {% if request.GET.status == "reject" %}selected{% endif %}>Reject
+                        </option> -->
+                        <option value="Ringing" {% if request.GET.status == "Ringing" %}selected{% endif %}>
+                            Ringing
+                        </option>
+                        <option value="loan_needed" {% if request.GET.status == "loan_needed" %}selected{% endif %}>
+                            Loan Needed
+                        </option>
+                        <option value="Switched_Off" {% if request.GET.status == "Switched_Off" %}selected{% endif %}>
+                            Switched Off
+                        </option>
+
+                        <option value="invalid_number" {% if request.GET.status == "invalid_number" %}selected{% endif %}>
+                            Invalid Number
+                        </option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-responsive border rounded p-1 d-md-block d-none">
+                <table class="table table-fixed">
+                    <thead>
+                        <tr class="table-secondary">
+                            <!-- <th onclick="sortTable('name')" style="font-weight: 600;">Name</th> -->
+                            <th style="font-weight: 600;" onclick="sortTable('name')">Name</th>
+                            <!-- <th style="font-weight: 600;">Mobile</th> -->
+                            <!-- <th style="font-weight: 600;">Loan</th> -->
+                            <!-- <th style="font-weight: 600;">Salary</th> -->
+                            <th style="font-weight: 600;">Status</th>
+                            <th style="font-weight: 600;">FU Date</th>
+                            <!-- <th style="font-weight: 600;">Follow-Up Date</th> -->
+                            <th class="text-center" style="font-weight: 600;">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for lead in leads %}
+                        <tr class=" h-100 lead-row" data-id="{{ lead.id }}" style="cursor:pointer;">
+                            <td class="">{{ lead.name }}
+                            </td>
+                            <!-- <td>{{ lead.mobile_number }}</td> -->
+                            <!-- <td>₹{{ lead.require_loan_amount|default:"-" }}</td> -->
+                            <!-- <td>₹{{ lead.monthly_salary|default:"-" }}</td> -->
+
+                            <td>
+                                <span class="badge bg-warning">
+                                    {{ lead.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ lead.follow_up_date|date:"d/m/Y"|default:"-" }}</td>
+                            <!-- <td>{{ lead.follow_up_date|date:"d/m/Y"|default:"-" }}</td> -->
+
+                            <td class="text-center">
+                                <!-- <a href="javascript:void(0)"
+                                    class="btn btn-success btn-sm click-to-call-btn"
+                                    data-mobile="{{ lead.mobile_number }}">
+                                        Call
+                                </a> -->
+                                <a href="tel:{{ lead.mobile_number }}" class="btn btn-success btn-sm">
+                                    Call
+                                </a>
+                                <a class="btn btn-primary btn-sm open-btn w-48" href="/crm/Lead/{{ lead.id }}">
+                                    Open
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div> <!--  table-responsive -->
+
+            <div class="row d-md-none d-lg-none">
+
+                {% for lead in leads %}
+
+                <div class="col-md-12 mb-0">
+                    <div class="card h-100 lead-row {% if forloop.first %}border-primary{% endif %}"
+                        data-id="{{ lead.id }}" style="cursor:pointer;">
+
+                        <div class="p-2 d-flex flex-column">
+
+                            <!-- Header -->
+                            <div class="d-flex justify-content-between align-items-start flex-wrap">
+
+                                <h6 class="mb-0 text-truncate" style="max-width: 70%;">
+                                    {{ lead.name }}
+                                </h6>
+
+                                <span class="badge badge-warning ml-2" style="white-space: nowrap;">
+                                    {{ lead.get_status_display }}
+                                </span>
+
+                            </div>
+                            <!-- Info -->
+                            <div class="mb-1 d-flex justify-content-between">
+                                <span>
+                                    <small class="text-muted">Salary</small> :
+                                    <small>₹{{ lead.monthly_salary|default:"" }}</small>
+                                </span>
+
+                                <span>
+                                    <small class="text-muted">Follow-Up Date</small> :
+                                    <small>{{ lead.follow_up_date|date:"d/m/Y"|default:"-" }}</small>
+                                </span>
+                            </div>
+
+                            <!-- 👇 PUSH ACTIONS TO BOTTOM -->
+                            <div class="mt-1 text-center">
+                                <div class="d-flex justify-content-between">
+
+                                    <a href="tel:{{ lead.mobile_number }}" class="btn btn-success btn-sm">
+                                        Call
+                                    </a>
+                                    <a class="btn btn-primary btn-sm open-btn" href="/crm/Lead/{{ lead.id }}">
+                                        Open
+                                    </a>
+
+                                </div>
+                                <hr class="my-1">
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+            <!-- Pagination controls -->
+            <div class="d-flex p-2 flex-wrap">
+                <p class="text-muted">
+                    Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }}
+                    products
+                </p>
+                <nav class="ml-auto">
+                    <ul class="pagination separated pagination-primary">
+                        <!-- Previous -->
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a href="?page={{ page_obj.previous_page_number }}&status={{ request.GET.status }}&search={{ request.GET.search }}"
+                                class="page-link">
+                                <i class="icon-arrow-left"></i>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link"><i class="icon-arrow-left"></i></a>
+                        </li>
+                        {% endif %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a href="?page={{ page_obj.next_page_number }}&status={{ request.GET.status }}&search={{ request.GET.search }}"
+                                class="page-link">
+                                <i class="icon-arrow-right"></i>
+                            </a>
+
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <a class="page-link"><i class="icon-arrow-right"></i></a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+            <!-- End pagination controls -->
+
+        </div>
+    </div>
+</div>
+<!-- Models pop up form save to add new lead -->
+<div class="modal fade" id="leadModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+
+            <!-- HEADER -->
+            <div class="d-flex justify-content-between align-items-center p-2 bg-primary">
+                <h5 class="mb-0 text-white">Create New Lead</h5>
+                <button type="button" class="close text-white text-danger" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+
+            <!-- BODY -->
+            <form id="leadForm" method="POST">
+                {% csrf_token %}
+
+                <div class="p-2">
+                    <div class="row">
+                        <!-- LEFT -->
+                        <div class="col-md-6">
+
+                            <div class="row align-items-center mb-1">
+                                <label class="col-5 label-font">Name<span class="text-danger">*</span></label>
+                                <div class="col-7">
+                                    <input name="name" type="text" class="form-control form-control-sm" required>
+                                </div>
+                            </div>
+
+                            <div class="row align-items-center mb-1">
+                                <label class="col-5 label-font">Mobile No.<span class="text-danger">*</span></label>
+                                <div class="col-7">
+                                    <input type="text" name="mobile_number" class="form-control form-control-sm"
+                                        maxlength="10" pattern="\d{10}" inputmode="numeric" required
+                                        placeholder="Enter 10 digit mobile">
+                                </div>
+                            </div>
+
+                            <div class="row align-items-center mb-1">
+                                <label class="col-5 label-font">Location</label>
+                                <div class="col-7">
+                                    <input name="location" class="form-control form-control-sm">
+                                </div>
+                            </div>
+
+                            <div class="row align-items-center mb-1">
+                                <label class="col-5 label-font">Company</label>
+                                <div class="col-7">
+                                    <input name="company_name" class="form-control form-control-sm">
+                                </div>
+                            </div>
+
+                            <!-- <div class="row align-items-center mb-1">
+                                <label class="col-5 label-font">PAN</label>
+                                <div class="col-7">
+                                    <input name="pan" class="form-control form-control-sm">
+                                </div>
+                            </div> -->
+
+                            <div class="row align-items-center mb-1">
+                                <label class="col-5 label-font">Salary</label>
+                                <div class="col-7">
+                                    <input type="number" name="monthly_salary" class="form-control form-control-sm">
+                                </div>
+                            </div>
+
+                            <!-- <div class="row align-items-center mb-1">
+                                <label class="col-5 label-font">DOB</label>
+                                <div class="col-7">
+                                    <input type="text" name="dob" id="modal_dob" class="form-control form-control-sm"
+                                        placeholder="DD/MM/YYYY" autocomplete="off">
+                                </div>
+                            </div> -->
+
+                            
+
+                        </div>
+
+                        <!-- RIGHT -->
+                        <div class="col-md-6">
+
+                            <!-- <div class="row align-items-center mb-1">
+                                <label class="col-5 label-font">Lender</label>
+                                <div class="col-7">
+                                    <select name="lender_name" class="form-control form-control-sm">
+                                        <option value="" disabled selected>---Select Lender---</option>
+                                        {% for lender in lender_name_choices %}
+                                        <option value="{{ lender.id }}">{{ lender.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div> -->
+
+                            <!-- <div class="row align-items-center mb-1">
+                                <label class="col-5 label-font">Loan Req</label>
+                                <div class="col-7">
+                                    <input type="number" name="require_loan_amount"
+                                        class="form-control form-control-sm">
+                                </div>
+                            </div> -->
+
+                            <!-- <div class="row align-items-center mb-1">
+                                <label class="col-5 label-font">Existing Loans</label>
+                                <div class="col-7">
+                                    <textarea name="existing_loan_details"
+                                        class="form-control form-control-sm" style="resize: vertical;"></textarea>
+                                </div>
+                            </div> -->
+                            <div class="row align-items-center mb-1">
+                                <label class="col-5 label-font">Lead Source<span class="text-danger">*</span></label>
+                                <div class="col-7">
+                                    <select name="lead_source" class="form-control form-control-sm" required>
+                                        <option value="" disabled selected>---Select Source---</option>
+                                        
+                                        {% for value, label in lead_type_choices %}
+                                            <option value="{{ value }}">{{ label }}</option>
+                                        {% endfor %}
+                                        
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row align-items-center mb-1">
+                                <label class="col-5 label-font">Status<span class="text-danger">*</span></label>
+                                <div class="col-7">
+                                    <select name="status" class="form-control form-control-sm" required>
+                                        <option value="" disabled selected>---Select Status---</option>
+                                        <option value="new">New</option>
+                                        <option value="Not_Interested">Not Interested</option>
+                                        <option value="Future Lead">Future Lead</option>
+                                        <option value="follow_up">Follow-UP</option>
+                                        <option value="waiting_for_docs">Waiting For Docs </option>
+                                        <option value="OTP">OTP</option>
+                                        <option value="Ringing">Ringing</option>
+                                        <option value="loan_needed">Loan Needed</option>
+                                        <option value="Switched_Off">Switched Off</option>
+                                        <option value="invalid_number">Invalid Number</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row align-items-center mb-1">
+                                <label class="col-5 label-font">Follow-up Date</label>
+                                <div class="col-7">
+                                    <input type="text" name="follow_up_date" id="modal_followup"
+                                        class="form-control form-control-sm" placeholder="DD/MM/YYYY HH:mm"
+                                        autocomplete="off">
+                                </div>
+                            </div>
+                            <!-- TEAM LEADER -->
+                            <div class="row align-items-center mb-1">
+                                <label class="col-5 label-font">Team Leader<span class="text-danger">*</span></label>
+                                <div class="col-7">
+                                    <select name="team_lead" class="form-control form-control-sm" required>
+                                        <option value="" disabled selected>--- Select Leader ---</option>
+                                        {% for user in team_leaders %}
+                                        <option value="{{ user.id }}">
+                                            {% if user.first_name or user.last_name %}
+                                                {{ user.first_name|default:'' }} {{ user.last_name|default:'' }}
+                                            {% else %}
+                                                {{ user.username }}
+                                            {% endif %}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row align-items-center mb-1">
+                                <label class="col-5 label-font">TSE<span class="text-danger">*</span></label>
+                                <div class="col-7">
+                                    <select name="tse" class="form-control form-control-sm" required>
+                                        <option value="" disabled selected>--- Select TSE ---</option>
+                                        {% for user in tele_executive %}
+                                        <option value="{{ user.id }}">
+                                            {% if user.first_name or user.last_name %}
+                                                {{ user.first_name|default:'' }} {{ user.last_name|default:'' }}
+                                            {% else %}
+                                                {{ user.username }}
+                                            {% endif %}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-1">
+                        <textarea name="description" class="form-control" placeholder="Notes..." style="resize: vertical;"></textarea>
+                    </div>
+
+                </div>
+
+                <div class="p-2 text-right">
+                    <button type="button" class="btn btn-light btn-sm" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Create Lead</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block Script %}
+
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+<script src="/static/vendors/daterangepicker/daterangepicker.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/inputmask/5.0.8/jquery.inputmask.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        initLeadNavigation();
+
+        let firstRow = document.querySelector(".lead-row");
+        if (firstRow) {
+            loadLead(firstRow.dataset.id);
+        }
+    });
+
+
+    // Date Picker Initialization
+    function initDatePicker(selector, isRange = false, withTime = false) {
+        $(selector).daterangepicker({
+            singleDatePicker: !isRange,
+            showDropdowns: true,
+            autoUpdateInput: false,
+
+            timePicker: withTime,
+            timePicker24Hour: true,
+
+            locale: {
+                format: withTime ? 'DD/MM/YYYY HH:mm' : 'DD/MM/YYYY'
+            }
+        });
+
+        $(selector).on('apply.daterangepicker', function (ev, picker) {
+            let format = withTime ? 'DD/MM/YYYY HH:mm' : 'DD/MM/YYYY';
+
+            if (isRange) {
+                $(this).val(
+                    picker.startDate.format(format) + ' - ' +
+                    picker.endDate.format(format)
+                );
+            } else {
+                $(this).val(picker.startDate.format(format));
+            }
+        });
+    }
+
+    function applyDateMask(selector) {
+        $(selector).inputmask("99/99/9999", {
+            placeholder: "DD/MM/YYYY",
+            clearIncomplete: true
+        });
+    }
+
+    $(document).ready(function () {
+        initDatePicker('#ld_dob', false, false);
+        initDatePicker('#followup', false, true);
+
+        // Apply mask
+        applyDateMask('#ld_dob');
+        $('#followup').inputmask("99/99/9999 99:99", {
+            placeholder: "DD/MM/YYYY HH:mm",
+            clearIncomplete: true
+        });
+    });
+
+    function convertToBackendDate(dateStr) {
+        if (!dateStr) return '';
+        return moment(dateStr, "DD/MM/YYYY").format("YYYY-MM-DD");
+    }
+
+    function convertToBackendDateTime(dateStr) {
+        if (!dateStr) return '';
+        return moment(dateStr, "DD/MM/YYYY HH:mm").format("YYYY-MM-DDTHH:mm");
+    }
+
+    function isValidDate(dateStr) {
+        return moment(dateStr, "DD/MM/YYYY", true).isValid();
+    }
+
+    function isValidDateTime(dateStr) {
+        return moment(dateStr, "DD/MM/YYYY HH:mm", true).isValid();
+    }
+
+    function formatToUI(dateStr) {
+        if (!dateStr) return '';
+        return moment(dateStr, "YYYY-MM-DD").format("DD/MM/YYYY");
+    }// Date Range Picker Logic End
+
+    // CLICK ROW
+    document.querySelectorAll(".lead-row").forEach(card => {
+        card.addEventListener("click", function () {
+            document.querySelectorAll(".lead-row").forEach(c => c.classList.remove("active"));
+            this.classList.add("active");
+            loadLead(this.dataset.id);
+        });
+    });
+
+    // OPEN BUTTON
+    document.querySelectorAll(".open-btn").forEach(btn => {
+        btn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            loadLead(this.dataset.id);
+        });
+    });
+    let leadIds = [];
+    let currentIndex = 0;
+
+    // ✅ Initialize list
+    function initLeadNavigation() {
+        leadIds = Array.from(document.querySelectorAll(".lead-row"))
+            .map(el => el.dataset.id);
+    }
+
+    function maskLast4(value) {
+        if (!value) return "";
+
+        value = value.toString();
+
+        if (value.length <= 4) return value;
+
+        return "X".repeat(value.length - 4) + value.slice(-4);
+    }
+    // LOAD LEAD
+    function loadLead(id) {
+        // SHOW LOADER
+        document.getElementById("leadLoader").style.display = "flex";
+
+        // set current index
+        currentIndex = leadIds.indexOf(String(id));
+        fetch(`/crm/lead/${id}/`)
+            .then(res => res.json())
+            .then(data => {
+
+                // HEADER
+                setValue("ld_name", data.name);
+                setValue("ld_mobile", data.mobile);
+                setValue("ld_status", data.status);
+
+                // LEFT
+                setValue("ld_location", data.location);
+                setValue("ld_company", data.company);
+                setValue("ld_salary", data.salary);
+                setValue("ld_employment_type", data.employment_type);
+                setValue("ld_cc_details", data.existing_cc_details);
+
+                // RIGHT
+                setValue("ld_description", data.description);
+                
+                // EXTRA
+                // setValue("followup", data.follow_up_date);
+                setValue("ld_last_updated", data.last_updated);
+                setValue("ld_assign_to", data.assigned_to);
+
+                document.getElementById("note").value = data.note || '';
+                document.getElementById("ld_status_drp").value = data.status_key;
+                document.getElementById("dailercallLink").href = `tel:${data.mobile}`;
+                
+
+            $(document).on("click", ".click-to-call-btn", function () {
+
+                let mobile = $(this).data("mobile");
+
+                $.ajax({
+                    url: "/crm/api/test-smartflo/",
+                    type: "POST",
+
+                    headers: {
+                        "X-CSRFToken": getCSRF()
+                    },
+
+                    data: {
+                        mobile: mobile
+                    },
+
+                    success: function (response) {
+
+                        console.log(response);
+
+                        if (response.status === "success") {
+
+                            alert("Call Initiated");
+
+                        } else {
+
+                            alert(response.message || "Call Failed");
+                        }
+                    },
+
+                    error: function (xhr) {
+
+                        console.log(xhr.responseText);
+
+                        alert("Server Error");
+                    }
+                });
+
+            });
+
+                highlightRow(id);
+            })
+            .finally(() => {
+                // HIDE LOADER
+                document.getElementById("leadLoader").style.display = "none";
+            });
+    }
+    // NEXT
+    function nextLead() {
+        if (currentIndex < leadIds.length - 1) {
+            currentIndex++;
+            loadLead(leadIds[currentIndex]);
+        }
+    }
+
+    // PREVIOUS
+    function prevLead() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            loadLead(leadIds[currentIndex]);
+        }
+    }
+
+    // SAFE SETTER (prevents crashes)
+    function setValue(id, value) {
+        let el = document.getElementById(id);
+        if (!el) return;
+
+        if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+            el.value = value || '';
+        }
+        else if (el.tagName === "SELECT") {
+            el.value = value || '';
+        }
+        else {
+            el.innerText = value || '-';
+        }
+    }
+
+    let isEditMode = false;
+
+    function toggleEdit() {
+        const fields = document.querySelectorAll(
+            "#ld_location,#ld_company,#ld_mobile_no,#ld_salary,#ld_name,#ld_employment_type,#ld_cc_details, #followup"
+        );
+
+        const btn = document.getElementById("editBtn");
+
+        if (!isEditMode) {
+            // ENABLE EDIT
+            fields.forEach(el => el.removeAttribute("disabled"));
+
+            btn.innerText = "Cancel";
+            btn.classList.remove("btn-outline-primary");
+            btn.classList.add("btn-outline-danger");
+
+            isEditMode = true;
+        } else {
+            // CANCEL EDIT → revert values
+            fields.forEach(el => el.setAttribute("disabled", true));
+
+            // reload current lead (restore original values)
+            let leadId = getSelected();
+            if (leadId) {
+                loadLead(leadId);
+            }
+
+            btn.innerText = "Edit";
+            btn.classList.remove("btn-outline-danger");
+            btn.classList.add("btn-outline-primary");
+
+            isEditMode = false;
+        }
+    }
+
+    // HIGHLIGHT
+    function highlightRow(id) {
+        document.querySelectorAll(".lead-row").forEach(r => r.classList.remove("table-primary"));
+        document.querySelector(`[data-id='${id}']`).classList.add("table-primary");
+    }
+
+    // SAVE NOTE
+    function saveLead() {
+        let leadId = getSelected();
+
+        let fu = document.getElementById("followup").value;
+        if (fu && !isValidDateTime(fu)) {
+            alert("Invalid Follow-up format! Valid Format is DD/MM/YYYY HH:mm");
+            return;
+        }
+
+        let data = new URLSearchParams();
+
+        data.append("lead_id", leadId);
+        data.append("name", document.getElementById("ld_name").value);
+        data.append("location", document.getElementById("ld_location").value);
+        data.append("company", document.getElementById("ld_company").value);
+        data.append("salary", document.getElementById("ld_salary").value);
+        data.append("status", document.getElementById("ld_status_drp").value);
+        data.append("note", document.getElementById("note").value);
+        data.append("follow_date", convertToBackendDateTime(document.getElementById("followup").value));
+        data.append("employment_type", document.getElementById("ld_employment_type").value);
+        data.append("existing_cc_details", document.getElementById("ld_cc_details").value);
+
+        fetch("/crm/lead/update-full/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-CSRFToken": getCSRF()
+            },
+            body: data.toString()
+        })
+            .then(res => res.json())
+            .then((updated) => {
+                if (updated.status === "error") {
+                    alert(updated.message || "Unauthorized access. Please refresh.");
+                    location.reload();   // force reload
+                    return;
+                }
+                alert("Saved successfully");
+
+                // UPDATE RIGHT SIDE LIST (TABLE + MOBILE CARD)
+                document.querySelectorAll(`[data-id='${leadId}']`).forEach(row => {
+
+                    // update name (optional)
+                    let nameCell = row.querySelector("td:first-child, h6");
+                    if (nameCell) nameCell.innerText = updated.name;
+
+                    // update status badge
+                    let badge = row.querySelector(".badge");
+                    if (badge) {
+                        badge.innerText = updated.status_label;  // send this from backend
+                    }
+                    // Follow-up date
+                    let fuCell = row.children[2];
+                    if (fuCell && updated.follow_up_date) {
+                        fuCell.innerText = formatToUI(updated.follow_up_date.split("T")[0]);
+                    }
+                });
+
+
+                // UPDATE HEADER STATUS BADGE
+                document.getElementById("ld_status").innerText = updated.status_label;
+
+                // disable again after save
+                document.querySelectorAll(
+                    "#ld_location,#ld_company,#ld_mobile_no,#ld_salary,#ld_name,#ld_employment_type,#ld_cc_details, #followup"
+                ).forEach(el => el.setAttribute("disabled", true));
+
+                document.getElementById("editBtn").innerText = "Edit";
+                document.getElementById("editBtn").classList.remove("btn-outline-danger");
+                document.getElementById("editBtn").classList.add("btn-outline-primary");
+
+                isEditMode = false;
+
+                loadLead(leadId);
+            });
+    }
+    // UPDATE TABLE STATUS BADGE
+    function updateTableStatus(leadId, status) {
+
+        let row = document.querySelector(`[data-id='${leadId}']`);
+
+        if (row) {
+            let statusCell = row.children[4]; // status column
+
+            statusCell.innerHTML = `<span class="badge badge-warning">${status}</span>`;
+        }
+    }
+
+    // GET SELECTED
+    function getSelected() {
+        return document.querySelector(".table-primary")?.dataset.id;
+    }
+
+    // SEARCH
+    function applySearch() {
+        let val = document.getElementById("searchInput").value;
+        window.location.href = `?search=${val}`;
+    }
+
+    // FILTER
+    function applyFilter() {
+        let status = document.getElementById("statusFilter").value;
+        let leadSource = document.getElementById("leadSourceFilter").value;
+        window.location.href = `?status=${status}&lead_source=${leadSource}`;
+    }
+
+    // SORT
+    function sortTable(field) {
+        window.location.href = `?sort=${field}`;
+    }
+
+    // CSRF
+    function getCSRF() {
+        return document.cookie.split('; ')
+            .find(row => row.startsWith('csrftoken'))
+            .split('=')[1];
+    }
+</script>
+<!-- Script for models -->
+<script>
+    $(document).ready(function () {
+
+        // Initialize daterangepicker for modal follow-up
+        $('#modal_followup').daterangepicker({
+            singleDatePicker: true,
+            timePicker: true,
+            timePicker24Hour: true,
+            autoUpdateInput: false,
+            locale: {
+                format: 'DD/MM/YYYY HH:mm'
+            }
+        });
+
+        // Set selected value
+        $('#modal_followup').on('apply.daterangepicker', function (ev, picker) {
+            $(this).val(picker.startDate.format('DD/MM/YYYY HH:mm'));
+        });
+
+        // Clear if cancelled
+        $('#modal_followup').on('cancel.daterangepicker', function () {
+            $(this).val('');
+        });
+
+        // DOB picker (no time)
+        $('#modal_dob').daterangepicker({
+            singleDatePicker: true,
+            showDropdowns: true,
+            autoUpdateInput: false,
+            locale: {
+                format: 'DD/MM/YYYY'
+            }
+        });
+
+        // Apply selected date
+        $('#modal_dob').on('apply.daterangepicker', function (ev, picker) {
+            $(this).val(picker.startDate.format('DD/MM/YYYY'));
+        });
+
+        // Clear on cancel
+        $('#modal_dob').on('cancel.daterangepicker', function () {
+            $(this).val('');
+        });
+
+
+        // Convert function (reuse everywhere)
+        function convertToBackendDateTime(dateStr) {
+            if (!dateStr) return '';
+            return moment(dateStr, "DD/MM/YYYY HH:mm").format("YYYY-MM-DDTHH:mm");
+        }
+
+
+        // Form Submit
+        $('#leadForm').on('submit', function (e) {
+            e.preventDefault();
+
+            let formData = $(this).serializeArray();
+
+            // Convert follow-up date BEFORE sending
+            let fuField = formData.find(f => f.name === "follow_up_date");
+
+            if (fuField && fuField.value) {
+                if (!moment(fuField.value, "DD/MM/YYYY HH:mm", true).isValid()) {
+                    alert("Invalid Follow-up Date format (Use DD/MM/YYYY HH:mm)");
+                    return;
+                }
+
+                fuField.value = convertToBackendDateTime(fuField.value);
+            }
+
+            // Convert DOB
+            let dobField = formData.find(f => f.name === "dob");
+
+            if (dobField && dobField.value) {
+                if (!moment(dobField.value, "DD/MM/YYYY", true).isValid()) {
+                    alert("Invalid DOB format (Use DD/MM/YYYY)");
+                    return;
+                }
+
+                dobField.value = moment(dobField.value, "DD/MM/YYYY").format("YYYY-MM-DD");
+            }
+
+            $.ajax({
+                url: "{% url 'create_lead_api' %}",
+                type: "POST",
+                data: $.param(formData),
+
+                success: function (response) {
+                    alert("Lead Created Successfully");
+
+                    // Close modal properly
+                    $('#leadModal').modal('hide');
+
+                    // Reset form
+                    $('#leadForm')[0].reset();
+                    $('#modal_followup').val('');
+
+                    // Delay reload (smooth UX)
+                    setTimeout(function () {
+                        location.reload();
+                    }, 300);
+                },
+
+                error: function (xhr) {
+                    console.log("ERROR:", xhr.responseText);
+                    alert("Error creating lead");
+                }
+            });
+        });
+
+    });
+</script>
+{% endblock %}

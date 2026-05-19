@@ -1,0 +1,119 @@
+<div id="tableContainer" class="table-responsive border rounded position-relative">
+
+    <!-- TABLE -->
+    <table class="table">
+        <thead>
+            <tr class="table-primary">
+                <th class="font-weight-bold">
+                    <a href="#" class="sort" data-field="id">
+                        ID
+                        <i class="fa fa-sort ml-1 sort-icon"></i>
+                    </a>
+                </th>
+                <th class="font-weight-bold">
+                    <a href="#" class="sort" data-field="user__username">
+                        Username
+                        <i class="fa fa-sort ml-1 sort-icon"></i>
+                    </a>
+                </th>
+
+                <th class="font-weight-bold">
+                    <a href="#" class="sort" data-field="emp_code">
+                        Employee Code
+                        <i class="fa fa-sort ml-1 sort-icon"></i>
+                    </a>
+                </th>
+
+                <th class="font-weight-bold">
+                    <a href="#" class="sort" data-field="role">
+                        Role
+                        <i class="fa fa-sort ml-1 sort-icon"></i>
+                    </a>
+                </th>
+                <th class="font-weight-bold">
+                    <a href="#" class="sort" data-field="branch">
+                        Branch
+                        <i class="fa fa-sort ml-1 sort-icon"></i>
+                    </a>
+                </th>
+                <th class="font-weight-bold">
+                    <a href="#" class="sort" data-field="user__is_active">
+                        Status
+                        <i class="fa fa-sort ml-1 sort-icon"></i>
+                    </a>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for profile in page_obj %}
+            <tr>
+                <td>{{profile.id}}</td>
+                <td>{{ profile.user.username }}</td>
+                <td>{{ profile.emp_code }}</td>
+                <td>{{ profile.get_role_display }}</td>
+                <td>{{ profile.branch|default:"-" }}</td>
+                <td>
+                    {% if profile.user.is_active %}
+                    <span class="badge badge-success">Active</span>
+                    {% else %}
+                    <span class="badge badge-danger">Inactive</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-center">No profiles found</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- PAGINATION -->
+    <div class="d-flex justify-content-between align-items-center mt-3 px-2">
+
+        <div>
+            Showing {{ page_obj.start_index }}–{{ page_obj.end_index }}
+            of {{ page_obj.paginator.count }}
+        </div>
+
+        <ul class="pagination mb-0">
+
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a href="#" class="page-link" data-page="1">&laquo;</a>
+            </li>
+            <li class="page-item">
+                <a href="#" class="page-link" data-page="{{ page_obj.previous_page_number }}">
+                    Prev
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+            <li class="page-item active">
+                <span class="page-link">{{ num }}</span>
+            </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
+                <a href="#" class="page-link" data-page="{{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a href="#" class="page-link" data-page="{{ page_obj.next_page_number }}">
+                        Next
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a href="#" class="page-link" data-page="{{ page_obj.paginator.num_pages }}">
+                        &raquo;
+                    </a>
+                </li>
+                {% endif %}
+
+        </ul>
+    </div>
+
+</div>

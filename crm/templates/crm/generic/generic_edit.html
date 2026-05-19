@@ -1,0 +1,177 @@
+{% extends 'crm/base.html' %}
+{% load widget_tweaks %}
+{% load custom_filters %}
+
+{% block title %} {{ title }} {% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<style>
+    /* Collapsible clickable header */
+    .section-header {
+        cursor: pointer;
+        padding: 5px 12px;
+        border-radius: 5px;
+        color: #fff;
+        margin-bottom: 6px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .section-arrow {
+        transition: transform 0.25s ease;
+    }
+
+    .section-header[aria-expanded="true"] .section-arrow {
+        transform: rotate(90deg);
+    }
+
+    /* 🔥 ADDED: Highlight invalid fields */
+    .is-invalid {
+        border: 1px solid #dc3545;
+    }
+
+    /* 🔥 ADDED: Sticky error banner */
+    .alert-danger {
+        position: sticky;
+        top: 10px;
+        z-index: 1000;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+
+<div class="card shadow-sm p-3">
+    <form method="post" enctype="multipart/form-data">
+
+        <!-- 🔥 UPDATED: SIMPLE GENERIC ERROR BAND (REMOVED DETAILED LIST) -->
+        {% if form.errors %}
+        <div class="alert alert-danger alert-dismissible fade show alert-fixed-top" role="alert">
+            <strong>Error!</strong> Please correct the errors below.
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+        </div>
+
+        {% endif %}
+
+        <h3 class="text-primary">{{ title }}</h3>
+        {% csrf_token %}
+
+        <div class="mt-4 d-flex justify-content-end mb-2">
+            <button class="btn btn-primary btn-sm">Update</button>
+            <a href="javascript:history.back()" class="btn btn-secondary btn-sm ml-2">Back</a>
+        </div>
+
+        {% for fs in fieldsets %}
+        {% with section_id=fs.id %}
+
+        <!-- COLLAPSE HEADER -->
+        <div class="section-header bg-primary text-white font-weight-bold" data-toggle="collapse"
+            data-target="#{{ section_id }}" aria-expanded="true">
+
+            <span>{{ fs.title }}</span>
+
+            <span class="section-arrow">
+                <i class="fas fa-chevron-right"></i>
+            </span>
+        </div>
+
+        <!-- COLLAPSE BODY -->
+        <div id="{{ section_id }}" class="collapse show section-body">
+
+            <div class="row">
+                {% for fname in fs.fields %}
+                {% with field=form|get_field:fname %}
+                {% if field %}
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        {{ field.label }}
+                        {% if field.field.required %}
+                        <span class="text-danger">*</span>
+                        {% endif %}
+                    </label>
+
+                    <!-- 🔥 UPDATED: Highlight field if error -->
+                    {% if field.errors %}
+                        {% render_field field class="form-control form-control-sm is-invalid" %}
+                    {% else %}
+                        {% render_field field class="form-control form-control-sm" %}
+                    {% endif %}
+
+                    <!-- 🔥 KEEP: Field level error -->
+                    {% if field.errors %}
+                    <div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>
+                    {% endif %}
+
+                </div>
+                {% endif %}
+                {% endwith %}
+                {% endfor %}
+            </div>
+
+        </div>
+
+        {% endwith %}
+        {% endfor %}
+
+        {% with fallback_id="fallback_"|add:model_name %}
+        <div id="{{ fallback_id }}" class="collapse section-body">
+
+            <div class="row">
+                {% for field in form %}
+                {% if field.name not in all_fieldset_fields %}
+                <div class="col-md-6 mb-3">
+
+                    <label class="form-label">
+                        {{ field.label }}
+                        {% if field.field.required %}
+                        <span class="text-danger">*</span>
+                        {% endif %}
+                    </label>
+
+                    <!-- 🔥 UPDATED: Highlight field if error -->
+                    {% if field.errors %}
+                        {% render_field field class="form-control form-control-sm is-invalid" %}
+                    {% else %}
+                        {% render_field field class="form-control form-control-sm" %}
+                    {% endif %}
+
+                    {% if field.errors %}
+                    <div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>
+                    {% endif %}
+
+                </div>
+                {% endif %}
+                {% endfor %}
+            </div>
+
+        </div>
+        {% endwith %}
+
+        <div class="mt-4 d-flex justify-content-end">
+            <button class="btn btn-primary btn-sm">Update</button>
+            <a href="javascript:history.back()" class="btn btn-secondary btn-sm ml-2">Back</a>
+        </div>
+
+    </form>
+</div>
+
+{% endblock %}
+
+{% block Script %}
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+
+<script>
+/* 🔥 ADDED: Auto-scroll to first error field */
+document.addEventListener("DOMContentLoaded", function() {
+    const firstErrorField = document.querySelector(".is-invalid, .text-danger");
+    if (firstErrorField) {
+        firstErrorField.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+});
+</script>
+
+{% endblock %}
