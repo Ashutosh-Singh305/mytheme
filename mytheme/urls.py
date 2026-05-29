@@ -31,6 +31,7 @@ urlpatterns = [
     path('admin/field-access-control/', field_access_control_view, name='field_access_control'),
     path('admin/', admin.site.urls),
     path('crm/', include('crm.urls')),
+    path('theme/', include('theme.urls')),
     path('',include('notifications.urls')),
     
     path('tinymce/', include('tinymce.urls')),

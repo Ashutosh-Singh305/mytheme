@@ -5,14 +5,18 @@
 {% block title %}Data Mapping{% endblock %}
 
 {% block body %}
-<div class="card" style="max-width: 100%; padding: 30px;">
-    <h2 class="card-header text-xl font-semibold mb-5">🧩 Map Excel Columns to Model Fields</h2>
+<div class="d-flex justify-content-between align-items-center mb-1">
+  <div>
+    <h4 class="page-title">🧩 Map Excel Columns to Model Fields</h4>
+  </div>
+</div>
+<div class="card">
 
     <form method="post" class="form" novalidate>
         {% csrf_token %}
 
         {% if form.errors %}
-            <div class="alert alert-danger bg-red-100 text-red-800 p-4 rounded mb-4">
+            <div class="alert alert-danger bg-red-100 text-red-800 p-2 rounded mb-4">
                 <strong>⚠️ Error:</strong>
                 {% if form.non_field_errors %}
                     {{ form.non_field_errors|join:"<br>"|safe }}
@@ -27,8 +31,8 @@
             <table class="table table-bordered w-full text-sm">
                 <thead class="bg-gray-100">
                     <tr>
-                        <th class="p-3">📄 Excel Column</th>
-                        <th class="p-3">📦 Model Field Mapping</th>
+                        <th class="p-2">📄 Excel Column</th>
+                        <th class="p-2">📦 Model Field Mapping</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -42,7 +46,7 @@
             </table>
         </div>
 
-        <div class="mt-4 d-flex justify-content-end">
+        <div class="mt-2 mb-2 gap-2 d-flex justify-content-end">
             <button type="submit" class="btn btn-primary btn-sm">📥 Import Data</button>
             <a href="{% url 'crm-data-upload' %}" class="btn btn-secondary ml-2 btn-sm">⬅ Back to Upload</a>
         </div>

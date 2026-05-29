@@ -1,0 +1,120 @@
+
+/* Balanced Two Column Row Matrix */
+.admin-form-row {
+    border-bottom: 1px solid #f8f9fa;
+    padding: 12px 0;
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.admin-label-col {
+    width: 30%;
+    font-size: 0.85rem;
+    color: #333333;
+    font-weight: bold;
+    padding-top: 4px;
+    padding-right: 10px;
+}
+
+.admin-field-col {
+    width: 70%;
+}
+
+/* Help Text styling below inputs */
+.admin-help-text {
+    display: block;
+    font-size: 0.72rem;
+    color: #999999;
+    margin-top: 4px;
+}
+
+/* Toggle Password Styling Adjustments */
+.input-group-text {
+    cursor: pointer;
+    background-color: #f4f6f9;
+    border: 1px solid #ced4da;
+}
+
+/* --- DJANGO DUAL SELECT BOXES --- */
+.selector {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.selector-available,
+.selector-chosen {
+    flex: 1;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+}
+
+.selector h2 {
+    background: #f4f6f9;
+    color: #666;
+    font-size: 0.8rem;
+    font-weight: bold;
+    padding: 8px 12px;
+    margin: 0;
+    border-bottom: 1px solid #ddd;
+    text-align: center;
+}
+
+.selector h2.chosen-header {
+    background: #007bff;
+    color: #fff;
+}
+
+.selector-filter {
+    padding: 5px;
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: center;
+}
+
+.selector-filter input {
+    width: 100%;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+.selector select {
+    width: 100%;
+    border: none;
+    font-size: 0.9rem;
+    padding: 5px;
+    outline: none;
+}
+
+.selector-chooseall,
+.selector-clearall {
+    display: block;
+    text-align: center;
+    font-size: 0.75rem;
+    padding: 6px;
+    background: #f8f9fa;
+    border-top: 1px solid #eee;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.selector-controls {
+    padding: 0 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.selector-controls button {
+    background: #f4f6f9;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    padding: 2px 6px;
+    cursor: pointer;
+    color: #666;
+}

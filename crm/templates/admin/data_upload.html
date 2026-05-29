@@ -1,24 +1,39 @@
 {% extends 'crm/base.html' %}
 {% block body %}
-<div class="container-fluid">
-  <div class="card shadow-sm mb-4">
-    <div class="card-header">
-      <h2 class="h4 mb-0">Upload Excel File</h2>
-    </div>
-    <div class="card-body">
-      <form method="post" enctype="multipart/form-data" class="form">
-        {% csrf_token %}
-        {% for field in form %}
-          <div class="form-group mb-3">
-            {{ field.label_tag }} {{ field }}
-            {% if field.errors %}<div class="text-danger">{{ field.errors }}</div>{% endif %}
-          </div>
-        {% endfor %}
-        <div class="d-flex justify-content-end">
-          <button type="submit" class="btn btn-primary btn-sm">Next</button>
-        </div>
-      </form>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-1">
+  <div>
+    <h4 class="page-title">Upload Excel File</h4>
   </div>
 </div>
+<div class="card p-1">
+  <form method="post" enctype="multipart/form-data" class="form">
+    {% csrf_token %}
+
+    <div class="row g-3">
+      {% for field in form %}
+      <div class="col-12 col-md-6">
+        <div class="form-group">
+          {{ field.label_tag }}
+
+          {{ field }}
+
+          {% if field.errors %}
+          <div class="text-danger small mt-1">
+            {{ field.errors }}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="d-flex justify-content-end mt-3">
+      <button type="submit" class="btn btn-primary btn-sm">
+        Next
+      </button>
+    </div>
+  </form>
+</div>
+
+
 {% endblock %}

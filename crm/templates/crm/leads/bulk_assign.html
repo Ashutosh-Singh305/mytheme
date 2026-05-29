@@ -1,99 +1,199 @@
 {% extends 'crm/base.html' %}
-
+{% load static %}
 {% block title %} Bulk Assign Leads {% endblock %}
-
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/list.css' %}">
+{% endblock css %}
 {% block body %}
 
 <div class="card">
-  <div class="card-header d-flex justify-content-between">
-    <h5>Bulk Lead Assignment</h5>
 
-    <div class="d-flex">
+  <!-- HEADER -->
+  <div class="card-header p-2">
 
-      <select id="leadSourceFilter" class="form-control form-control-sm mr-2">
-        <option value="">All Lead Source</option>
-        {% for key,label in lead_source_choices %}
-        <option value="{{ key }}" {% if key == selected_lead_source %}selected{% endif %}>
-          {{ label }}
-        </option>
-        {% endfor %}
-      </select>
+    <div class="d-flex flex-column flex-xl-row justify-content-between gap-2">
 
-      <select id="assignedToFilter" class="form-control form-control-sm mr-2">
-        <option value="">All Assigned To</option>
-        {% for user in users %}
-        <option value="{{ user.id }}" {% if user.id|stringformat:"s" == selected_assigned_to %}selected{% endif %}>
-          {{ user.username }}
-        </option>
-        {% endfor %}
-      </select>
+      <h5 class="mb-0">
+        Bulk Lead Assignment
+      </h5>
 
-      <select id="statusFilter" class="form-control form-control-sm mr-2">
-        <option value="">All Status</option>
-        {% for key,label in status_choices %}
-        <option value="{{ key }}" {% if key == selected_status %}selected{% endif %}>
-          {{ label }}
-        </option>
-        {% endfor %}
-      </select>
+      <div class="row g-1 w-100 w-xl-auto">
 
-      <select id="perPage" class="form-control mr-2">
-        <option value="10" {% if per_page == 10 %}selected{% endif %}>10</option>
-        <option value="20" {% if per_page == 20 %}selected{% endif %}>20</option>
-        <option value="50" {% if per_page == 50 %}selected{% endif %}>50</option>
-        <option value="100" {% if per_page == 100 %}selected{% endif %}>100</option>
-      </select>
+        <div class="col-12 col-sm-6 col-lg">
+          <select id="leadSourceFilter" class="form-select form-select-sm">
 
-      <button class="btn btn-primary" onclick="applyFilter()">Apply</button>
+            <option value="">
+              All Lead Source
+            </option>
+
+            {% for key,label in lead_source_choices %}
+            <option value="{{ key }}" {% if key == selected_lead_source %}selected{% endif %}>
+
+              {{ label }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg">
+          <select id="assignedToFilter" class="form-select form-select-sm">
+
+            <option value="">
+              All Assigned To
+            </option>
+
+            {% for user in users %}
+            <option value="{{ user.id }}" {% if user.id|stringformat:"s" == selected_assigned_to %}selected{% endif %}>
+
+              {{ user.username }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg">
+          <select id="statusFilter" class="form-select form-select-sm">
+
+            <option value="">
+              All Status
+            </option>
+
+            {% for key,label in status_choices %}
+            <option value="{{ key }}" {% if key == selected_status %}selected{% endif %}>
+
+              {{ label }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-6 col-sm-3 col-lg">
+          <select id="perPage" class="form-select form-select-sm">
+
+            <option value="10" {% if per_page == 10 %}selected{% endif %}>
+              10
+            </option>
+
+            <option value="20" {% if per_page == 20 %}selected{% endif %}>
+              20
+            </option>
+
+            <option value="50" {% if per_page == 50 %}selected{% endif %}>
+              50
+            </option>
+
+            <option value="100" {% if per_page == 100 %}selected{% endif %}>
+              100
+            </option>
+          </select>
+        </div>
+
+        <div class="col-6 col-sm-3 col-lg">
+          <button class="btn btn-primary btn-sm w-100" onclick="applyFilter()">
+
+            Apply
+          </button>
+        </div>
+
+      </div>
+
     </div>
   </div>
 
-  <div class="card-body">
+  <!-- BODY -->
+  <div class="card-body p-2">
 
     <!-- ASSIGN -->
-    <div class="d-flex mb-3">
-      <select id="assignUser" class="form-control mr-2">
-        <option value="">Assign To</option>
-        {% for user in users %}
-        <option value="{{ user.id }}">{{ user.username }}</option>
-        {% endfor %}
-      </select>
+    <div class="row g-2 mb-3">
 
-      <select name="team_lead" class="form-control mr-2">
-        <option value="">Select TL</option>
-        {% for user in team_leads %}
-        <option value="{{ user.id }}">{{ user.username }}</option>
-        {% endfor %}
-      </select>
+      <div class="col-md-6 col-lg">
+        <select id="assignUser" class="form-select form-select-sm">
 
-      <select name="business_head" class="form-control mr-2">
-        <option value="">Select BH</option>
-        {% for user in business_heads %}
-        <option value="{{ user.id }}">{{ user.username }}</option>
-        {% endfor %}
-      </select>
+          <option value="">
+            Assign To
+          </option>
 
-      <select name="business_manager" class="form-control mr-2">
-        <option value="">Select BM</option>
-        {% for user in business_managers %}
-        <option value="{{ user.id }}">{{ user.username }}</option>
-        {% endfor %}
-      </select>
+          {% for user in users %}
+          <option value="{{ user.id }}">
+            {{ user.username }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
 
-      <select name="tele_sales_executive" class="form-control mr-2">
-        <option value="">Select TSE</option>
-        {% for user in users %}
-        <option value="{{ user.id }}">{{ user.username }}</option>
-        {% endfor %}
-      </select>
+      <div class="col-md-6 col-lg">
+        <select name="team_lead" class="form-select form-select-sm">
 
-      <button class="btn btn-success btn-sm" onclick="assignLeads()">Assign Selected</button>
+          <option value="">
+            Select TL
+          </option>
+
+          {% for user in team_leads %}
+          <option value="{{ user.id }}">
+            {{ user.username }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-6 col-lg">
+        <select name="business_head" class="form-select form-select-sm">
+
+          <option value="">
+            Select BH
+          </option>
+
+          {% for user in business_heads %}
+          <option value="{{ user.id }}">
+            {{ user.username }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-6 col-lg">
+        <select name="business_manager" class="form-select form-select-sm">
+
+          <option value="">
+            Select BM
+          </option>
+
+          {% for user in business_managers %}
+          <option value="{{ user.id }}">
+            {{ user.username }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-6 col-lg">
+        <select name="tele_sales_executive" class="form-select form-select-sm">
+
+          <option value="">
+            Select TSE
+          </option>
+
+          {% for user in users %}
+          <option value="{{ user.id }}">
+            {{ user.username }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-6 col-lg-auto">
+        <button class="btn btn-success btn-sm w-100" onclick="assignLeads()">
+
+          Assign Selected
+        </button>
+      </div>
+
     </div>
 
-    <!-- TABLE + PAGINATION -->
-    <div class="table-responsive">
+    <!-- TABLE -->
+    <div class="table-responsive border rounded">
 
-      <table class="table sf-table">
+      <table class="table table-hover table-sm align-middle text-nowrap mb-0">
 
         <thead>
           <tr class="table-primary text-capitalize font-weight-bold">
@@ -125,8 +225,7 @@
               </a>
             </th>
             <th class="text-capitalize font-weight-bold">
-              <a
-                href="?sort=team_lead&dir={% if sort == 'team_lead' and dir == 'asc' %}desc{% else %}asc{% endif %}">
+              <a href="?sort=team_lead&dir={% if sort == 'team_lead' and dir == 'asc' %}desc{% else %}asc{% endif %}">
                 Team Lead
               </a>
             </th>
@@ -159,10 +258,16 @@
         </thead>
 
         <tbody>
+
           {% if page_obj.object_list %}
+
           {% for lead in page_obj %}
           <tr>
-            <td><input type="checkbox" class="rowCheck" value="{{ lead.id }}"></td>
+
+            <td>
+              <input type="checkbox" class="rowCheck" value="{{ lead.id }}">
+            </td>
+
             <td>{{ lead.name }}</td>
             <td>XXXXXX{{ lead.mobile_number|slice:"-4:" }}</td>
             <td>{{ lead.get_lead_source_display|default:"-" }}</td>
@@ -172,31 +277,37 @@
             <td>{{ lead.business_manager.username|default:"-" }}</td>
             <td>{{ lead.tele_sales_executive.username|default:"-" }}</td>
             <td>{{ lead.assigned_to.username|default:"-" }}</td>
+
           </tr>
           {% endfor %}
+
           {% else %}
+
           <tr>
-            <td colspan="7" class="text-center p-4">
+            <td colspan="10" class="text-center py-4 text-muted">
               No Leads Found
             </td>
           </tr>
+
           {% endif %}
+
         </tbody>
 
       </table>
 
     </div>
 
-    <!-- 🔥 PAGINATION STRICTLY BELOW TABLE -->
-    <div class="d-flex justify-content-between align-items-center mt-3">
+    <!-- PAGINATION -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mt-3">
 
       <p class="text-muted mb-0">
-        Showing {{ page_obj.start_index }} to {{ page_obj.end_index }}
-        of {{ page_obj.paginator.count }} entries
+        Showing {{ page_obj.start_index }}
+        to {{ page_obj.end_index }}
+        of {{ page_obj.paginator.count }}
+        entries
       </p>
 
-      <ul class="pagination mb-0">
-
+      <ul class="pagination pagination-sm mb-0 flex-wrap">
         {% if page_obj.has_previous %}
         <li class="page-item">
           <a class="page-link" href="?page={{ page_obj.previous_page_number }}
@@ -238,7 +349,6 @@
           </a>
         </li>
         {% endif %}
-
       </ul>
 
     </div>
@@ -269,7 +379,7 @@
 
   function assignLeads() {
 
-   
+
     let selected = [];
     document.querySelectorAll(".rowCheck:checked").forEach(cb => {
       selected.push(cb.value);
@@ -280,14 +390,14 @@
       return;
     }
 
-   
+
     let assignedTo = document.getElementById("assignUser").value;
 
     let teamLead = document.querySelector("[name='team_lead']").value;
     let businessHead = document.querySelector("[name='business_head']").value;
     let businessManager = document.querySelector("[name='business_manager']").value;
-    let tse = document.querySelector("[name='tele_sales_executive']").value; 
-              
+    let tse = document.querySelector("[name='tele_sales_executive']").value;
+
 
     // -------------------------------
     // 🔥 VALIDATION
@@ -319,20 +429,20 @@
       },
       body: body
     })
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) {
-        alert(data.error);
-        return;
-      }
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert(data.error);
+          return;
+        }
 
-      alert(`✅ Updated ${data.updated} leads`);
-      location.reload();
-    })
-    .catch(err => {
-      console.error(err);
-      alert("Something went wrong");
-    });
+        alert(`✅ Updated ${data.updated} leads`);
+        location.reload();
+      })
+      .catch(err => {
+        console.error(err);
+        alert("Something went wrong");
+      });
   }
 
   function getCSRF() {

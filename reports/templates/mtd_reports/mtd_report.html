@@ -1,12 +1,15 @@
 {% extends "reports/base.html" %}
 {% load static %}
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/list.css' %}">
+{% endblock css %}
 {% block title %}Assignment Status Report{% endblock %}
 {% block body %}
 <div class="row">
-    <div class="col-lg-12 stretch-card grid-margin">
+    <div class="col-lg-12">
         <div class="card mb-4">
-            <div class="card-body">
-                <h4 class="mb-3 p-2">
+            <div class="card-body p-2">
+                <h4 class="mb-2">
                     {% if report_type == "count" %}
                     MTD Count Report
                     {% else %}
@@ -16,102 +19,176 @@
 
                 <!-- Filters -->
                 <div class="mb-3">
-                    <form method="get" class="d-flex flex-column">
+                    <form method="get">
 
-                        <div class="row">
-                            <!-- GROUP BY (Left Column) -->
-                            <div class="col-md-6 mb-3">
-                                <fieldset class="border rounded p-3">
-                                    <legend class="w-auto px-2 font-weight-bold">Group By</legend>
+                        <div class="row g-3">
 
-                                    <div class="form-group mb-2">
-                                        <label for="assignment_type">Assignment<i class="text-danger">*</i></label>
-                                        <select name="assignment_type" id="assignment_type"
-                                            class="form-control form-control-sm" required>
+                            <!-- GROUP BY -->
+                            <div class="col-lg-6">
+                                <fieldset class="border rounded p-3 h-100">
+                                    <legend class="w-auto px-2 fw-bold fs-6 mb-0">
+                                        Group By
+                                    </legend>
+
+                                    <div class="mb-3">
+                                        <label for="assignment_type" class="form-label">
+                                            Assignment <span class="text-danger">*</span>
+                                        </label>
+
+                                        <select name="assignment_type"
+                                            id="assignment_type"
+                                            class="form-select form-select-sm"
+                                            required>
+
                                             <option value="">-- Select --</option>
+
                                             {% for value, label in assignment_types %}
                                             <option value="{{ value }}"
-                                             {% if assignment_type == value %}selected{% endif %}>{{ label }}</option>
+                                                {% if assignment_type == value %}selected{% endif %}>
+                                                {{ label }}
+                                            </option>
                                             {% endfor %}
+
                                         </select>
-                                        <small class="form-text text-danger">
+
+                                        <small class="text-danger">
                                             You must select an Assignment Type to view leads.
                                         </small>
-
                                     </div>
 
-                                    <div class="form-group mb-2">
-                                        <label for="report_type">Select Group Type</label>
-                                        <select name="report_type" id="report_type"
-                                            class="form-control form-control-sm">
-                                            <option value="sum" {% if report_type == "sum" %}selected{% endif %}>Sum
+                                    <div class="mb-0">
+                                        <label for="report_type" class="form-label">
+                                            Select Group Type
+                                        </label>
+
+                                        <select name="report_type"
+                                            id="report_type"
+                                            class="form-select form-select-sm">
+
+                                            <option value="sum"
+                                                {% if report_type == "sum" %}selected{% endif %}>
+                                                Sum
                                             </option>
-                                            <option value="count" {% if report_type == "count" %}selected{% endif %}>Count
+
+                                            <option value="count"
+                                                {% if report_type == "count" %}selected{% endif %}>
+                                                Count
                                             </option>
+
                                         </select>
                                     </div>
                                 </fieldset>
                             </div>
-                            <!-- FILTER BY (Right Column) -->
-                            <div class="col-md-6 mb-3">
-                                <fieldset class="border rounded p-3">
-                                    <legend class="w-auto px-2 font-weight-bold">Filter By</legend>
 
-                                    <div class="form-row">
-                                        <div class="col-md-6 mb-2">
-                                            <label for="assignment_field">Assignment Field</label>
-                                            <select name="assignment_field" id="assignment_field"
-                                                class="form-control form-control-sm">
+                            <!-- FILTER BY -->
+                            <div class="col-lg-6">
+                                <fieldset class="border rounded p-3 h-100">
+                                    <legend class="w-auto px-2 fw-bold fs-6 mb-0">
+                                        Filter By
+                                    </legend>
+
+                                    <div class="row g-2">
+
+                                        <!-- Assignment Field -->
+                                        <div class="col-md-6">
+                                            <label for="assignment_field" class="form-label">
+                                                Assignment Field
+                                            </label>
+
+                                            <select name="assignment_field"
+                                                id="assignment_field"
+                                                class="form-select form-select-sm">
+
                                                 <option value="">-- Select Field --</option>
-                                                {% for value, label in assignment_types %}
-                                                <option value="{{ value }}" {% if assignment_field == value %}selected{% endif %}>{{ label }}</option>
-                                                     
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="assignment_value">Assignment Field Value</label>
-                                            <select name="assignment_value" id="assignment_value"
-                                                class="form-control form-control-sm"
-                                                data-selected="{{ assignment_value }}">
-                                                <option value="">-- Select User --</option>
-                                                 {% for user in users_for_field %}
-                                                    <option value="{{ user.id }}" {% if assignment_value|stringformat:"s" == user.id|stringformat:"s" %}selected{% endif %}>
-                                                        {{ user.get_full_name|default:user.username }}
-                                                    </option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
 
-                                    <div class="form-row">
-                                        <div class="col-md-6 mb-2">
-                                            <label for="start_date">Start Date</label>
-                                            <input type="date" name="start_date" id="start_date"
-                                                value="{{ start_date }}" class="form-control form-control-sm">
+                                                {% for value, label in assignment_types %}
+                                                <option value="{{ value }}"
+                                                    {% if assignment_field == value %}selected{% endif %}>
+
+                                                    {{ label }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
                                         </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="end_date">End Date</label>
-                                            <input type="date" name="end_date" id="end_date" value="{{ end_date }}"
+
+                                        <!-- Assignment Value -->
+                                        <div class="col-md-6">
+                                            <label for="assignment_value" class="form-label">
+                                                Assignment Field Value
+                                            </label>
+
+                                            <select name="assignment_value"
+                                                id="assignment_value"
+                                                class="form-select form-select-sm"
+                                                data-selected="{{ assignment_value }}">
+
+                                                <option value="">-- Select User --</option>
+
+                                                {% for user in users_for_field %}
+                                                <option value="{{ user.id }}"
+                                                    {% if assignment_value|stringformat:"s" == user.id|stringformat:"s" %}selected{% endif %}>
+
+                                                    {{ user.get_full_name|default:user.username }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+
+                                        <!-- Start Date -->
+                                        <div class="col-md-6">
+                                            <label for="start_date" class="form-label">
+                                                Start Date
+                                            </label>
+
+                                            <input type="date"
+                                                name="start_date"
+                                                id="start_date"
+                                                value="{{ start_date }}"
                                                 class="form-control form-control-sm">
                                         </div>
-                                        <small class="text-muted">
-                                            Note: Disbursed amounts are filtered by Date of Disbursement (DOD); others
-                                            use Date of Sourcing (DOS).
-                                        </small>
+
+                                        <!-- End Date -->
+                                        <div class="col-md-6">
+                                            <label for="end_date" class="form-label">
+                                                End Date
+                                            </label>
+
+                                            <input type="date"
+                                                name="end_date"
+                                                id="end_date"
+                                                value="{{ end_date }}"
+                                                class="form-control form-control-sm">
+                                        </div>
+
+                                        <!-- Note -->
+                                        <div class="col-12">
+                                            <small class="text-muted">
+                                                Note: Disbursed amounts are filtered by Date of
+                                                Disbursement (DOD); others use Date of Sourcing (DOS).
+                                            </small>
+                                        </div>
 
                                     </div>
                                 </fieldset>
                             </div>
-
 
                         </div>
 
-                        <!-- Buttons (Below Both Columns, Centered) -->
-                        <div class="d-flex justify-content-center mt-2">
-                            <button type="submit" class="btn btn-primary btn-sm mr-2">Filter</button>
+                        <!-- Buttons -->
+                        <div class="d-flex flex-column flex-sm-row justify-content-center gap-2 mt-3">
+
+                            <button type="submit"
+                                class="btn btn-primary btn-sm">
+
+                                Filter
+                            </button>
+
                             <a href="?assignment_type={{ assignment_type }}&report_type={{ report_type }}&start_date={{ start_date }}&end_date={{ end_date }}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}&export=1"
-                                class="btn btn-success btn-sm">Export to Excel</a>
+                                class="btn btn-success btn-sm">
+
+                                Export to Excel
+                            </a>
+
                         </div>
 
                     </form>
@@ -120,7 +197,7 @@
 
                 <!-- Report Table -->
                 <div class="table-responsive border rounded p-1">
-                    <table class="table mb-3">
+                    <table class="table custom-table">
                         <thead>
                             <tr class="table-primary">
                                 <th class="font-weight-bold">Employee Code</th>
@@ -150,7 +227,7 @@
                                 <!-- Sortable Status Columns -->
                                 {% for field in sort_fields %}
                                 {% if field != "user" %}
-                                <th class="text-right font-weight-bold">
+                                <th class="text-end font-weight-bold">
                                     <a
                                         href="?assignment_type={{ assignment_type }}&report_type={{ report_type }}&start_date={{ start_date }}&end_date={{ end_date }}&sort={{ field }}&order={% if sort_field == field and order == 'asc' %}desc{% else %}asc{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}">
                                         {% if field|lower == "ofb" %}
@@ -185,12 +262,12 @@
 
                                 <!--User  DOJ -->
                                 <td>{{r.profile.user.date_joined|date:"d-m-Y"}}</td>
-                                <td class="text-right">
+                                <td class="text-end">
                                     <a
                                         href="{% url 'reports:mtd_user_detail' r.user_id %}?assignment_type={{ assignment_type }}&status=ofb{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}">
                                         {{ r.ofb|floatformat:0 }}</a>
                                 </td>
-                                <td class="text-right">
+                                <td class="text-end">
 
                                     <a
                                         href="{% url 'reports:mtd_user_detail' r.user_id %}?assignment_type={{ assignment_type }}&status=underwriting{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}">
@@ -198,36 +275,36 @@
                                     </a>
                                         
                                 </td>
-                                <td class="text-right">
+                                <td class="text-end">
                                     <a
                                         href="{% url 'reports:mtd_user_detail' r.user_id %}?assignment_type={{ assignment_type }}&status=Declined{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}">
                                         {{ r.declined|floatformat:0 }}
                                     </a>
                                 </td>
-                                <td class="text-right">
+                                <td class="text-end">
                                     <a
                                         href="{% url 'reports:mtd_user_detail' r.user_id %}?assignment_type={{ assignment_type }}&status=reject_relook{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}">
                                         {{ r.reject_relook|floatformat:0 }}</a>
                                 </td>
-                                <td class="text-right">
+                                <td class="text-end">
                                     <a
                                         href="{% url 'reports:mtd_user_detail' r.user_id %}?assignment_type={{ assignment_type }}&status=approved{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}">
                                         {{ r.approved|floatformat:0 }}
                                     </a>
                                 </td>
-                                <td class="text-right">
+                                <td class="text-end">
                                     <a
                                         href="{% url 'reports:mtd_user_detail' r.user_id %}?assignment_type={{ assignment_type }}&status=disbursed{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}">
                                         {{ r.gross_disbursed|floatformat:0 }}
                                     </a>
                                 </td>
-                                <td class="text-right">
+                                <td class="text-end">
                                     <a
                                         href="{% url 'reports:mtd_user_detail' r.user_id %}?assignment_type={{ assignment_type }}&status=disbursed{% if start_date %}&start_date={{ start_date }}{% endif %}{% if end_date %}&end_date={{ end_date }}{% endif %}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}">
                                         {{ r.net_disbursed|floatformat:0 }}
                                     </a>
                                 </td>
-                                <td class="text-right font-weight-bold">{{ r.grand_total|floatformat:0 }}</td>
+                                <td class="text-end font-weight-bold">{{ r.grand_total|floatformat:0 }}</td>
                             </tr>
                             {% empty %}
                             <tr>
@@ -240,14 +317,14 @@
                                 <td>-</td> <!-- User column, empty for totals -->
                                 <td>-</td> <!-- DOJ column, empty for totals -->
                                 <td colspan="2">Grand Total</td>
-                                <td class="text-right">{{ totals.ofb|floatformat:0 }}</td>
-                                <td class="text-right">{{ totals.underwriting|floatformat:0 }}</td>
-                                <td class="text-right">{{ totals.declined|floatformat:0 }}</td>
-                                <td class="text-right">{{ totals.reject_relook|floatformat:0 }}</td>
-                                <td class="text-right">{{ totals.approved|floatformat:0 }}</td>
-                                <td class="text-right">{{ totals.gross_disbursed|floatformat:0 }}</td>
-                                <td class="text-right">{{ totals.net_disbursed|floatformat:0 }}</td>
-                                <td class="text-right">{{ totals.grand_total|floatformat:0 }}</td>
+                                <td class="text-end">{{ totals.ofb|floatformat:0 }}</td>
+                                <td class="text-end">{{ totals.underwriting|floatformat:0 }}</td>
+                                <td class="text-end">{{ totals.declined|floatformat:0 }}</td>
+                                <td class="text-end">{{ totals.reject_relook|floatformat:0 }}</td>
+                                <td class="text-end">{{ totals.approved|floatformat:0 }}</td>
+                                <td class="text-end">{{ totals.gross_disbursed|floatformat:0 }}</td>
+                                <td class="text-end">{{ totals.net_disbursed|floatformat:0 }}</td>
+                                <td class="text-end">{{ totals.grand_total|floatformat:0 }}</td>
                             </tr>
                         </tfoot>
                     </table>

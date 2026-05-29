@@ -5,90 +5,62 @@
 
 {% block css %}
 <style>
-    /* -------------------------------------
-   COLLAPSIBLE HEADER (Salesforce-style)
--------------------------------------- */
-    .section-header {
-        cursor: pointer;
-        padding: 6px 10px;
-        border-radius: 4px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+    /* TABLE */
+    .detail-table {
+        border: 1px solid #dee2e6;
     }
 
-    .section-arrow {
-        transition: transform 0.25s ease;
+    .detail-table td {
+        vertical-align: middle;
     }
 
-    .section-header[aria-expanded="true"] .section-arrow {
-        transform: rotate(90deg);
-    }
-
-    .profile-section {
-        margin-bottom: 0.2rem;
-    }
-
-    /* -------------------------------------
-   MOBILE LAYOUT (DEFAULT)
--------------------------------------- */
-    .phone-list {
-        display: block !important;
-    }
-
-    .profile-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 6px 8px;
-    }
-
-    .profile-label {
+    /* LABEL */
+    .label-cell {
+        width: 18%;
         font-weight: 600;
+        opacity: 80%;
+        background: #fafafa;
+        white-space: nowrap;
+        font-size: medium;
+    }
+
+    /* VALUE */
+    .value-cell {
+        width: 32%;
         color: #333;
+        word-break: break-word;
     }
 
-    .profile-value {
-        color: #444;
-        text-align: right;
-        max-width: 55%;
-    }
-
-    /* -------------------------------------
-   DESKTOP (TABLE LAYOUT)
--------------------------------------- */
-    .desktop-table {
-        display: none !important;
-    }
-
-    @media (min-width: 768px) {
-
-        .phone-list {
-            display: none !important;
-        }
-
-        .desktop-table {
-            display: block !important;
-        }
-
-        .detail-table {
-            width: 100%;
-        }
+    /* MOBILE */
+    @media (max-width:768px) {
 
         .detail-table td {
-            padding: 8px 12px;
-            vertical-align: middle;
-            background: #fff;
+            display: inline-block;
+            vertical-align: top;
+            border: 0;
+            padding: 6px 8px;
         }
 
+        /* label */
         .label-cell {
-            width: 15%;
+            width: 40% !important;
+            background: transparent;
+            white-space: normal;
             font-weight: 600;
-            background: #fafafa;
-            text-align: left;
+            opacity: 80%;
         }
 
+        /* value */
         .value-cell {
-            width: 35%;
+            width: 60% !important;
+            text-align: right;
+            word-break: break-word;
+        }
+
+        .detail-table tr {
+            display: flex;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #eee;
         }
     }
 </style>
@@ -97,12 +69,16 @@
 
 {% block body %}
 <div class="card shadow-sm">
-    <div class="p-3 mb-3">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h3 class="text-primary mb-0 d-none d-md-flex">{{ obj }}</h3>
+    <div class="p-1 mb-1">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <h4 class="text-primary mb-0 d-none d-md-flex">{{ obj }}</h4>
 
             <!-- ================= DESKTOP ACTIONS ================= -->
-            <div class="btn-group flex-wrap" role="group">
+            <div class="btn-group flex-wrap gap-1" role="group">
+                <!--New     -->
+                <a href="{% url 'crm_object_create' model_name %}" class="btn btn-outline-primary btn-sm">
+                    New
+                </a>
 
                 <!-- Edit -->
                 <a href="{% url 'crm_object_edit' model_name obj.pk %}" class="btn btn-outline-primary btn-sm">
@@ -168,40 +144,41 @@
                 </a>
             </div>
         </div>
-        <h3 class="text-primary mb-0 d-block d-md-none p-1">
+        <h3 class="text-primary mb-0 d-block d-md-none">
             {{ obj }}
         </h3>
-        {% for section in fieldsets %}
-        <div class="profile-section">
+        <!-- TAB HEADER -->
+        <div class="border-bottom mb-1">
 
-            <!-- HEADER -->
-            <div class="section-header bg-primary text-white font-weight-bold" data-bs-toggle="collapse"
-                data-bs-target="#{{ section.id }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">
+            <ul class="nav nav-tabs" id="detailTabs" role="tablist">
 
-                <span class="m-0">{{ section.title }}</span>
+                {% for section in fieldsets %}
+                <li class="nav-item" role="presentation">
 
-                <span class="section-arrow">
-                    <i class="bi bi-chevron-right text-white"></i>
-                </span>
-            </div>
+                    <button class="nav-link  {% if forloop.first %}active{% endif %}" data-bs-toggle="tab"
+                        data-bs-target="#{{ section.id }}" type="button">
 
+                        {{ section.title }}
 
-            <!-- BODY -->
-            <div id="{{ section.id }}" class="collapse {% if forloop.first %}show{% endif %} table-responsive">
+                    </button>
 
-                <!-- 📱 MOBILE VIEW -->
-                <div class="phone-list">
-                    {% for field in section.fields %}
-                    <div class="profile-item">
-                        <span class="profile-label">{{ field.label }}</span>
-                        <span class="profile-value text-wrap">{{ field.value|default_if_none:" "|safe }}</span>
-                    </div>
-                    {% endfor %}
-                </div>
+                </li>
+                {% endfor %}
 
-                <!-- 🖥 DESKTOP VIEW -->
-                <div class="desktop-table">
-                    <table class="table detail-table mb-0">
+            </ul>
+
+        </div>
+
+        <!-- TAB CONTENT -->
+        <div class="tab-content mt-1">
+
+            {% for section in fieldsets %}
+            <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="{{ section.id }}">
+
+                <div class="table-responsive">
+
+                    <table class="table table-sm detail-table align-middle mb-0">
+
                         <tbody>
 
                             {% for field in section.fields %}
@@ -210,17 +187,32 @@
                             <tr>
                                 {% endif %}
 
-                                <td class="label-cell">{{ field.label }}</td>
-                                <td class="value-cell text-wrap">
+                                <!-- LABEL -->
+                                <td class="label-cell">
+                                    {{ field.label }}
+                                </td>
+
+                                <!-- VALUE -->
+                                <td class="value-cell">
+
                                     {% if field.render == "image" and field.value %}
-                                    <img src="{{ field.value }}" style="max-width:120px;">
+
+                                    <img src="{{ field.value }}" class="img-thumbnail" style="max-width:120px;">
 
                                     {% elif field.render == "file" and field.value %}
-                                    <a href="{{ field.value }}" target="_blank">Download file</a>
+
+                                    <a href="{{ field.value }}" target="_blank">
+
+                                        Download file
+
+                                    </a>
 
                                     {% else %}
+
                                     {{ field.value|default_if_none:""|safe }}
+
                                     {% endif %}
+
                                 </td>
 
                                 {% if forloop.counter|divisibleby:2 %}
@@ -230,21 +222,27 @@
                             {% endfor %}
 
                             {% if section.fields|length|divisibleby:2 == False %}
+                            <td class="label-cell"></td>
+                            <td class="value-cell"></td>
                             </tr>
                             {% endif %}
 
                         </tbody>
+
                     </table>
+
                 </div>
 
             </div>
+            {% endfor %}
+
         </div>
-        {% endfor %}
 
         <!-- ACTION BUTTONS -->
-        <div class="mt-4">
+        <div class="p-1 text-end">
             <a href="{% url 'crm_object_edit' model_name obj.pk %}" class="btn btn-primary btn-sm">Edit</a>
-            <a href="{% url 'crm_object_delete' model_name obj.pk %}" class="btn btn-danger btn-sm">Delete</a>
+            <a href="{% url 'crm_object_delete' model_name obj.pk %}" class="btn btn-outline-danger btn-sm">Delete</a>
+            <a href="javascript:void(0)"  onclick="history.back()" class="btn btn-outline-secondary btn-sm">Back</a>
         </div>
 
     </div>
@@ -263,13 +261,12 @@
                     </h5>
                     <small class="text-muted">Log an interaction or reminder</small>
                 </div>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                 </button>
             </div>
 
             <!-- Form -->
-            <form id="followupCreateForm" class="px-3 py-2">
+            <form id="followupCreateForm" class="px-3 py-1">
                 {% csrf_token %}
 
                 <!-- Lead (Read-only) -->
@@ -340,84 +337,110 @@
     aria-hidden="true">
 
     <div class="modal-dialog modal-md modal-dialog-centered">
-        <div class="modal-content shadow-sm border-0">
 
-            <!-- Header -->
-            <div class="modal-header bg-light border-bottom">
+        <div class="modal-content border-0 shadow-sm">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-light border-bottom py-2">
+
                 <div>
                     <h5 class="modal-title mb-0" id="documentCreateModalLabel">
+
                         Add Document
                     </h5>
+
                     <small class="text-muted">
                         Upload a file related to this lead
                     </small>
                 </div>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
+
+                <!-- Bootstrap 5 Close -->
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                 </button>
 
             </div>
 
-            <!-- Form -->
+            <!-- FORM -->
             <form id="documentCreateForm" enctype="multipart/form-data">
+
                 {% csrf_token %}
 
-                <div class="modal-body">
+                <div class="modal-body py-3">
 
-                    <!-- Lead (read-only) -->
+                    <!-- LEAD -->
                     <div class="mb-3">
-                        <label class="form-label text-muted mb-1">
+
+                        <label class="form-label text-muted small mb-1">
                             Lead
                         </label>
+
                         <input type="text" class="form-control form-control-sm bg-light" value="{{ obj.name }}"
                             disabled>
+
                         <input type="hidden" name="lead" value="{{ obj.id }}">
+
                     </div>
 
-                    <!-- Document Type -->
+                    <!-- DOCUMENT TYPE -->
                     <div class="mb-3">
+
                         <label class="form-label mb-1">
-                            Document Type <span class="text-danger">*</span>
+                            Document Type
+                            <span class="text-danger">*</span>
                         </label>
+
                         <input type="text" name="document_type" class="form-control form-control-sm"
                             placeholder="e.g. PAN Card, Proposal, Agreement" required>
+
                     </div>
 
-                    <!-- File -->
-                    <div class="mb-3">
+                    <!-- FILE -->
+                    <div class="mb-2">
+
                         <label class="form-label mb-1">
-                            File <span class="text-danger">*</span>
+                            File
+                            <span class="text-danger">*</span>
                         </label>
+
                         <input type="file" name="file" class="form-control form-control-sm" required>
+
                         <small class="text-muted">
                             Allowed formats: PDF, JPG, PNG
                         </small>
+
                     </div>
 
-                    <!-- Errors -->
-                    <div id="documentCreateErrors" class="alert alert-danger d-none py-2 mb-0"></div>
+                    <!-- ERRORS -->
+                    <div id="documentCreateErrors" class="alert alert-danger d-none py-2 mt-3 mb-0">
+                    </div>
 
                 </div>
 
-                <!-- Footer -->
-                <div class="modal-footer border-top-0 pt-0">
+                <!-- FOOTER -->
+                <div class="modal-footer border-top bg-light py-2">
+
                     <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+
                         Cancel
                     </button>
+
                     <button type="submit" class="btn btn-primary btn-sm">
+
                         Upload
                     </button>
+
                 </div>
+
             </form>
 
         </div>
+
     </div>
+
 </div>
 {% endblock %}
 
 {% block Script %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <!-- Create Followup -->
 <script>
     $('#followupCreateForm').on('submit', function (e) {

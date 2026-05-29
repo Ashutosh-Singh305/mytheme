@@ -2,10 +2,20 @@ from django.urls import path
 from crm import listview_views
 from crm import generic_crud
 from . import views,admin_views
-
+from .views import RoleListView, RoleCreateView, RoleUpdateView, RoleDeleteView
 urlpatterns = [
     # To auto fetch branch when IFSC code is saved in bank details form
     path("api/get-branch/", admin_views.get_branch_name, name="get_branch_name"),
+    
+    path('roles/', RoleListView.as_view(), name='role-list'),
+    path('roles/create/', RoleCreateView.as_view(), name='role-create'),
+    path('roles/<int:pk>/update/', RoleUpdateView.as_view(), name='role-update'),
+    path('roles/<int:pk>/delete/', RoleDeleteView.as_view(), name='role-delete'),
+    
+    path('groups/', views.group_list, name='group-list'),
+    path('groups/create/', views.group_create, name='group-create'),
+    path('groups/<int:pk>/update/', views.group_update, name='group-update'),
+    path('groups/<int:pk>/delete/', views.group_delete, name='group-delete'),
     
     # ip
     path('ip/list', views.ip_list, name='ip-list'),
@@ -20,6 +30,7 @@ urlpatterns = [
     path('users/<int:pk>/details/', views.user_detail, name='user-detail'),
     path('users/<int:pk>/edit/', views.user_edit, name='user-edit'),
     path('users/<int:pk>/delete/', views.user_delete, name='user-delete'),
+    path('users/<int:pk>/password/', views.user_password_change, name='user-password-change'),
     # path('my-profile',views.myProfile, name="my_profile"),
     
     # Dashboard URLs

@@ -3,30 +3,38 @@
 {% block title %}Lead Documents{% endblock %}
 
 {% block body %}
-<div class="page-header">
-    <h3 class="page-title">Lead Documents</h3>
-    <nav aria-label="breadcrumb">
-        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentCreateModal">
+
+<div class="d-flex justify-content-between align-items-center mb-1">
+
+    <div>
+        <h4 class="page-title">
+          Lead Documents
+        </h4>
+    </div>
+
+    <div>
+         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#documentCreateModal">
             Add
         </button>
         <a href="javascript:history.back()" class="btn btn-secondary btn-sm">
             Back
         </a>
+    </div>
 
-    </nav>
 </div>
 
-<div class="row">
-    <div class="col-lg-12 stretch-card grid-margin">
-        <div class="card">
-            <div class="card-body">
 
-                <h4>Total Documents : {{ documents.paginator.count }}</h4>
+<div class="row">
+    <div class="col-lg-12 grid-margin">
+        <div class="card shadow-sm border-light">
+            <div class="card-body p-1">
+
+                <h4 class="mb-3 fs-5 fw-bold">Total Documents : {{ documents.paginator.count }}</h4>
 
                 <div class="table-responsive border rounded p-1">
-                    <table class="table">
+                    <table class="table table-sm align-middle mb-0">
                         <thead>
-                            <tr class="table-primary">
+                            <tr class="table-primary text-dark">
                                 <th>ID</th>
                                 <th>Lead</th>
                                 <th>Type</th>
@@ -39,32 +47,34 @@
                             <tr>
                                 <td>{{ document.id|default_if_none:'' }}</td>
                                 <td>
-                                    <a href="/crm/Lead/{{ document.lead.id }}/">
+                                    <a href="/crm/Lead/{{ document.lead.id }}/" class="text-primary fw-semibold text-decoration-none">
                                         {{ document.lead.name|default_if_none:'' }}
                                     </a>
                                 </td>
                                 <td>{{ document.document_type|default_if_none:'' }}</td>
                                 <td>
-                                    <a href="{{ document.file.url }}" target="_blank">
+                                    <a href="{{ document.file.url }}" target="_blank" class="text-secondary text-decoration-underline small">
                                         {{ document.file.name|cut:"documents/"|default_if_none:'' }}
                                     </a>
                                 </td>
                                 <td class="text-center">
-                                    <button class="btn btn-primary btn-sm document-edit-btn" data-bs-toggle="modal"
-                                        data-bs-target="#documentEditModal" data-id="{{ document.id }}"
-                                        data-type="{{ document.document_type }}">
-                                        Edit
-                                    </button>
+                                    <div class="d-inline-flex gap-1 justify-content-center">
+                                        <button class="btn btn-primary btn-sm document-edit-btn" data-bs-toggle="modal"
+                                            data-bs-target="#documentEditModal" data-id="{{ document.id }}"
+                                            data-type="{{ document.document_type }}">
+                                            Edit
+                                        </button>
 
-                                    <button class="btn btn-danger btn-sm document-delete-btn"
-                                        data-id="{{ document.id }}">
-                                        Delete
-                                    </button>
+                                        <button class="btn btn-danger btn-sm document-delete-btn"
+                                            data-id="{{ document.id }}">
+                                            Delete
+                                        </button>
+                                    </div>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="5" class="text-center text-muted">
+                                <td colspan="5" class="text-center text-muted py-3">
                                     No documents found.
                                 </td>
                             </tr>
@@ -73,25 +83,28 @@
                     </table>
                 </div>
 
-                <!-- Pagination -->
                 {% if documents.has_other_pages %}
                 <nav class="mt-3">
-                    <ul class="pagination pagination-primary">
+                    <ul class="pagination pagination-sm mb-0">
                         {% if documents.has_previous %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ documents.previous_page_number }}">&laquo;</a>
+                            <a class="page-link" href="?page={{ documents.previous_page_number }}" aria-label="Previous">
+                                <span aria-hidden="true">&laquo;</span>
+                            </a>
                         </li>
                         {% endif %}
 
                         {% for num in documents.paginator.page_range %}
-                        <li class="page-item {% if documents.number == num %}active{% endif %}">
+                        <li class="page-item {% if documents.number == num %}active{% endif %}" {% if documents.number == num %}aria-current="page"{% endif %}>
                             <a class="page-link" href="?page={{ num }}">{{ num }}</a>
                         </li>
                         {% endfor %}
 
                         {% if documents.has_next %}
                         <li class="page-item">
-                            <a class="page-link" href="?page={{ documents.next_page_number }}">&raquo;</a>
+                            <a class="page-link" href="?page={{ documents.next_page_number }}" aria-label="Next">
+                                <span aria-hidden="true">&raquo;</span>
+                            </a>
                         </li>
                         {% endif %}
                     </ul>
@@ -120,9 +133,7 @@
                         Upload a file related to this lead
                     </small>
                 </div>
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 
             </div>
 
@@ -200,9 +211,7 @@
                     </small>
                 </div>
 
-                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
 
             <!-- Form -->

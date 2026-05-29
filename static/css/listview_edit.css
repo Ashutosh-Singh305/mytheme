@@ -1,0 +1,47 @@
+table#filter-table th,
+table#filter-table td {
+    white-space: nowrap;
+}
+
+.col-num {
+    width: 10px;
+}
+
+.col-value {
+    min-width: 200px;
+}
+
+.col-delete {
+    width: 10px;
+}
+
+@media (max-width: 576px) {
+    .col-num {
+        width: 10px;
+    }
+
+    .col-field {
+        min-width: 120px;
+    }
+
+    .col-operator {
+        min-width: 120px;
+    }
+
+    .col-value {
+        min-width: 180px;
+    }
+
+    .col-delete {
+        width: 50px;
+    }
+}
+
+.same-height {
+    height: 30px;
+}
+
+/* small visual nicety for Select2 inside table */
+.select2-container {
+    width: 100% !important;
+}

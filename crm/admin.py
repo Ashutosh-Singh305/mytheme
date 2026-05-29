@@ -511,7 +511,7 @@ class BranchAdmin(BaseAuditAdmin):
 @admin.register(IPRange)
 class IPRangeAdmin(admin.ModelAdmin):
     list_display = ("start_ip", "end_ip", "is_active")
-# admin.site.register(Role)
+admin.site.register(Role)
 # admin.site.register(ListView)
 # admin.site.register(ListViewField)
 # admin.site.register(ListViewFilter)

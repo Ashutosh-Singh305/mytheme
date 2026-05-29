@@ -1,0 +1,235 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+
+{% block title %}User Registration | Django Admin{% endblock %}
+
+{% block css %}
+<!-- FontAwesome -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+<!-- Select2 CSS (Jazzmin uses standard Select2 integrated with Bootstrap themes) -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<style>
+   /* Jazzmin styled alignments */
+   .card-primary.card-outline {
+      border-top: 3px solid #007bff;
+   }
+   .form-check-input {
+      cursor: pointer;
+   }
+   .input-group-text {
+      cursor: pointer;
+      background-color: #f4f6f9;
+   }
+   /* Fix select2 heights to match Jazzmin inputs */
+   .select2-container .select2-selection--single {
+      height: 38px !important;
+   }
+   .select2-container--default .select2-selection--single .select2-selection__rendered {
+      line-height: 38px !important;
+      padding-left: 12px;
+   }
+   .select2-container--default .select2-selection--single .select2-selection__arrow {
+      height: 36px !important;
+   }
+</style>
+{% endblock %}
+
+{% block body %}
+<!-- Content Header (Page header) -->
+<div class="content-header p-0 mb-3">
+   <div class="container-fluid p-0">
+      <div class="row mb-2">
+         <div class="col-sm-6">
+            <h1 class="m-0 text-dark" style="font-size: 1.8rem; font-weight: 400;">Add User</h1>
+         </div>
+         <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right justify-content-end mb-0" style="background: transparent;">
+               <li class="breadcrumb-item"><a href="{% url 'user-list' %}"><i class="fa fa-tachometer-alt"></i> Home</a></li>
+               <li class="breadcrumb-item active">User Registration</li>
+            </ol>
+         </div>
+      </div>
+   </div>
+</div>
+
+<!-- Main content -->
+<div class="content">
+   <form method="post" novalidate>
+      {% csrf_token %}
+      
+      <div class="row">
+         <div class="col-12">
+            
+            <!-- USER DETAILS CARD -->
+            <div class="card card-primary card-outline shadow-sm mb-4">
+               <div class="card-header bg-white py-3">
+                  <h3 class="card-title mb-0" style="font-size: 1.1rem; font-weight: 500;">
+                     <i class="fas fa-edit mr-2 text-muted"></i> User Details
+                  </h3>
+               </div>
+               
+               <div class="card-body">
+                  <div class="row g-4">
+                     {% for fm in user_form %}
+                        <div class="col-lg-6">
+                           <div class="form-group row align-items-center mb-3">
+                              {% if fm.field.widget.input_type == "checkbox" %}
+                                 <!-- Checkbox Layout -->
+                                 <div class="col-md-3 text-md-right">
+                                    <!-- Empty or minimal placeholder text mapping to Jazzmin alignment -->
+                                 </div>
+                                 <div class="col-md-9">
+                                    <div class="form-check pt-1">
+                                       {{ fm }}
+                                       <label class="form-check-label fw-bold ms-2" for="{{ fm.id_for_label }}">
+                                          {{ fm.label }}
+                                       </label>
+                                    </div>
+                                    {% if fm.errors %}
+                                    <span class="error invalid-feedback d-block">{{ fm.errors|striptags }}</span>
+                                    {% endif %}
+                                 </div>
+                              {% else %}
+                                 <!-- Standard Input Layout -->
+                                 <div class="col-md-3 text-md-right text-secondary fw-bold" style="font-size: 0.9rem;">
+                                    {{ fm.label_tag }}
+                                 </div>
+                                 <div class="col-md-9">
+                                    <div class="input-group">
+                                       {{ fm }}
+                                       {% if fm.name == 'password1' %}
+                                       <span class="input-group-text" id="togglePassword1">
+                                          <i class="fa fa-eye text-muted"></i>
+                                       </span>
+                                       {% elif fm.name == 'password2' %}
+                                       <span class="input-group-text" id="togglePassword2">
+                                          <i class="fa fa-eye text-muted"></i>
+                                       </span>
+                                       {% endif %}
+                                    </div>
+                                    {% if fm.errors %}
+                                    <span class="error invalid-feedback d-block">{{ fm.errors|striptags }}</span>
+                                    {% endif %}
+                                 </div>
+                              {% endif %}
+                           </div>
+                        </div>
+                     {% endfor %}
+                  </div>
+               </div>
+            </div>
+
+            <!-- PROFILE DETAILS CARD -->
+            <div class="card card-primary card-outline shadow-sm mb-4">
+               <div class="card-header bg-white py-3">
+                  <h3 class="card-title mb-0" style="font-size: 1.1rem; font-weight: 500;">
+                     <i class="fas fa-id-card mr-2 text-muted"></i> Profile Details
+                  </h3>
+               </div>
+               
+               <div class="card-body">
+                  <div class="row g-4">
+                     {% for fm in profile_form %}
+                        <div class="col-lg-6">
+                           <div class="form-group row align-items-center mb-3">
+                              <div class="col-md-3 text-md-right text-secondary fw-bold" style="font-size: 0.9rem;">
+                                 {{ fm.label_tag }}
+                              </div>
+                              <div class="col-md-9">
+                                 {{ fm }}
+                                 {% if fm.errors %}
+                                 <span class="error invalid-feedback d-block">{{ fm.errors|striptags }}</span>
+                                 {% endif %}
+                              </div>
+                           </div>
+                        </div>
+                     {% endfor %}
+                  </div>
+               </div>
+            </div>
+
+            <!-- NON-FIELD ERRORS -->
+            {% if user_form.non_field_errors or profile_form.non_field_errors %}
+            <div class="alert alert-danger alert-dismissible fade show">
+               <button type="button" class="btn-close text-white" data-bs-dismiss="alert" aria-label="Close"></button>
+               <h5><i class="icon fas fa-ban"></i> Alert!</h5>
+               {% for error in user_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+               {% for error in profile_form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- STICKY/BOTTOM FORM ACTIONS BAR (Jazzmin Style) -->
+            <div class="card card-body bg-light border-0 shadow-sm p-3 mb-5">
+               <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                     <!-- Empty space aligned with default templates layout tools -->
+                  </div>
+                  <div>
+                     <a href="{% url 'user-list' %}" class="btn btn-default btn-sm border text-secondary px-3 me-2" style="background: #fff;">
+                        Cancel
+                     </a>
+                     <button type="submit" class="btn btn-success btn-sm px-4 fw-medium">
+                        <i class="fa fa-save me-1"></i> Save
+                     </button>
+                  </div>
+               </div>
+            </div>
+
+         </div>
+      </div>
+   </form>
+</div>
+{% endblock %}
+
+{% block Script %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="{% static 'js/select2.js' %}"></script>
+
+<script>
+   $(document).ready(function () {
+      // Apply Jazzmin structure to generic input fields programmatically if classes aren't set in forms.py
+      $('form input[type="text"], form input[type="password"], form input[type="email"], form select').addClass('form-control');
+      $('form input[type="checkbox"]').addClass('form-check-input');
+
+      // ✅ Password toggle 1
+      $('#togglePassword1').on('click', function () {
+         const passwordField = $('#id_password1');
+         const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+         passwordField.attr('type', type);
+         $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+      });
+
+      // ✅ Password toggle 2
+      $('#togglePassword2').on('click', function () {
+         const passwordField = $('#id_password2');
+         const type = passwordField.attr('type') === 'password' ? 'text' : 'password';
+         passwordField.attr('type', type);
+         $(this).find('i').toggleClass('fa-eye fa-eye-slash');
+      });
+
+      // ✅ Select2 Multi Select Init matching Jazzmin parameters
+      $('#id_groups').select2({
+         placeholder: "Select Groups",
+         allowClear: true,
+         width: '100%'
+      });
+
+      $('#id_manager').select2({
+         placeholder: "Select Manager",
+         allowClear: true,
+         width: '100%'
+      });
+
+      $('#id_branch').select2({
+         placeholder: "Select Branch",
+         allowClear: true,
+         width: '100%'
+      });
+   });
+</script>
+{% endblock %}

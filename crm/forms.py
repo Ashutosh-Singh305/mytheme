@@ -2,7 +2,15 @@ from django import forms
 from .models import *
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User, Group
+from django.contrib.auth.models import Group
 
+class GroupForm(forms.ModelForm):
+    class Meta:
+        model = Group
+        fields = ['name']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter group name'}),
+        }
 class IPRangeForm(forms.ModelForm):
     class Meta:
         model = IPRange
@@ -12,13 +20,19 @@ class IPRangeForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
 
         for name, field in self.fields.items():
+
+            # Checkbox field
             if isinstance(field.widget, forms.CheckboxInput):
-                field.widget.attrs.update({'class': 'form-control'})
+                field.widget.attrs.update({
+                    'class': 'form-check-input'
+                })
+
+            # Normal input fields
             else:
                 field.widget.attrs.update({
                     'class': 'form-control',
                     'placeholder': field.label
-            })
+                })
         
 # Registration Form
 class UserRegistrationForm(UserCreationForm):
@@ -163,6 +177,18 @@ class UpdateUserRegistration(forms.ModelForm):
         label='Assign Groups',
         widget=forms.SelectMultiple(attrs={'class': 'form-control select2'})
     )
+    
+    first_name = forms.CharField(
+        label='First Name',
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+
+    last_name = forms.CharField(
+        label='Last Name',
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
 
     class Meta:
         model = User
@@ -174,8 +200,6 @@ class UpdateUserRegistration(forms.ModelForm):
 
         widgets = {
             'username': forms.TextInput(attrs={'class': 'form-control'}),
-            'first_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'last_name': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
 class UserProfileForm(forms.ModelForm):

@@ -6,87 +6,51 @@
 {% block css %}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-
-<style>
-  table#filter-table th,
-  table#filter-table td {
-    white-space: nowrap;
-  }
-
-  .col-num {
-    width: 10px;
-  }
-
-  .col-value {
-    min-width: 200px;
-  }
-
-  .col-drag,
-  .col-delete {
-    width: 10px;
-  }
-
-  @media (max-width: 576px) {
-    .col-num {
-      width: 10px;
-    }
-
-    .col-field {
-      min-width: 120px;
-    }
-
-    .col-operator {
-      min-width: 120px;
-    }
-
-    .col-value {
-      min-width: 180px;
-    }
-
-    .col-drag,
-    .col-delete {
-      width: 50px;
-    }
-  }
-
-  /* small visual nicety for Select2 inside table */
-  .select2-container {
-    width: 100% !important;
-  }
-</style>
-
+<link rel="stylesheet" href="{% static 'css/listview_edit.css' %}">
 {% endblock css %}
 
 
 {% block body %}
 <div class="p-0">
   <div class="card shadow-sm">
-    <div class="card-body">
+    <div class="card-body p-1">
 
-      <h3 class="mb-4">{{ lv.name|default:"New List View" }}</h3>
+      <h3 class="mb-2">{{ lv.name|default:"New List View" }}</h3>
 
       <form method="POST" id="listview-form">
         {% csrf_token %}
 
         <!-- STEP 1: View Name + Object -->
-        <div class="card mb-1">
-          <div class="p-2 bg-primary text-white">STEP 1 — Enter View Name</div>
-          <div class="card-body">
+        <div class="card mb-1 shadow-sm border-0">
+          <!-- Header -->
+          <div class="card-header bg-primary text-white p-1  fw-semibold">
+            STEP 1 — Enter View Name
+          </div>
+          <!-- Body -->
+          <div class="card-body p-2">
+            <div class="row g-2">
+              <!-- Name -->
+              <div class="col-lg-6">
+                <label class="form-label mb-1 small fw-semibold">
+                  Name
+                </label>
 
-            <div class="form-row">
-              <div class="form-group col-md-6">
-                <label>Name</label>
-                <input type="text" class="form-control" name="name" value="{{ lv.name|default_if_none:'' }}" required>
+                <input type="text" class="form-control same-height" name="name"
+                  value="{{ lv.name|default_if_none:'' }}" required>
               </div>
-
-              <div class="form-group col-md-6">
-                <label>Object</label>
-                <select id="object_name" class="form-control" name="object_name" style="width:100%;" disabled>
+              <!-- Object -->
+              <div class="col-lg-6">
+                <label class="form-label mb-1 small fw-semibold">
+                  Object
+                </label>
+                <select id="object_name" class="form-control same-height" name="object_name" disabled>
                   {% if lv.object_name %}
-                  <option selected value="{{ lv.object_name }}">{{ lv.object_name }}</option>
+                  <option selected value="{{ lv.object_name }}">
+                    {{ lv.object_name }}
+                  </option>
                   {% endif %}
                 </select>
-                <input type="hidden" name="object_name" value="{{ lv.object_name }}" required>
+                <input type="hidden"  name="object_name" value="{{ lv.object_name }}" required>
               </div>
             </div>
           </div>
@@ -94,13 +58,13 @@
 
 
         <!-- STEP 2: Filters -->
-        <div class="card mb-4">
-          <div class="p-2 bg-primary text-white">
+        <div class="card mb-2">
+          <div class="p-1 bg-primary text-white fw-semibold">
             STEP 2 — Filters
           </div>
 
 
-          <div class="card-body">
+          <div class="card-body p-1">
             <div class="table-responsive">
               <table class="table table-bordered table-sm" id="filter-table">
                 <thead>
@@ -109,7 +73,7 @@
                     <th class="col-field">Field</th>
                     <th class="col-operator">Operator</th>
                     <th class="col-value">Value</th>
-                    <th class="col-drag">Drag</th>
+                    <!-- <th class="col-drag">Drag</th> -->
                     <th class="col-delete">Delete</th>
                   </tr>
                 </thead>
@@ -121,7 +85,7 @@
                     <td class="filter-row-number"></td>
 
                     <td>
-                      <select class="form-control select2-field" name="filter_field[]">
+                      <select class="form-select select2-field" name="filter_field[]">
                         <option value="">--None--</option>
                         {% for field,label in available_fields %}
                         <option value="{{ field }}" {% if field == f.field_name %}selected{% endif %}>{{ label }}</option>
@@ -130,7 +94,7 @@
                     </td>
 
                     <td>
-                      <select class="form-control select2-operator" name="filter_operator[]">
+                      <select class="form-select select2-operator" name="filter_operator[]">
                         {% for key,label in operators.items %}
                         <option value="{{ key }}" {% if key == f.operator %}selected{% endif %}>{{ label }}</option>
                         {% endfor %}
@@ -138,11 +102,11 @@
                     </td>
 
                     {# value cell: JS will render proper input here; we store saved value in data-value #}
-                    <td class="filter-value" data-value="{{ f.value|default:'' }}"></td>
+                    <td class="filter-value form-control form-control-sm" data-value="{{ f.value|default:'' }}"></td>
 
-                    <td class="text-center"><span class="drag-handle btn btn-light btn-sm">☰</span></td>
+                    <!-- <td class="text-center"><span class="drag-handle btn btn-light btn-sm">☰</span></td> -->
                     <td class="text-center"><button type="button"
-                        class="btn btn-danger btn-sm remove-filter-btn">×</button></td>
+                        class="btn btn-outline-danger btn-sm remove-filter-btn">×</button></td>
                   </tr>
                   {% endfor %}
 
@@ -170,9 +134,9 @@
 
                     <td class="filter-value" data-value=""></td>
 
-                    <td class="text-center"><span class="drag-handle btn btn-light btn-sm">☰</span></td>
+                    <!-- <td class="text-center"><span class="drag-handle btn btn-light btn-sm">☰</span></td> -->
                     <td class="text-center"><button type="button"
-                        class="btn btn-danger btn-sm remove-filter-btn">×</button></td>
+                        class="btn btn-outline-danger btn-sm remove-filter-btn">×</button></td>
                   </tr>
                   {% endif %}
                 </tbody>
@@ -204,8 +168,8 @@
 
 
         <!-- STEP 3: Field Selector -->
-        <div class="card mb-3">
-          <div class="p-2 bg-primary text-white">STEP 3 — Select Fields</div>
+        <div class="card mb-2">
+          <div class="p-1 bg-primary text-white fw-semibold">STEP 3 — Select Fields</div>
           <div class="card-body">
 
             <div class="row align-items-center">
@@ -263,28 +227,30 @@
 
           </div>
         </div>
-
-
-
         <!-- STEP 4: Visibility -->
-        <div class="card mb-4">
-          <div class="p-2 bg-primary text-white">STEP 4 — Visibility</div>
+        <div class="card mb-2">
+          <div class="p-1 bg-primary fw-semibold">STEP 4 — Visibility</div>
           <div class="card-body">
 
             <div class="form-check">
-              <input class="form-check-input" type="radio" name="visibility" value="private" {% if lv.visibility == "private" %}checked{% endif %}>
+              <input class="form-check-input" type="radio" name="visibility" value="private"
+              {% if lv.visibility == "private" %}checked{% endif %}>
 
               <label class="form-check-label">Visible only to me</label>
             </div>
 
             <div class="form-check">
-              <input class="form-check-input" type="radio" name="visibility" value="public" {% if not lv.visibility or lv.visibility == "public" %}checked{% endif %}>
+              <input class="form-check-input" type="radio" name="visibility" value="public"
+               {% if not lv.visibility or lv.visibility == "public" %}checked{% endif %}>
+                 
 
               <label class="form-check-label">Visible to all users</label>
             </div>
- 
+
             <div class="form-check">
-              <input class="form-check-input" type="radio" name="visibility" value="groups" {% if lv.visibility == "groups" %}checked{% endif %}>
+              <input class="form-check-input" type="radio" name="visibility" value="groups"
+              {% if lv.visibility == "groups" %}checked{% endif %}>
+                
               <label class="form-check-label">Visible to selected groups</label>
             </div>
 
@@ -302,7 +268,7 @@
           </select>
         </div>
 
-        <div class="text-right mt-2">
+        <div class="text-end mt-2">
           <button type="submit" class="btn btn-primary btn-sm" id="save-listview-btn">Save</button>
           <a class="btn btn-sm btn-secondary" href="javascript:history.back()">Back</a>
         </div>
@@ -805,8 +771,8 @@
 
           <td class="filter-value" data-value=""></td>
 
-          <td class="text-center"><span class="drag-handle btn btn-light btn-sm">☰</span></td>
-          <td class="text-center"><button type="button" class="btn btn-danger btn-sm remove-filter-btn">×</button></td>
+          
+          <td class="text-center"><button type="button" class="btn btn-outline-danger btn-sm remove-filter-btn">×</button></td>
       </tr>`;
 
       let $row = $(html);

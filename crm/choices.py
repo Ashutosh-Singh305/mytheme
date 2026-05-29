@@ -11,13 +11,18 @@ CUSTOM_FK_MATCH_FIELDS = {
 }
 
 # User Profile Model with Role
-# ROLE_CHOICES = [
-#         ('Admin', 'Admin'),
-#         ('TL', 'Team Leader'),
-#         ('TSE', 'Tele Sales Executive'),
-#         ('Hr Executive','Hr Executive'),
-#         ('Other', 'Other'),
-#     ]
+# User Profile Model with Role
+ROLE_CHOICES = [
+        ('Admin', 'Admin'),
+        ('BH', 'Business Head'),
+        ('Business Manager','Business Manager'),
+        ('SM', 'Sales Manager'),
+        ('TL', 'Team Leader'),
+        ('TSE', 'Tele Sales Executive'),
+        ('Backend Executive','Backend Executive'),
+        ('Hr Executive','Hr Executive'),
+        ('Other', 'Other'),
+    ]
 AGREEMENT_STATUS_CHOICES = [
         ('active', 'Active'),
         ('expired', 'Expired'),

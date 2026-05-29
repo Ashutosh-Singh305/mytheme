@@ -1,0 +1,138 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+
+{% block title %}{% if is_update %}Update{% else %}Create{% endif %} Group | Django Admin{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/user_form.css' %}">
+{% endblock %}
+
+{% block body %}
+<div class="content mt-1">
+   <form method="post" novalidate id="group-reg-form">
+      {% csrf_token %}
+
+      <div class="row">
+         <div class="col-12">
+            <div class="card card-primary card-outline-tabs shadow-sm bg-white mb-2">
+               <div class="card-header p-0 border-bottom-0 bg-white">
+                  <ul class="nav nav-tabs" id="jazzmin-tabs" role="tablist">
+                     <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="general-tab" data-bs-toggle="tab" data-bs-target="#general"
+                           type="button" role="tab">General</button>
+                     </li>
+                     <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="permissions-tab" data-bs-toggle="tab" data-bs-target="#permissions"
+                           type="button" role="tab">Permissions</button>
+                     </li>
+                  </ul>
+               </div>
+
+               <div class="card-body p-2">
+                  <div class="tab-content" id="jazzmin-tabs-content">
+                     <div class="tab-pane fade show active" id="general" role="tabpanel">
+                        <div class="row pt-2">
+                           {% for fm in group_form %}
+                           <div class="col-md-6">
+                              <div class="admin-form-row">
+                                 <div class="admin-label-col">{{ fm.label_tag }}</div>
+                                 <div class="admin-field-col">
+                                    {{ fm }}
+                                    {% if fm.errors %}<span class="text-danger small d-block">{{ fm.errors|striptags
+                                       }}</span>{% endif %}
+                                 </div>
+                              </div>
+                           </div>
+                           {% endfor %}
+                        </div>
+                     </div>
+
+                     <div class="tab-pane fade" id="permissions" role="tabpanel">
+                        <div class="pt-2">
+                           <div class="admin-form-row flex-column border-0">
+                              <div class="d-flex w-100">
+                                 <div style="width: 15%; font-size: 0.85rem; color: #333333; font-weight: bold;">
+                                    Permissions</div>
+                                 <div style="width: 85%;">
+                                    <div class="selector" id="permissions_selector">
+
+                                       <div class="selector-available">
+                                          <h2 class="bg-info">Available permissions</h2>
+                                          <div class="selector-filter"><input type="text" placeholder="Filter"
+                                                class="filter-input"></div>
+                                          <select multiple size="10" class="available-box">
+                                             {% for perm in all_permissions %}
+                                             <option value="{{ perm.id }}">
+                                                {{ perm.content_type.app_label|capfirst }} | {{ perm.content_type.model }} | {{ perm.name }}
+                                             </option>
+                                             {% endfor %}
+                                          </select>
+                                          <a href="#" class="selector-chooseall">Choose all <i
+                                                class="fas fa-arrow-right-long ms-1" style="font-size:0.7rem"></i></a>
+                                       </div>
+
+                                       <div class="selector-controls">
+                                          <button type="button" class="move-right btn btn-sm btn-outline-primary"><i
+                                                class="fas fa-angle-right"></i></button>
+                                          <button type="button" class="move-left btn btn-sm btn-outline-danger"><i
+                                                class="fas fa-angle-left"></i></button>
+                                       </div>
+
+                                       <div class="selector-chosen">
+                                          <h2 class="bg-primary">Chosen permissions</h2>
+                                          <div class="selector-filter"><input type="text" placeholder="Filter"
+                                                class="filter-input"></div>
+                                          <select multiple size="10" name="permissions" id="id_permissions"
+                                             class="chosen-box">
+                                             {% if is_update %}
+                                             {% for perm in chosen_permissions %}
+                                             <option value="{{ perm.id }}" selected>
+                                                {{ perm.content_type.app_label|capfirst }} | {{ perm.content_type.model }} | {{ perm.name }}
+                                             </option>
+                                             {% endfor %}
+                                             {% endif %}
+                                          </select>
+                                          <a href="#" class="selector-clearall"><i class="fas fa-arrow-left-long me-1"
+                                                style="font-size:0.7rem"></i> Remove all</a>
+                                       </div>
+
+                                    </div>
+                                    <span class="admin-help-text mt-2">Permissions assigned directly to this
+                                       group.</span>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <div class="card card-body bg-light border-0 shadow-sm p-2 mb-2">
+               <div class="d-flex justify-content-end align-items-center">
+                  <a href="{% url 'group-list' %}" class="btn btn-default btn-sm border text-secondary px-3 me-2"
+                     style="background: #fff;">Cancel</a>
+                  <button type="submit" class="btn btn-success btn-sm px-4 fw-medium"><i class="fa fa-save me-1"></i>
+                     Save</button>
+               </div>
+            </div>
+         </div>
+      </div>
+   </form>
+</div>
+{% endblock %}
+
+{% block Script %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/user_form.js' %}"></script>
+<script>
+   $(document).ready(function () {
+      // Intercept form submission
+      $('#group-reg-form').on('submit', function () {
+         // Select every option inside the chosen box so they are sent via POST
+         $('#id_permissions option').prop('selected', true);
+      });
+   });
+</script>
+{% endblock %}

@@ -14,8 +14,6 @@ import os
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
 from django.db.models import Q
-# for dashboard
-from crm.ip_utils import get_client_ip
 from crm.models import *
 from django.db.models import Count, Sum, Avg,Case, When, F
 from django.contrib.auth.views import LoginView
@@ -23,12 +21,119 @@ from django.db.models.functions import TruncMonth
 from django.utils.dateformat import DateFormat
 from django.urls import reverse_lazy
 from django.http import JsonResponse
-from crm.utils import apply_audit_logic, get_allowed_user_queryset, get_lead_allowed_user_queryset, get_visible_queryset
+from crm.utils import *
 from django.db import transaction
 from django.views.decorators.http import require_POST
-from django.template.loader import render_to_string
 from django.http import JsonResponse
-# Create your views here.
+from django.contrib.auth.forms import AdminPasswordChangeForm
+from django.contrib.auth import update_session_auth_hash
+from django.contrib.auth.models import Group, Permission
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+from django.contrib.auth.mixins import PermissionRequiredMixin
+
+
+class RoleListView(PermissionRequiredMixin, ListView):
+    model = Role
+    template_name = 'crm/role/role_list.html'
+    context_object_name = 'roles'
+    # Requires permission to view roles
+    permission_required = 'crm.view_role'
+    raise_exception = True
+
+class RoleCreateView(PermissionRequiredMixin, CreateView):
+    model = Role
+    fields = ['name', 'code', 'is_active']
+    template_name = 'crm/role/role_form.html'
+    success_url = reverse_lazy('role-list')
+    
+    # Requires permission to add roles
+    permission_required = 'crm.add_role'
+    raise_exception = True
+
+class RoleUpdateView(PermissionRequiredMixin, UpdateView):
+    model = Role
+    fields = ['name', 'code', 'is_active']
+    template_name = 'crm/role/role_form.html'
+    success_url = reverse_lazy('role-list')
+    
+    # Requires permission to change roles
+    permission_required = 'crm.change_role'
+    raise_exception = True
+class RoleDeleteView(PermissionRequiredMixin, DeleteView):
+    model = Role
+    template_name = 'crm/role/role_confirm_delete.html'
+    success_url = reverse_lazy('role-list')
+    
+    # Requires permission to delete roles
+    permission_required = 'crm.delete_role'
+    raise_exception = True
+
+
+def group_list(request):
+    groups = Group.objects.all()
+    return render(request, 'crm/group/group_list.html', {'groups': groups})
+
+def group_create(request):
+    if request.method == 'POST':
+        form = GroupForm(request.POST)
+        if form.is_valid():
+            group = form.save()
+            # Extract chosen permissions array from the dual-listbox
+            permission_ids = request.POST.getlist('permissions')
+            group.permissions.set(Permission.objects.filter(id__in=permission_ids))
+            
+            messages.success(request, "Group created successfully!")
+            return redirect('group-list')
+    else:
+        form = GroupForm()
+
+    all_permissions = Permission.objects.select_related('content_type').all()
+    context = {
+        'group_form': form,
+        'all_permissions': all_permissions,
+        'is_update': False
+    }
+    return render(request, 'crm/group/group_form.html', context)
+
+#UPDATE
+def group_update(request, pk):
+    group = get_object_or_404(Group, pk=pk)
+    if request.method == 'POST':
+        form = GroupForm(request.POST, instance=group)
+        if form.is_valid():
+            group = form.save()
+            # Update the permissions mapping
+            permission_ids = request.POST.getlist('permissions')
+            group.permissions.set(Permission.objects.filter(id__in=permission_ids))
+            
+            messages.success(request, "Group updated successfully!")
+            return redirect('group-list')
+    else:
+        form = GroupForm(instance=group)
+
+    # Get permissions already assigned to this group to populate the right box
+    chosen_permissions = group.permissions.all()
+    # Available permissions are anything NOT assigned yet
+    all_permissions = Permission.objects.select_related('content_type').exclude(id__in=chosen_permissions)
+
+    context = {
+        'group_form': form,
+        'all_permissions': all_permissions,
+        'chosen_permissions': chosen_permissions,
+        'is_update': True
+    }
+    return render(request, 'crm/group/group_form.html', context)
+
+#DELETE
+def group_delete(request, pk):
+    group = get_object_or_404(Group, pk=pk)
+    if request.method == 'POST':
+        group.delete()
+        messages.success(request, "Group deleted successfully!")
+        return redirect('group-list')
+    return render(request, 'crm/group/group_confirm_delete.html', {'group': group})
+
+
 @login_required
 def WelcomeView(request):
     return render(request,"welcome.html")
@@ -189,18 +294,15 @@ def user_create(request):
         return render(request, "403.html")
 
     if request.method == 'POST':
-
         user_form = UserRegistrationForm(request.POST)
         profile_form = UserProfileForm(request.POST)
 
         if user_form.is_valid() and profile_form.is_valid():
-
             # SAVE USER
             user = user_form.save(commit=False)
-
-            user.is_active = user_form.cleaned_data.get('is_active')
-            user.is_staff = user_form.cleaned_data.get('is_staff')
-            user.is_superuser = user_form.cleaned_data.get('is_superuser')
+            user.is_active = user_form.cleaned_data.get('is_active', True)
+            user.is_staff = user_form.cleaned_data.get('is_staff', False)
+            user.is_superuser = user_form.cleaned_data.get('is_superuser', False)
             
             # DATE JOINED DEFAULT
             if user_form.cleaned_data.get('date_joined'):
@@ -210,10 +312,15 @@ def user_create(request):
 
             user.save()
 
-            # GROUP ASSIGN
-            groups = user_form.cleaned_data.get('groups')
+            # DYNAMIC GROUP ASSIGNMENT
+            groups = request.POST.getlist('groups')
             if groups:
                 user.groups.set(groups)
+
+            # DYNAMIC USER PERMISSIONS ASSIGNMENT
+            user_permissions = request.POST.getlist('user_permissions')
+            if user_permissions:
+                user.user_permissions.set(user_permissions)
 
             # SAVE PROFILE
             profile = profile_form.save(commit=False)
@@ -226,19 +333,26 @@ def user_create(request):
                 request,
                 f"Employee {user.username} created successfully!"
             )
-
             return redirect('user-list')
-
         else:
             messages.error(request, 'Please correct the errors below.')
-
     else:
         user_form = UserRegistrationForm()
         profile_form = UserProfileForm()
 
+    # Fetch all available groups and permissions ordered beautifully like native admin
+    all_groups = Group.objects.all().order_by('name')
+    all_permissions = Permission.objects.select_related('content_type').all().order_by(
+        'content_type__app_label', 
+        'content_type__model', 
+        'name'
+    )
+
     context = {
         'user_form': user_form,
         'profile_form': profile_form,
+        'all_groups': all_groups,
+        'all_permissions': all_permissions,
     }
 
     return render(
@@ -252,18 +366,19 @@ def user_create(request):
 def user_list(request):
 
     if not request.user.is_superuser:
-        return render(request, "403.html")
+        return render(request, '403.html')
 
-    # MAIN QUERY
     users = User.objects.select_related(
         'userprofile',
         'userprofile__role',
         'userprofile__manager',
         'userprofile__branch'
-    ).all()
+    )
 
-    # STATUS FILTER
     status = request.GET.get('status')
+    role = request.GET.get('role')
+    branch = request.GET.get('branch')
+    search = request.GET.get('search')
 
     if status == 'active':
         users = users.filter(is_active=True)
@@ -271,19 +386,10 @@ def user_list(request):
     elif status == 'inactive':
         users = users.filter(is_active=False)
 
-    # ROLE FILTER
-    role = request.GET.get('role')
-
     if role:
         users = users.filter(
             userprofile__role_id=role
         )
-
-    # SEARCH
-    search = request.GET.get('search')
-
-    # BRANCH FILTER
-    branch = request.GET.get('branch')
 
     if branch:
         users = users.filter(
@@ -291,118 +397,95 @@ def user_list(request):
         )
 
     if search:
-
         users = users.filter(
-
             Q(username__icontains=search) |
             Q(email__icontains=search) |
             Q(first_name__icontains=search) |
             Q(last_name__icontains=search) |
-
             Q(userprofile__emp_code__icontains=search) |
             Q(userprofile__branch__name__icontains=search) |
             Q(userprofile__role__name__icontains=search) |
             Q(userprofile__role__code__icontains=search)
-
         )
 
-    # SORT
-    sort = request.GET.get('sort', 'date_joined')
+    sort = request.GET.get('sort', 'id')
     direction = request.GET.get('dir', 'desc')
 
-    allowed = [
+    allowed_sort_fields = [
         'id',
         'username',
         'first_name',
         'is_active',
-
+        'date_joined',
         'userprofile__branch__name',
         'userprofile__role__name',
     ]
 
-    if sort not in allowed:
-        sort = 'date_joined'
+    if sort not in allowed_sort_fields:
+        sort = 'id'
 
-    ordering = f"-{sort}" if direction == "desc" else sort
+    ordering = (
+        f'-{sort}'
+        if direction == 'desc'
+        else sort
+    )
 
     users = users.order_by(ordering)
 
-    # PAGINATION
     paginator = Paginator(users, 10)
-
     page_obj = paginator.get_page(
         request.GET.get('page')
     )
 
-    # AJAX
-    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-
-        html = render_to_string(
-            'crm/user/user_table_partial.html',
-            {'page_obj': page_obj},
-            request=request
-        )
-
-        return JsonResponse({
-            'html': html
-        })
-
-    return render(request, 'crm/user/user_list.html', {
-
+    context = {
         'page_obj': page_obj,
-
         'current_sort': sort,
         'current_dir': direction,
-
         'current_status': status,
         'current_role': role,
         'current_branch': branch,
         'branches': Branch.objects.all(),
         'roles': Role.objects.filter(is_active=True),
-    })
+        'is_paginated': page_obj.has_other_pages(),
+    }
+
+    return render(
+        request,
+        'crm/user/user_list.html',
+        context
+    )
 #  UPDATE
 @login_required
 @permission_required('auth.change_user', raise_exception=True)
 def user_edit(request, pk):
-
     if not request.user.is_superuser:
         return render(request, "403.html")
 
     user = get_object_or_404(User, pk=pk)
-
+    
     # GET OR CREATE PROFILE
-    profile, created = UserProfile.objects.get_or_create(
-        user=user
-    )
+    profile, created = UserProfile.objects.get_or_create(user=user)
 
     if request.method == 'POST':
-
-        user_form = UpdateUserRegistration(
-            request.POST,
-            instance=user
-        )
-
-        profile_form = UserProfileForm(
-            request.POST,
-            instance=profile
-        )
+        user_form = UpdateUserRegistration(request.POST, instance=user)
+        profile_form = UserProfileForm(request.POST, instance=profile)
 
         if user_form.is_valid() and profile_form.is_valid():
-
             with transaction.atomic():
-
                 # SAVE USER
                 updated_user = user_form.save(commit=False)
-
-                updated_user.is_active = user_form.cleaned_data.get('is_active')
-                updated_user.is_staff = user_form.cleaned_data.get('is_staff')
-                updated_user.is_superuser = user_form.cleaned_data.get('is_superuser')
-
+                updated_user.is_active = user_form.cleaned_data.get('is_active', False)
+                updated_user.is_staff = user_form.cleaned_data.get('is_staff', False)
+                updated_user.is_superuser = user_form.cleaned_data.get('is_superuser', False)
                 updated_user.save()
 
-                # SAVE GROUPS
-                groups = user_form.cleaned_data.get('groups')
-                updated_user.groups.set(groups)
+                # SAVE DYNAMIC GROUPS
+                chosen_groups = request.POST.getlist('groups')
+                updated_user.groups.set(chosen_groups)
+
+                # SAVE DYNAMIC USER PERMISSIONS
+                chosen_perms = request.POST.getlist('user_permissions')
+                updated_user.user_permissions.set(chosen_perms)
 
                 # SAVE PROFILE
                 updated_profile = profile_form.save(commit=False)
@@ -410,43 +493,66 @@ def user_edit(request, pk):
                 updated_profile.modified_by = request.user
                 updated_profile.save()
 
-            messages.success(
-                request,
-                f"User {updated_user.username} updated successfully!"
-            )
-
+            messages.success(request, f"User {updated_user.username} updated successfully!")
             return redirect('user-list')
-
         else:
-            messages.error(
-                request,
-                "Please correct the errors below."
-            )
-
+            messages.error(request, "Please correct the errors below.")
     else:
+        user_form = UpdateUserRegistration(instance=user)
+        profile_form = UserProfileForm(instance=profile)
 
-        user_form = UpdateUserRegistration(
-            instance=user
-        )
+    # Fetch master lists ordered matching Jazzmin conventions
+    all_groups = Group.objects.all().order_by('name')
+    all_permissions = Permission.objects.select_related('content_type').all().order_by(
+        'content_type__app_label', 
+        'content_type__model', 
+        'name'
+    )
 
-        profile_form = UserProfileForm(
-            instance=profile
-        )
-
-        # PRESELECT GROUPS
-        user_form.fields['groups'].initial = user.groups.all()
+    # Get explicitly assigned IDs to construct the dual listboxes correctly
+    user_group_ids = list(user.groups.values_list('id', flat=True))
+    user_perm_ids = list(user.user_permissions.values_list('id', flat=True))
 
     context = {
         'user_form': user_form,
         'profile_form': profile_form,
-        'user': user
+        'user': user,
+        'all_groups': all_groups,
+        'all_permissions': all_permissions,
+        'user_group_ids': user_group_ids,
+        'user_perm_ids': user_perm_ids,
     }
 
-    return render(
-        request,
-        "crm/user/user_edit.html",
-        context
-    )
+    return render(request, "crm/user/user_edit.html", context)
+
+
+@login_required
+@permission_required('auth.change_user', raise_exception=True)
+def user_password_change(request, pk):
+    if not request.user.is_superuser:
+        return render(request, "403.html")
+
+    user = get_object_or_404(User, pk=pk)
+
+    if request.method == 'POST':
+        form = AdminPasswordChangeForm(user, request.POST)
+        if form.is_valid():
+            form.save()
+            
+            # Keeps the user logged in if they are changing their own password
+            if request.user == user:
+                update_session_auth_hash(request, user)
+                
+            messages.success(request, f"Password for {user.username} was changed successfully.")
+            return redirect('user-edit', pk=user.pk)
+    else:
+        form = AdminPasswordChangeForm(user)
+
+    context = {
+        'form': form,
+        'target_user': user,
+    }
+    return render(request, 'crm/user/password_change.html', context)
 
 #  READ (DETAIL)
 @login_required
@@ -1379,14 +1485,14 @@ def test_smartflo(request):
 @login_required
 @permission_required('crm.can_access_bulk_assign', raise_exception=True)
 def bulk_assign_leads(request):
+
     leads = get_visible_queryset(Lead, request.user)
-    
+
     role_map = {
-        # 'sm': ['SM','Business Manager','BH'],
-        'team_lead': ['TL','Business Manager','SM','BH'],
-        'business_manager': ['Business Manager','BH'],
-        'business_head': ['BH'],
-        'tele_sales_executive': ['TSE'],
+        'TL': ['TL', 'SM', 'BM', 'BH'],
+        'BM': ['BM', 'BH'],
+        'BH': ['BH'],
+        'TSE': ['TSE']
     }
 
     lead_source_filter = request.GET.get("lead_source", "").strip()
@@ -1394,33 +1500,23 @@ def bulk_assign_leads(request):
     status = request.GET.get("status", "").strip()
 
     sort = request.GET.get("sort", "created_date")
-    dir = request.GET.get("dir", "desc")
-    
+    direction = request.GET.get("dir", "desc")
 
-    #  SORTING
-    sort_field = sort
+    sort_mapping = {
+        "assigned_to": "assigned_to__username",
+        "tele_sales_executive": "tele_sales_executive__username",
+        "team_lead": "team_lead__username",
+        "business_head": "business_head__username",
+        "business_manager": "business_manager__username",
+    }
 
-    if sort == "assigned_to":
-        sort_field = "assigned_to__username"
-    
-    if sort == "tele_sales_executive":
-        sort_field = "tele_sales_executive__username"
-        
-    if sort == "team_lead":
-        sort_field = "team_lead__username"
+    sort_field = sort_mapping.get(sort, sort)
 
-    if sort == "business_head":
-        sort_field = "business_head__username"
-
-    if sort == "business_manager":
-        sort_field = "business_manager__username"
-
-    if dir == "desc":
-        sort_field = "-" + sort_field
+    if direction == "desc":
+        sort_field = f"-{sort_field}"
 
     leads = leads.order_by(sort_field)
-    
-    # FILTERS (SAFE)
+
     if lead_source_filter and lead_source_filter != "None":
         leads = leads.filter(lead_source=lead_source_filter)
 
@@ -1429,12 +1525,12 @@ def bulk_assign_leads(request):
 
     if assigned_to and assigned_to != "None":
         try:
-            assigned_to_int = int(assigned_to)
-            leads = leads.filter(assigned_to_id=assigned_to_int)
+            leads = leads.filter(
+                assigned_to_id=int(assigned_to)
+            )
         except ValueError:
-            pass  # ignore invalid input
+            pass
 
-    #  PAGINATION
     try:
         per_page = int(request.GET.get("per_page", 50))
     except ValueError:
@@ -1444,13 +1540,21 @@ def bulk_assign_leads(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
-    # USERS LIST
     login_user = request.user
     profile = getattr(login_user, "userprofile", None)
 
-    if login_user.is_superuser or (profile and profile.role.code == "ADMIN"):
-        users = User.objects.filter(is_active=True)\
-            .select_related('userprofile').order_by('username')
+    base_users = User.objects.filter(
+        is_active=True
+    ).select_related(
+        'userprofile',
+        'userprofile__role',
+        'userprofile__branch'
+    )
+
+    if login_user.is_superuser or (
+        profile and profile.role.code == "ADMIN"
+    ):
+        users = base_users.order_by('username')
 
     elif not profile or not profile.branch:
         users = User.objects.filter(
@@ -1459,41 +1563,47 @@ def bulk_assign_leads(request):
         ).select_related('userprofile')
 
     else:
-        users = User.objects.filter(
-            userprofile__branch=profile.branch,
-            is_active=True
-        ).select_related('userprofile').order_by('username')
+        users = base_users.filter(
+            userprofile__branch=profile.branch
+        ).order_by('username')
+
+    team_leads = users.filter(
+        userprofile__role__code__in=role_map['TL']
+    )
+
+    business_heads = users.filter(
+        userprofile__role__code__in=role_map['BH']
+    )
+
+    business_managers = users.filter(
+        userprofile__role__code__in=role_map['BM']
+    )
+
+    tse_users = users.filter(
+        userprofile__role__code__in=role_map['TSE']
+    )
+
+    return render(request,"crm/leads/bulk_assign.html",{
+            "page_obj": page_obj,
+            "users": users,
+            "status_choices": Lead._meta.get_field('status').choices,
+            "lead_source_choices": Lead._meta.get_field('lead_source').choices,
+            "per_page": per_page,
+            "selected_status": status,
+            "selected_lead_source": lead_source_filter,
+            "selected_assigned_to": assigned_to,
+            "team_leads": team_leads,
+            "business_heads": business_heads,
+            "business_managers": business_managers,
+            "tse_users": tse_users,
+            "sort": sort,
+            "dir": direction,
+        }
+    )
     
-    team_leads = users.filter(userprofile__role__in=role_map['team_lead'])
-    business_heads = users.filter(userprofile__role__in=role_map['business_head'])
-    business_managers = users.filter(userprofile__role__in=role_map['business_manager'])
-    tse_users = users.filter(userprofile__role__in=role_map['tele_sales_executive'])
-
-    return render(request, "crm/leads/bulk_assign.html", {
-        "page_obj": page_obj,
-        "users": users,
-        "status_choices": Lead._meta.get_field('status').choices,
-        "lead_source_choices": Lead._meta.get_field('lead_source').choices,
-        "per_page": per_page,
-
-        "selected_status": status,
-        "selected_lead_source": lead_source_filter,
-        "selected_assigned_to": assigned_to,
-        
-        "team_leads": team_leads,
-        "business_heads": business_heads,
-        "business_managers": business_managers,
-        "tse_users": tse_users,
-
-        "sort": sort,
-        "dir": dir,
-        
-    })
-
 @login_required
 @require_POST
 def assign_leads(request):
-
     lead_ids = request.POST.getlist("lead_ids[]")
     assigned_to = request.POST.get("assigned_to")
     tele_sales_executive = request.POST.get("tele_sales_executive")
@@ -1502,64 +1612,63 @@ def assign_leads(request):
     business_manager = request.POST.get("business_manager")
 
     if not lead_ids:
-        return JsonResponse({"error": "No leads selected"}, status=400)
+        return JsonResponse(
+            {"error": "No leads selected"},
+            status=400
+        )
 
-    #  SECURITY
-    leads = get_visible_queryset(Lead, request.user).filter(id__in=lead_ids)
-
+    leads = get_visible_queryset(Lead,request.user).filter(id__in=lead_ids)
     update_data = {}
 
-    #  ASSIGNED TO (WITH OLD LOGIC)
     if assigned_to:
-        user = get_object_or_404(
-            User.objects.select_related("userprofile"),
-            id=assigned_to
-        )
+
+        user = get_object_or_404( User.objects.select_related("userprofile", "userprofile__role" ),id=assigned_to)
 
         update_data["assigned_to"] = user
 
-        # PRESERVE OLD BEHAVIOR
-        user_profile = getattr(user, "userprofile", None)
-        if user_profile and user_profile.role == "TSE":
-            update_data["tele_sales_executive"] = user
+        user_profile = getattr(user,"userprofile",None)
 
-    # TELE SALES EXECUTIVE (MANUAL OVERRIDE)
+        if ( user_profile and user_profile.role and user_profile.role.code == "TSE"):
+            update_data[
+                "tele_sales_executive"
+            ] = user
+
     if tele_sales_executive:
-        tse = get_object_or_404(
-            User.objects.select_related("userprofile"),
-            id=tele_sales_executive
-        )
-        update_data["tele_sales_executive"] = tse
+        tse = get_object_or_404(User.objects.select_related("userprofile"),id=tele_sales_executive)
+        update_data[
+            "tele_sales_executive"
+        ] = tse
 
-    # TEAM LEAD
     if team_lead:
-        tl = get_object_or_404(
-            User.objects.select_related("userprofile"),
-            id=team_lead
-        )
-        update_data["team_lead"] = tl
+        tl = get_object_or_404(User.objects.select_related("userprofile"),id=team_lead)
+        update_data[
+            "team_lead"
+        ] = tl
 
-    # BUSINESS HEAD
+
     if business_head:
-        bh = get_object_or_404(
-            User.objects.select_related("userprofile"),
+        bh = get_object_or_404(User.objects.select_related("userprofile"),
             id=business_head
         )
-        update_data["business_head"] = bh
+        update_data[
+            "business_head"
+        ] = bh
 
     # BUSINESS MANAGER
     if business_manager:
-        bm = get_object_or_404(
-            User.objects.select_related("userprofile"),
+        bm = get_object_or_404(User.objects.select_related("userprofile"),
             id=business_manager
         )
-        update_data["business_manager"] = bm
+        update_data[
+            "business_manager"
+        ] = bm
 
-    # NOTHING TO UPDATE
     if not update_data:
-        return JsonResponse({"error": "No fields to update"}, status=400)
+        return JsonResponse(
+            {"error": "No fields to update"},
+            status=400
+        )
 
-    # BULK UPDATE
     with transaction.atomic():
         updated_count = leads.update(**update_data)
 
@@ -1567,7 +1676,7 @@ def assign_leads(request):
         "success": True,
         "updated": updated_count
     })
-
+    
 # Detail View
 @login_required
 def lead_detail(request, pk):

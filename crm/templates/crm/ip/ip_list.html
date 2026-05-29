@@ -1,73 +1,55 @@
 {% extends 'crm/base.html' %}
 {% block title %}IP Ranges{% endblock %}
-
+{% load static %}
 {% block css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<style>
-    #tableContainer {
-        position: relative;
-    }
-
-    .loader-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.6);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 100;
-        display: none;
-    }
-
-    .sort-icon {
-        font-size: 12px;
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/list.css' %}">
 {% endblock %}
 
 {% block body %}
+<div class="d-flex justify-content-between align-items-center mb-1">
 
-<div class="page-header d-flex justify-content-between align-items-center mb-3">
-    <h3 class="page-title">
-        <i class="fa fa-network-wired mr-2"></i> IP Ranges
-    </h3>
+    <div>
+        <h4 class="page-title">
+            <i class="fa fa-network-wired mr-2"></i> IP Ranges
+        </h4>
+    </div>
 
-    <a href="{% url 'ip-create' %}" class="btn btn-primary btn-sm">
-        <i class="fa fa-plus"></i> Add IP Range
-    </a>
+    <div>
+        <a href="{% url 'ip-create' %}" class="btn btn-primary btn-sm">
+            <i class="bi bi-plus-lg"></i>
+            Add IP Range
+        </a>
+    </div>
+
 </div>
+<div class="card list-card">
+    <div class="d-flex align-items-center gap-2">
 
-<div class="card">
-    <div class="card-body">
+        <!-- SEARCH -->
+        <input class="form-control form-control-sm mb-1 gap-2 list-filter" id="myInput" type="text"
+            placeholder="Search IP...">
 
-        <div class="d-flex align-items-center">
+        <!-- FILTER -->
+        <select id="statusFilter" name="status" class="form-control form-control-sm mb-1 list-filter"
+            style="width: 150px;">
+            <option value="">All</option>
+            <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+            <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactive</option>
+        </select>
 
-            <!-- SEARCH -->
-            <input class="form-control form-control-sm mb-1 mr-2" id="myInput" type="text" placeholder="Search IP...">
+    </div>
 
-            <!-- FILTER -->
-            <select id="statusFilter" class="form-control form-control-sm mb-1 mr-2" style="width: 150px;">
-                <option value="">All</option>
-                <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
-                <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactive</option>
-            </select>
+    <!-- TABLE CONTAINER -->
+    <div id="tableContainer">
 
+        <div class="loader-overlay" id="loader">
+            <i class="fa fa-spinner fa-spin fa-2x"></i>
         </div>
-
-        <!-- TABLE CONTAINER -->
-        <div id="tableContainer">
-
-            <div class="loader-overlay" id="loader">
-                <i class="fa fa-spinner fa-spin fa-2x"></i>
-            </div>
-
+        <div id="tableContent">
             <!-- 🔥 TABLE START -->
-            <div class="table-responsive border rounded">
-
-                <table class="table">
+            <div class="table-responsive">
+                <table class="table custom-table align-middle">
                     <thead>
                         <tr class="table-primary">
 
@@ -111,17 +93,18 @@
 
                             <td>
                                 {% if ip.is_active %}
-                                <span class="badge badge-success">Active</span>
+                                <span class="badge bg-success">Active</span>
                                 {% else %}
-                                <span class="badge badge-secondary">Inactive</span>
+                                <span class="badge bg-secondary">Inactive</span>
                                 {% endif %}
                             </td>
 
                             <td class="text-center">
-                                <a href="{% url 'ip-edit' ip.pk %}" class="btn btn-sm btn-primary">
+                                <a href="{% url 'ip-edit' ip.pk %}" class="btn btn-sm btn-outline-primary">
                                     <i class="fa fa-edit"></i>
                                 </a>
-                                <a href="{% url 'ip-delete' ip.pk %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this record?');">
+                                <a href="{% url 'ip-delete' ip.pk %}" class="btn btn-sm btn-outline-danger"
+                                    onclick="return confirm('Are you sure you want to delete this record?');">
                                     <i class="fa fa-trash"></i>
                                 </a>
                             </td>
@@ -138,11 +121,12 @@
 
                 <!-- PAGINATION -->
                 {% if is_paginated %}
-                <div class="d-flex justify-content-between align-items-center mt-3 px-2">
+                <div
+                    class="d-flex flex-column flex-md-row justify-content-between align-items-center px-2 py-2 border-top gap-2">
 
                     <div>
-                        Showing {{ page_obj.start_index }}–{{ page_obj.end_index }}
-                        of {{ page_obj.paginator.count }}
+                        Showing <strong>{{ page_obj.start_index }}</strong> to <strong>{{ page_obj.end_index }}</strong>
+                        of <strong>{{ page_obj.paginator.count }}</strong> entries.
                     </div>
 
                     <ul class="pagination mb-0">
@@ -176,96 +160,25 @@
                     </ul>
                 </div>
                 {% endif %}
-
-
             </div>
-            <!-- 🔥 TABLE END -->
-
         </div>
+        <!-- 🔥 TABLE END -->
     </div>
-
 </div>
 
 {% endblock %}
 
 {% block Script %}
+<script src="{% static 'js/list.js' %}"></script>
+
 <script>
-    let currentPage = 1;
-    let currentSort = "id";
-    let currentDir = "desc";
-    let currentStatus = "";
-    let currentSearch = "";
+    new AjaxListView({
 
-    function updateSortIcons() {
-        $(".sort-icon")
-            .removeClass("fa-sort-up fa-sort-down")
-            .addClass("fa-sort");
+        currentSort:
+            "{{ current_sort|default:'id' }}",
 
-        $(`.sort[data-field='${currentSort}'] .sort-icon`)
-            .removeClass("fa-sort")
-            .addClass(currentDir === "asc" ? "fa-sort-up" : "fa-sort-down");
-    }
-
-    function loadData() {
-        $("#loader").show();
-
-        $.ajax({
-            url: "",
-            data: {
-                page: currentPage,
-                sort: currentSort,
-                dir: currentDir,
-                status: currentStatus,
-                search: currentSearch
-            },
-            success: function (response) {
-                // Extract only table part
-                let html = $(response).find("#tableContainer").html();
-                $("#tableContainer").html(html);
-                updateSortIcons();
-            },
-            complete: function () {
-                $("#loader").hide();
-            }
-        });
-    }
-
-    $("#statusFilter").change(function () {
-        currentStatus = $(this).val();
-        currentPage = 1;
-        loadData();
-    });
-
-    let timer;
-    $("#myInput").keyup(function () {
-        clearTimeout(timer);
-        currentSearch = $(this).val();
-
-        timer = setTimeout(() => {
-            currentPage = 1;
-            loadData();
-        }, 400);
-    });
-
-    $(document).on("click", ".sort", function (e) {
-        e.preventDefault();
-
-        let field = $(this).data("field");
-
-        if (currentSort === field) {
-            currentDir = currentDir === "asc" ? "desc" : "asc";
-        } else {
-            currentSort = field;
-            currentDir = "asc";
-        }
-
-        loadData();
-    });
-
-    $(document).on("click", ".page-link", function (e) {
-        e.preventDefault();
-        currentPage = $(this).data("page");
-        loadData();
+        currentDir:
+            "{{ current_dir|default:'desc' }}"
     });
 </script>
 {% endblock %}

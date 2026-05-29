@@ -3,382 +3,302 @@
 {% block title %}User Details{% endblock %}
 
 {% block css %}
-<link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 {% endblock css %}
 
 {% block body %}
+<!-- HEADER -->
+<div class="page-header mb-1">
+    <h4 class="fw-semibold mb-0">
+        <i class="fa fa-user text-primary me-2"></i>
+        User Details
+    </h4>
+</div>
 
-<div class="container-fluid">
+<!-- PROFILE SUMMARY -->
+<div class="card border-0 shadow-sm mb-1">
+    <div class="card-body p-2">
 
-    <!-- PAGE HEADER -->
-    <div class="page-header mb-1">
-        <h3 class="page-title">
-            <i class="fa fa-user mr-2"></i>
-            User Details
-        </h3>
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+
+            <div>
+                <h5 class="mb-1 text-primary fw-semibold">
+                    {{ user.first_name }}
+                    {{ user.last_name }}
+
+                    <small class="text-muted">
+                        (@{{ user.username }})
+                    </small>
+                </h5>
+            </div>
+
+            <div class="mt-2 mt-md-0">
+
+                {% if user.is_active %}
+                <span class="badge bg-success me-1">
+                    Active
+                </span>
+                {% else %}
+                <span class="badge bg-secondary me-1">
+                    Inactive
+                </span>
+                {% endif %}
+
+                {% if user.is_superuser %}
+                <span class="badge bg-danger">
+                    Admin
+                </span>
+                {% elif user.is_staff %}
+                <span class="badge bg-info text-dark">
+                    Staff
+                </span>
+                {% else %}
+                <span class="badge bg-light text-dark border">
+                    User
+                </span>
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<!-- TAB CARD -->
+<div class="card border-0 shadow-sm">
+
+    <!-- TAB HEADER -->
+    <div class="card-header bg-white p-0 border-bottom">
+
+        <ul class="nav nav-tabs" role="tablist">
+
+            <li class="nav-item">
+                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#general">
+                    General
+                </button>
+            </li>
+
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#profile">
+                    Employee Profile
+                </button>
+            </li>
+
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#permissions">
+                    Groups & Permissions
+                </button>
+            </li>
+
+            <li class="nav-item">
+                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#audit">
+                    Audit
+                </button>
+            </li>
+
+        </ul>
+
     </div>
 
-    <div class="row">
+    <!-- TAB BODY -->
+    <div class="card-body">
 
-        <!-- PROFILE HEADER -->
-        <div class="col-12 mb-1">
+        <div class="tab-content">
 
-            <div class="card shadow-sm border-0">
+            <!-- GENERAL TAB -->
+            <div class="tab-pane fade show active" id="general">
 
-                <div class="card-body d-flex justify-content-between align-items-center">
-
-                    <div>
-
-                        <h4 class="mb-1 text-primary">
-
-                            {{ user.first_name }}
-                            {{ user.last_name }}
-
-                            <small class="text-muted">
-                                (@{{ user.username }})
-                            </small>
-
-                        </h4>
-
+                <div class="row mb-1">
+                    <div class="col-md-3 col-4 text-muted">
+                        Full Name
                     </div>
+                    <div class="col-md-9 col-8">
+                        {{ user.first_name }}
+                        {{ user.last_name }}
+                    </div>
+                </div>
 
-                    <div>
+                <div class="row mb-1">
+                    <div class="col-md-3 col-4 text-muted">
+                        Username
+                    </div>
+                    <div class="col-md-9 col-8">
+                        {{ user.username }}
+                    </div>
+                </div>
+
+                <div class="row mb-1">
+                    <div class="col-md-3 col-4 text-muted">
+                        Email
+                    </div>
+                    <div class="col-md-9 col-8">
+                        {{ user.email|default:"-" }}
+                    </div>
+                </div>
+
+                <div class="row mb-0">
+                    <div class="col-md-3 col-4 text-muted">
+                        Status
+                    </div>
+                    <div class="col-md-9 col-8">
 
                         {% if user.is_active %}
-                        <span class="badge badge-success">
+                        <span class="badge bg-success">
                             Active
                         </span>
                         {% else %}
-                        <span class="badge badge-secondary">
+                        <span class="badge bg-secondary">
                             Inactive
                         </span>
                         {% endif %}
 
-                        {% if user.is_superuser %}
-                        <span class="badge badge-danger">
-                            Admin
-                        </span>
+                    </div>
+                </div>
 
-                        {% elif user.is_staff %}
-                        <span class="badge badge-info">
-                            Staff
-                        </span>
+            </div>
 
+            <!-- EMPLOYEE PROFILE TAB -->
+            <div class="tab-pane fade" id="profile">
+
+                {% if profile %}
+
+                <div class="row mb-1">
+                    <div class="col-md-3 col-4 text-muted">
+                        Employee Code
+                    </div>
+                    <div class="col-md-9 col-8">
+                        {{ profile.emp_code|default:"-" }}
+                    </div>
+                </div>
+
+                <div class="row mb-1">
+                    <div class="col-md-3 col-4 text-muted">
+                        Role
+                    </div>
+                    <div class="col-md-9 col-8">
+                        {{ profile.role|default:"-" }}
+                    </div>
+                </div>
+
+                <div class="row mb-1">
+                    <div class="col-md-3 col-4 text-muted">
+                        Manager
+                    </div>
+                    <div class="col-md-9 col-8">
+                        {% if profile.manager %}
+                        {{ profile.manager.get_full_name|default:profile.manager.username }}
                         {% else %}
-                        <span class="badge badge-light">
-                            User
+                        -
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="row mb-0">
+                    <div class="col-md-3 col-4 text-muted">
+                        Branch
+                    </div>
+                    <div class="col-md-9 col-8">
+                        {{ profile.branch|default:"-" }}
+                    </div>
+                </div>
+
+                {% else %}
+                <span class="text-muted">
+                    No employee profile found
+                </span>
+                {% endif %}
+
+            </div>
+
+            <!-- GROUPS & PERMISSIONS -->
+            <div class="tab-pane fade" id="permissions">
+
+                <h6 class="fw-semibold mb-0">
+                    Groups
+                </h6>
+
+                <div class="mb-3">
+                    {% for g in user.groups.all %}
+                    <span class="badge bg-primary me-1 mb-0">
+                        {{ g.name }}
+                    </span>
+                    {% empty %}
+                    <span class="text-muted">
+                        No groups assigned
+                    </span>
+                    {% endfor %}
+                </div>
+
+                <hr class="mb-0 mt-0">
+
+                <h6 class="fw-semibold mb-1">
+                    Permissions
+                </h6>
+
+                <div class="row mb-1">
+                    <div class="col-md-3 col-4 text-muted">
+                        Staff Status
+                    </div>
+
+                    <div class="col-md-9 col-8">
+
+                        {% if user.is_staff %}
+                        <span class="badge bg-info text-dark">
+                            Yes
+                        </span>
+                        {% else %}
+                        <span class="badge bg-light text-dark border">
+                            No
                         </span>
                         {% endif %}
 
                     </div>
+                </div>
 
+                <div class="row">
+                    <div class="col-md-3 col-4 text-muted">
+                        Superuser
+                    </div>
+
+                    <div class="col-md-9 col-8">
+
+                        {% if user.is_superuser %}
+                        <span class="badge bg-danger">
+                            Yes
+                        </span>
+                        {% else %}
+                        <span class="badge bg-light text-dark border">
+                            No
+                        </span>
+                        {% endif %}
+
+                    </div>
                 </div>
 
             </div>
 
-        </div>
+            <!-- AUDIT -->
+            <div class="tab-pane fade" id="audit">
 
-
-        <!-- BASIC INFORMATION -->
-        <div class="col-md-6 mb-1">
-
-            <div class="card shadow-sm border-0 h-100">
-
-                <div class="card-body">
-
-                    <h4 class="card-title mb-2">
-                        Basic Information
-                    </h4>
-
-                    <div class="row mb-1">
-                        <div class="col-5 text-muted">
-                            Full Name
-                        </div>
-
-                        <div class="col-7">
-                            {{ user.first_name }}
-                            {{ user.last_name }}
-                        </div>
+                <div class="row mb-1">
+                    <div class="col-md-3 col-4 text-muted">
+                        Date Joined
                     </div>
 
-                    <div class="row mb-1">
-                        <div class="col-5 text-muted">
-                            Username
-                        </div>
-
-                        <div class="col-7">
-                            {{ user.username }}
-                        </div>
+                    <div class="col-md-9 col-8">
+                        {{ user.date_joined|date:"d M Y, h:i A" }}
                     </div>
-
-                    <div class="row mb-1">
-                        <div class="col-5 text-muted">
-                            Email
-                        </div>
-
-                        <div class="col-7">
-                            {{ user.email|default:"-" }}
-                        </div>
-                    </div>
-
                 </div>
 
-            </div>
-
-        </div>
-
-
-        <!-- PROFILE DETAILS -->
-        <div class="col-md-6 mb-1 ml-0">
-
-            <div class="card shadow-sm border-0 h-100">
-
-                <div class="card-body">
-
-                    <h4 class="card-title mb-2">
-                        Employee Profile
-                    </h4>
-                    {% if profile %}
-                   
-
-                    <div class="row mb-1">
-
-                        <div class="col-5 text-muted">
-                            Employee Code
-                        </div>
-
-                        <div class="col-7">
-                            {{ profile.emp_code|default:"-" }}
-                        </div>
-
+                <div class="row">
+                    <div class="col-md-3 col-4 text-muted">
+                        Last Login
                     </div>
 
-                    <div class="row mb-1">
-
-                        <div class="col-5 text-muted">
-                            Role
-                        </div>
-
-                        <div class="col-7">
-                            {{ profile.role|default:"-" }}
-                        </div>
-
+                    <div class="col-md-9">
+                        {{ user.last_login|default:"Never"|date:"d M Y, h:i A" }}
                     </div>
-
-                    <div class="row mb-1">
-
-                        <div class="col-5 text-muted">
-                            Manager
-                        </div>
-
-                        <div class="col-7">
-
-                            {% if profile.manager %}
-                                {{ profile.manager.get_full_name|default:profile.manager.username }}
-                            {% else %}
-                                -
-                            {% endif %}
-
-                        </div>
-
-                    </div>
-
-                    <div class="row mb-1">
-
-                        <div class="col-5 text-muted">
-                            Branch
-                        </div>
-
-                        <div class="col-7">
-                            {{ profile.branch|default:"-" }}
-                        </div>
-
-                    </div>
-                    
-                    {% else %}
-                    <span class="text-muted">
-                        No employee profile found
-                    </span>
-                    {% endif %}
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- GROUPS -->
-        <div class="col-md-6 mb-1">
-
-            <div class="card shadow-sm border-0 h-100">
-
-                <div class="card-body">
-
-                    <h4 class="card-title mb-2">
-                        Groups
-                    </h4>
-
-                    {% for g in user.groups.all %}
-
-                    <span class="badge badge-primary mr-1 mb-1">
-                        {{ g.name }}
-                    </span>
-
-                    {% empty %}
-
-                    <span class="text-muted">
-                        No groups assigned
-                    </span>
-
-                    {% endfor %}
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- PERMISSIONS -->
-        <div class="col-md-6 mb-1">
-
-            <div class="card shadow-sm border-0 h-100">
-
-                <div class="card-body">
-
-                    <h4 class="card-title mb-2">
-                        Permissions
-                    </h4>
-
-                    <div class="row mb-1">
-
-                        <div class="col-6 text-muted">
-                            Staff Status
-                        </div>
-
-                        <div class="col-6">
-
-                            {% if user.is_staff %}
-                            <span class="badge badge-info">
-                                Yes
-                            </span>
-                            {% else %}
-                            <span class="badge badge-light">
-                                No
-                            </span>
-                            {% endif %}
-
-                        </div>
-
-                    </div>
-
-                    <div class="row mb-1">
-
-                        <div class="col-6 text-muted">
-                            Superuser
-                        </div>
-
-                        <div class="col-6">
-
-                            {% if user.is_superuser %}
-                            <span class="badge badge-danger">
-                                Yes
-                            </span>
-                            {% else %}
-                            <span class="badge badge-light">
-                                No
-                            </span>
-                            {% endif %}
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- AUDIT -->
-        <div class="col-md-12 mb-1">
-
-            <div class="card shadow-sm border-0">
-
-                <div class="card-body">
-
-                    <h4 class="card-title mb-2">
-                        Audit Trail
-                    </h4>
-
-                    <div class="row">
-
-                        <div class="col-md-6 mb-1">
-
-                            <div class="row">
-
-                                <div class="col-5 text-muted">
-                                    Date Joined
-                                </div>
-
-                                <div class="col-7">
-                                    {{ user.date_joined|date:"d M Y, H:i" }}
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                        <div class="col-md-6 mb-1">
-
-                            <div class="row">
-
-                                <div class="col-5 text-muted">
-                                    Last Login
-                                </div>
-
-                                <div class="col-7">
-                                    {{ user.last_login|default:"Never"|date:"d M Y, H:i" }}
-                                </div>
-
-                            </div>
-
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </div>
-
-
-        <!-- ACTION BUTTONS -->
-        <div class="col-12">
-
-            <div class="card shadow-sm border-0">
-
-                <div class="card-body d-flex justify-content-between">
-
-                    <a href="{% url 'user-list' %}"
-                       class="btn btn-light btn-sm">
-
-                        <i class="fa fa-arrow-left"></i>
-                        Back
-
-                    </a>
-
-                    <a href="{% url 'user-edit' user.pk %}"
-                       class="btn btn-primary btn-sm">
-
-                        <i class="fa fa-edit"></i>
-                        Edit
-
-                    </a>
-
                 </div>
 
             </div>
@@ -386,6 +306,22 @@
         </div>
 
     </div>
+</div>
+
+<!-- FOOTER BUTTONS -->
+<div class="text-end mt-2">
+
+    <a href="{% url 'user-list' %}" class="btn btn-secondary btn-sm">
+
+        <i class="fa fa-arrow-left me-1"></i>
+        Back
+    </a>
+
+    <a href="{% url 'user-edit' user.pk %}" class="btn btn-primary btn-sm">
+
+        <i class="fa fa-edit me-1"></i>
+        Edit
+    </a>
 
 </div>
 

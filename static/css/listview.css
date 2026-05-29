@@ -1,0 +1,202 @@
+/* Refresh button spinning animation */
+#refresh-table.spinning i {
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Header */
+.sf-header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+    padding-top: 5px;
+}
+
+.sf-left {
+    display: flex;
+    align-items: center;
+}
+
+.sf-object-icon {
+    width: 48px;
+    height: 48px;
+    background: #ff8a80;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 22px;
+    margin-right: 12px;
+}
+
+.sf-title-line {
+    display: flex;
+    align-items: center;
+}
+
+/* LIST VIEW NAME + ▼ */
+.sf-title-dropdown {
+    font-size: 28px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+}
+
+.sf-dropdown-caret {
+    margin-left: 6px;
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid #0d2a63;
+    margin-top: 6px;
+}
+
+.sf-subtitle {
+    color: #555;
+    font-size: 14px;
+    margin-top: -4px;
+}
+
+.sf-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.sf-action-buttons {
+    display: flex;
+    border-radius: 30px;
+    margin-left: 5px;
+    overflow: hidden;
+    border: 1px solid #dcdcdc;
+
+
+}
+
+.sf-action-buttons a {
+    border-right: 1px solid #dcdcdc;
+    background: white;
+    text-decoration: none;
+}
+
+.sf-action-buttons button {
+    border: none;
+    background: white;
+    color: #0070d2;
+    text-decoration: none;
+}
+
+.sf-action-buttons a:last-child {
+    border-right: none;
+}
+
+.sf-search-row {
+    display: flex;
+    align-items: center;
+}
+
+.sf-search-box input {
+    border-radius: 30px;
+    padding-left: 10px;
+    width: 100x;
+    height: 36px;
+}
+
+.sf-icon {
+    width: 40px;
+    height: 36px;
+    border: 1px solid #dcdcdc;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 5px;
+    cursor: pointer;
+    color: #0070d2;
+    font-size: 17px;
+    background: white;
+}
+
+.sf-icon:hover {
+    background: #f4f6f9;
+}
+
+/* SETTINGS ICON + ▼ TOGGLE */
+.sf-settings-btn {
+    position: relative;
+    padding: 0;
+}
+
+.settings-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.settings-toggle i {
+    font-size: 13px;
+    color: #0070d2;
+}
+
+.settings-caret {
+    margin-left: 4px;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 5px solid #0070d2;
+}
+
+/* Table */
+.sf-table th {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+
+    .sf-header-container {
+        flex-direction: column;
+        /* Stack vertically */
+        align-items: stretch;
+        text-align: left;
+    }
+
+    .sf-left {
+        width: 100%;
+        justify-content: flex-start;
+        margin-bottom: 5px;
+    }
+
+    .sf-right {
+        width: 100%;
+    }
+
+    .sf-action-buttons {
+        justify-content: flex-start;
+    }
+
+    .sf-search-row {
+        width: 100%;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        gap: 3px;
+    }
+
+    .sf-icon {
+        width: 40px;
+        height: 34px;
+    }
+}

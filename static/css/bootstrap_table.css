@@ -1,0 +1,121 @@
+/* 
+   BOOTSTRAP TABLE
+ */
+
+/* Toolbar buttons */
+.bootstrap-table .btn {
+    height: 34px !important;
+    padding: 6px 10px !important;
+    font-size: 0.875rem;
+}
+
+/* Search box */
+.bootstrap-table .search input {
+    height: 34px !important;
+    padding: .375rem .75rem !important;
+    font-size: .875rem !important;
+    width: 190px !important;
+}
+
+/* Table wrapper */
+.bootstrap-table {
+    overflow-x: auto;
+}
+
+/* Keep everything in one line */
+.bootstrap-table .table th,
+.bootstrap-table .table td {
+    white-space: nowrap !important;
+    word-break: normal !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle !important;
+}
+
+/* Smooth hover/render */
+.bootstrap-table .table td {
+    transition: background-color .2s ease;
+}
+
+/* 
+   STICKY FIRST COLUMN
+ */
+
+.bootstrap-table .table tbody td:first-child,
+.bootstrap-table .table thead th:first-child,
+.bootstrap-table .table tfoot td:first-child {
+    position: sticky;
+    left: 0;
+    background: #fff;
+    z-index: 3;
+}
+
+/* First header cell */
+.bootstrap-table .table thead th:first-child {
+    z-index: 6;
+}
+
+/* 
+   STICKY HEADER
+ */
+.bootstrap-table .table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    font-size: 15px;
+}
+
+/* 
+   STICKY FOOTER
+ */
+
+.bootstrap-table .table tfoot td {
+    position: sticky;
+    bottom: 0;
+    background: #f8f9fa;
+    z-index: 4;
+}
+
+/* 
+   REPORT DETAILS TABLE
+ */
+
+#reportDetails table {
+    margin-bottom: 0;
+}
+
+#reportDetails table th {
+    width: 15%;
+    white-space: nowrap;
+    background: #f8f9fa;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
+#reportDetails table td {
+    width: 35%;
+    white-space: normal;
+    word-break: break-word;
+    vertical-align: middle;
+}
+
+/* Prevent very long text overflow */
+#reportDetails td {
+    max-width: 300px;
+}
+
+/* 
+   MOBILE
+ */
+
+@media (max-width: 768px) {
+
+    .bootstrap-table .search input {
+        width: 150px !important;
+    }
+
+    #reportDetails table th,
+    #reportDetails table td {
+        width: auto;
+    }
+}

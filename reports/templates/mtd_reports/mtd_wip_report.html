@@ -1,104 +1,221 @@
 {% extends "reports/base.html" %}
+{% load static %}
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/list.css' %}">
+{% endblock css %}
 {% block title %}Channel Lender Report{% endblock %}
 {% block body %}
 <div class="row">
     <div class="col-lg-12 stretch-card grid-margin">
         <div class="card mb-4">
-            <div class="card-body">
-                <h4 class="mb-3 p-2">MTD WIP Report</h4>
+            <div class="card-body p-2">
+                <h4 class="mb-2">MTD WIP Report</h4>
 
                 <!-- Filters -->
-                <div class="mb-3">
-                    <form method="get" class="d-flex flex-column">
+               <div class="mb-3">
+    <form method="get">
 
-                        <div class="row">
-                            <!-- GROUP BY (Left Column) -->
-                            <div class="col-md-6 mb-3">
-                                <fieldset class="border rounded p-3">
-                                    <legend class="w-auto px-2 font-weight-bold">Group By</legend>
+        <div class="row g-3">
 
-                                    <div class="form-group mb-2">
-                                        <label for="channel_name">Channel <span class="text-danger">*</span></label>
-                                        <select name="channel_name" id="channel_name" class="form-control form-control-sm" required>
-                                            <option value="">--- Select Channel ---</option>
-                                            <option value="all" {% if channel_name == "all" %}selected{% endif %}>All</option>
-                                            {% for value, label in channel_choices %}
-                                                <option value="{{ value }}" {% if channel_name == value %}selected{% endif %}>{{ label }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <small class="form-text text-danger">
-                                            You must select a Channel to view leads.
-                                        </small>
-                                    </div>
+            <!-- GROUP BY -->
+            <div class="col-lg-6">
+                <fieldset class="border rounded p-3 h-100">
+                    <legend class="w-auto px-2 fw-bold fs-6 mb-0">
+                        Group By
+                    </legend>
 
-                                    <div class="form-group mb-2">
-                                        <label for="report_type">Select Group Type</label>
-                                        <select name="report_type" id="report_type" class="form-control form-control-sm">
-                                            <option value="sum" {% if report_type == "sum" %}selected{% endif %}>Sum</option>
-                                            <option value="count" {% if report_type == "count" %}selected{% endif %}>Count</option>
-                                        </select>
-                                    </div>
-                                </fieldset>
-                            </div>
+                    <div class="mb-3">
 
-                            <!-- FILTER BY (Right Column) -->
-                            <div class="col-md-6 mb-3">
-                                <fieldset class="border rounded p-3">
-                                    <legend class="w-auto px-2 font-weight-bold">Filter By</legend>
+                        <label for="channel_name" class="form-label">
+                            Channel <span class="text-danger">*</span>
+                        </label>
 
-                                    <div class="form-row">
-                                        <div class="col-md-6 mb-2">
-                                            <label for="assignment_field">Assignment Field</label>
-                                            <select name="assignment_field" id="assignment_field" class="form-control form-control-sm">
-                                                <option value="">-- Select Field --</option>
-                                                {% for value, label in assignment_types %}
-                                                    <option value="{{ value }}" {% if assignment_field == value %}selected{% endif %}>{{ label }}</option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
+                        <select name="channel_name"
+                            id="channel_name"
+                            class="form-select form-select-sm"
+                            required>
 
-                                        <div class="col-md-6 mb-2">
-                                            <label for="assignment_value">Assignment Field Value</label>
-                                            <select name="assignment_value" id="assignment_value" class="form-control form-control-sm" data-selected="{{ assignment_value }}">
-                                                <option value="">-- Select User --</option>
-                                                {% for user in users_for_field %}
-                                                    <option value="{{ user.id }}" {% if assignment_value|stringformat:"s" == user.id|stringformat:"s" %}selected{% endif %}>
-                                                        {{ user.get_full_name|default:user.username }}
-                                                    </option>
-                                                {% endfor %}
-                                            </select>
-                                        </div>
-                                    </div>
+                            <option value="">
+                                --- Select Channel ---
+                            </option>
 
-                                    <div class="form-row">
-                                        <div class="col-md-6 mb-2">
-                                            <label for="start_date">DOS Start Date</label>
-                                            <input type="date" name="start_date" id="start_date" value="{{ start_date }}" class="form-control form-control-sm">
-                                        </div>
-                                        <div class="col-md-6 mb-2">
-                                            <label for="end_date">DOS End Date</label>
-                                            <input type="date" name="end_date" id="end_date" value="{{ end_date }}" class="form-control form-control-sm">
-                                        </div>
-                                    </div>
-                                </fieldset>
-                            </div>
+                            <option value="all"
+                                {% if channel_name == "all" %}selected{% endif %}>
+                                All
+                            </option>
+
+                            {% for value, label in channel_choices %}
+                            <option value="{{ value }}"
+                                {% if channel_name == value %}selected{% endif %}>
+
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+
+                        </select>
+
+                        <small class="text-danger">
+                            You must select a Channel to view leads.
+                        </small>
+
+                    </div>
+
+                    <div class="mb-0">
+
+                        <label for="report_type" class="form-label">
+                            Select Group Type
+                        </label>
+
+                        <select name="report_type"
+                            id="report_type"
+                            class="form-select form-select-sm">
+
+                            <option value="sum"
+                                {% if report_type == "sum" %}selected{% endif %}>
+                                Sum
+                            </option>
+
+                            <option value="count"
+                                {% if report_type == "count" %}selected{% endif %}>
+                                Count
+                            </option>
+
+                        </select>
+
+                    </div>
+                </fieldset>
+            </div>
+
+            <!-- FILTER BY -->
+            <div class="col-lg-6">
+                <fieldset class="border rounded p-3 h-100">
+
+                    <legend class="w-auto px-2 fw-bold fs-6 mb-0">
+                        Filter By
+                    </legend>
+
+                    <div class="row g-2">
+
+                        <!-- Assignment Field -->
+                        <div class="col-md-6">
+
+                            <label for="assignment_field"
+                                class="form-label">
+
+                                Assignment Field
+                            </label>
+
+                            <select name="assignment_field"
+                                id="assignment_field"
+                                class="form-select form-select-sm">
+
+                                <option value="">
+                                    -- Select Field --
+                                </option>
+
+                                {% for value, label in assignment_types %}
+                                <option value="{{ value }}"
+                                    {% if assignment_field == value %}selected{% endif %}>
+
+                                    {{ label }}
+                                </option>
+                                {% endfor %}
+
+                            </select>
                         </div>
 
-                        <!-- Buttons (Below Both Columns, Centered) -->
-                        <div class="d-flex justify-content-center mt-2">
-                            <button type="submit" class="btn btn-primary btn-sm mr-2">Filter</button>
+                        <!-- Assignment Value -->
+                        <div class="col-md-6">
 
-                            <a href="?channel_name={{ channel_name }}&report_type={{ report_type }}&start_date={{ start_date }}&end_date={{ end_date }}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}&export=1"
-                            class="btn btn-success btn-sm">Export to Excel</a>
+                            <label for="assignment_value"
+                                class="form-label">
+
+                                Assignment Field Value
+                            </label>
+
+                            <select name="assignment_value"
+                                id="assignment_value"
+                                class="form-select form-select-sm"
+                                data-selected="{{ assignment_value }}">
+
+                                <option value="">
+                                    -- Select User --
+                                </option>
+
+                                {% for user in users_for_field %}
+                                <option value="{{ user.id }}"
+                                    {% if assignment_value|stringformat:"s" == user.id|stringformat:"s" %}selected{% endif %}>
+
+                                    {{ user.get_full_name|default:user.username }}
+                                </option>
+                                {% endfor %}
+
+                            </select>
+
                         </div>
 
-                    </form>
+                        <!-- Start Date -->
+                        <div class="col-md-6">
 
-                </div>
+                            <label for="start_date"
+                                class="form-label">
+
+                                DOS Start Date
+                            </label>
+
+                            <input type="date"
+                                name="start_date"
+                                id="start_date"
+                                value="{{ start_date }}"
+                                class="form-control form-control-sm">
+
+                        </div>
+
+                        <!-- End Date -->
+                        <div class="col-md-6">
+
+                            <label for="end_date"
+                                class="form-label">
+
+                                DOS End Date
+                            </label>
+
+                            <input type="date"
+                                name="end_date"
+                                id="end_date"
+                                value="{{ end_date }}"
+                                class="form-control form-control-sm">
+
+                        </div>
+
+                    </div>
+                </fieldset>
+            </div>
+
+        </div>
+
+        <!-- BUTTONS -->
+        <div class="d-flex flex-column flex-sm-row justify-content-center gap-2 mt-3">
+
+            <button type="submit"
+                class="btn btn-primary btn-sm">
+                Filter
+            </button>
+
+            <a href="?channel_name={{ channel_name }}&report_type={{ report_type }}&start_date={{ start_date }}&end_date={{ end_date }}{% if assignment_field %}&assignment_field={{ assignment_field }}{% endif %}{% if assignment_value %}&assignment_value={{ assignment_value }}{% endif %}&export=1"
+                class="btn btn-success btn-sm">
+
+                Export to Excel
+            </a>
+
+        </div>
+
+    </form>
+</div>
 
                 <!-- Report Table -->
                 <div class="table-responsive border rounded p-1">
-                    <table class="table mb-3">
+                    <table class="table custom-table mb-3">
                         <thead class="table-primary text-nowrap">
                             <tr>
                                 <th class="font-weight-bold">

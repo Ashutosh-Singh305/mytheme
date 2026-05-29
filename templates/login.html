@@ -8,27 +8,35 @@
 
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts for accurate typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #f4f6fb;
+            font-family: 'Poppins', sans-serif;
+            background: #f3f4fa;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            margin: 20px;
-            box-sizing: border-box;
+            min-height: 80vh;
+            padding: 20px;
         }
 
         .container {
             display: flex;
             width: 100%;
-            max-width: 900px;
-            max-height: 100vh;
-            margin: auto;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-            border-radius: 12px;
+            max-width: 1000px;
+            min-height: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+            border-radius: 20px;
             overflow: hidden;
             background: #fff;
         }
@@ -39,176 +47,227 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 35px;
+            padding: 60px 75px;
+            background-color: #ffffff;
         }
 
         .login-box {
             width: 100%;
-            max-width: 100%;
+            max-width: 380px;
         }
 
-        .login-box h6 {
-            margin-bottom: 25px;
-            margin-top: 10px;
-            font-weight: 300;
-            font-size: 20px;
-            color: #777;
+        .login-box h2 {
+            font-size: 32px;
+            font-weight: 600;
+            color: #1a1c36;
+            margin-bottom: 8px;
+        }
+
+        .login-box .subtitle {
+            font-size: 15px;
+            color: #797b89;
+            margin-bottom: 35px;
+            font-weight: 400;
         }
 
         .form-group {
-            margin-bottom: 20px;
+            position: relative;
+            margin-bottom: 22px;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group i.input-icon {
+            position: absolute;
+            left: 20px;
+            color: #633be2;
+            font-size: 18px;
         }
 
         .form-group input {
             width: 100%;
             border: none;
-            border-bottom: 1px solid #ccc;
-            padding: 10px 5px;
+            padding: 18px 20px 18px 55px;
             outline: none;
             font-size: 15px;
-            background: transparent;
+            background: #f6f5fa;
+            border-radius: 14px;
+            color: #1a1c36;
+            font-family: 'Poppins', sans-serif;
+            transition: background 0.2s ease;
         }
 
         .form-group input::placeholder {
-            color: #aaa;
+            color: #a0a2b1;
         }
 
         .form-group input:focus {
-            border-color: #3498db;
-            /* light blue focus */
+            background: #f0eef9;
         }
 
-        .password-wrapper {
-            position: relative;
-        }
-
-        .toggle-password {
-            position: absolute;
-            top: 50%;
-            right: 10px;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: #aaa;
+        /* Specifically for styling password masking dots tightly like the image */
+        .form-group input[type="password"] {
+            font-family: 'Arial', sans-serif;
+            letter-spacing: 3px;
             font-size: 16px;
+        }
+
+        .password-wrapper .toggle-password {
+            position: absolute;
+            right: 20px;
+            cursor: pointer;
+            color: #797b89;
+            font-size: 18px;
+            transition: color 0.2s ease;
+        }
+
+        .password-wrapper .toggle-password:hover {
+            color: #633be2;
         }
 
         .remember-forgot {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-top: 25px;
+            margin-bottom: 35px;
             font-size: 14px;
         }
 
-        .remember-forgot input {
-            margin-right: 6px;
+        .remember-checkbox {
+            display: flex;
+            align-items: center;
+            color: #4a4c5a;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .remember-checkbox input {
+            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            border: 1.5px solid #d0d2de;
+            accent-color: #633be2;
+            cursor: pointer;
+        }
+
+        .forgot-password a {
+            color: #5527e1;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.2s ease;
+        }
+
+        .forgot-password a:hover {
+            opacity: 0.8;
         }
 
         .login-btn {
             width: 100%;
-            padding: 12px;
-            background: linear-gradient(135deg, #3498db, #5dade2);
-            /* light blue gradient */
+            padding: 16px;
+            background: linear-gradient(90deg, #6c2de9, #2b7af0);
             border: none;
             color: white;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 500;
+            font-family: 'Poppins', sans-serif;
             cursor: pointer;
             border-radius: 30px;
-            transition: background 0.3s ease;
+            box-shadow: 0 10px 20px rgba(108, 45, 233, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .login-btn:hover {
-            background: linear-gradient(135deg, #2e86c1, #5499c7);
-            /* darker on hover */
+            transform: translateY(-1px);
+            box-shadow: 0 12px 24px rgba(108, 45, 233, 0.3);
         }
 
-        /* Right panel (decorative/video) */
+        /* Right panel (decorative canvas matching image_cb6b84.jpg) */
         .right-panel {
             flex: 1;
-            background: linear-gradient(135deg, #3498db, #5dade2);
-            /* light blue gradient */
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            padding: 30px;
+            background: linear-gradient(135deg, #4483f7 0%, #5752e6 45%, #a847e4 100%);
             position: relative;
             overflow: hidden;
         }
 
-        .right-panel::before,
+        /* Large upper right ambient circle */
+        .right-panel::before {
+            content: '';
+            position: absolute;
+            width: 320px;
+            height: 320px;
+            top: -40px;
+            right: -40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02));
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+        }
+
+        /* Large bottom left ambient circle */
         .right-panel::after {
             content: '';
             position: absolute;
+            width: 280px;
+            height: 280px;
+            bottom: -60px;
+            left: -40px;
             border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01));
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
         }
 
-        .right-panel::before {
-            width: 220px;
-            height: 220px;
-            top: -40px;
-            right: -40px;
+        /* Django specific styling for error wrappers if thrown */
+        .alert-danger {
+            margin-top: 20px;
+            padding: 12px;
+            background-color: #ffeef0;
+            border-left: 4px solid #f84b63;
+            color: #ea2b46;
+            border-radius: 8px;
+            font-size: 14px;
         }
 
-        .right-panel::after {
-            width: 150px;
-            height: 150px;
-            bottom: -30px;
-            left: -30px;
+        .text-danger {
+            font-size: 12px;
+            color: #f84b63;
+            display: block;
+            margin-top: 4px;
+            padding-left: 5px;
         }
 
-        @media (max-width: 768px) {
+        /* Responsive Breakpoint Layout */
+        @media (max-width: 840px) {
             .container {
                 flex-direction: column;
+                max-width: 480px;
+                min-height: auto;
             }
 
             .right-panel {
+                height: 180px;
                 order: 1;
-                height: auto;
-                padding: 40px 30px;
-                position: relative;
-                background-color: #007bff;
-                /* Optional: ensure the blue section stays distinct */
-                color: white;
-                /* Optional: make text readable */
-                text-align: center;
             }
 
             .left-panel {
+                padding: 40px 30px;
                 order: 2;
-                padding: 20px;
-            }
-
-            .right-panel::before,
-            .right-panel::after {
-                content: '';
-                position: absolute;
-                border-radius: 50%;
-                background: rgba(255, 255, 255, 0.1);
-                z-index: 0;
             }
 
             .right-panel::before {
-                width: 120px;
+                width: 180px;
                 height: 180px;
-                top: 0;
-                right: -30px;
+                top: -20px;
+                right: -20px;
             }
 
             .right-panel::after {
-                width: 100px;
-                height: 100px;
-                bottom: 0;
+                width: 160px;
+                height: 160px;
+                bottom: -40px;
                 left: -20px;
-            }
-
-            .right-panel>* {
-                position: relative;
-                z-index: 1;
-                /* Ensure content appears above decorative shapes */
             }
         }
     </style>
@@ -217,63 +276,58 @@
 <body>
 
     <div class="container">
-        <!-- Left Panel -->
-        <div class="left-panel">
-            <div class="login-box">
-                <h6>Welcome Back,Please login to your account.</h6>
+            <!-- Left Panel -->
+            <div class="left-panel">
+                <div class="login-box">
+                    <h2>Welcome Back!</h2>
+                    <p class="subtitle">Please login to your account.</p>
 
-                <form method="post" action="{% url 'login' %}?next={{ request.GET.next }}">
-                    {% csrf_token %}
+                    <form method="post" action="{% url 'login' %}?next={{ request.GET.next }}">
+                        {% csrf_token %}
 
-                    <div class="form-group">
-                        <input type="text" name="username" placeholder="Username" autocomplete="username">
+                        <div class="form-group">
+                            <i class="far fa-user input-icon"></i>
+                            <input type="text" name="username" placeholder="admin" autocomplete="username">
+                            <small class="text-danger">{{ form.username.errors|striptags }}</small>
+                        </div>
 
-                        <small class="text-danger">{{ form.username.errors|striptags }}</small>
-                    </div>
+                        <div class="form-group password-wrapper">
+                            <i class="layer-group fas fa-lock input-icon"></i>
+                            <input type="password" name="password" placeholder="••••••••••••" id="passwordField"
+                                autocomplete="current-password">
+                            <span class="toggle-password" id="togglePassword">
+                                <i class="far fa-eye"></i>
+                            </span>
+                            <small class="text-danger">{{ form.password.errors|striptags }}</small>
+                        </div>
 
-                    <div class="form-group password-wrapper">
-                        <input type="password" name="password" placeholder="Password" id="passwordField"
-                            autocomplete="current-password">
-                        <span class="toggle-password" id="togglePassword">
-                            <i class="fas fa-eye"></i>
-                        </span>
-                        <small class="text-danger">{{ form.password.errors|striptags }}</small>
-                    </div>
-
-                    <div class="remember-forgot">
-                        <div class="remember-checkbox">
-                            <label>
+                        <div class="remember-forgot">
+                            <label class="remember-checkbox">
                                 <input type="checkbox" name="remember_me"> Remember me
                             </label>
+                            <div class="forgot-password">
+                                <a href="{% url 'password_reset' %}">Forgot password?</a>
+                            </div>
                         </div>
-                        <div class="forgot-password">
-                            <a href="{% url 'password_reset' %}">Forgot password?</a>
+
+                        <button type="submit" class="login-btn">Login</button>
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                            {% endfor %}
                         </div>
-                    </div>
-
-                    <button type="submit" class="login-btn">Login</button>
-
-                    {% if form.non_field_errors %}
-                    <div class="alert alert-danger mt-3">
-                        {% for error in form.non_field_errors %}
-                        <p>{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </form>
+                        {% endif %}
+                    </form>
+                </div>
             </div>
+
+            <!-- Right Panel (Background decorative layout) -->
+            <div class="right-panel"></div>
         </div>
 
-        <!-- Right Panel -->
-        <div class="right-panel">
-            <div class="content">
-
-            </div>
-        </div>
-    </div>
-    </div>
-
-    <!-- Toggle password visibility -->
+    <!-- Interactive script to toggle password eye icon state -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const togglePassword = document.getElementById('togglePassword');
@@ -282,8 +336,15 @@
             togglePassword.addEventListener('click', function () {
                 const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
                 passwordField.setAttribute('type', type);
-                this.querySelector('i').classList.toggle('fa-eye');
-                this.querySelector('i').classList.toggle('fa-eye-slash');
+
+                const icon = this.querySelector('i');
+                if (type === 'password') {
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                } else {
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                }
             });
         });
     </script>

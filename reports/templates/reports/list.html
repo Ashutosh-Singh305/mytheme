@@ -2,16 +2,16 @@
 {% block title %}All Reports{% endblock %}
 {% block body %}
 <div class="card">
-  <div class="card-body">
-    <div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="card-body p-2">
+    <div class="d-flex justify-content-between align-items-center mb-1">
       <h4 class="card-title">Reports</h4>
       {% if perms.reports.add_report %}
       <a class="btn btn-primary btn-sm" href="{% url 'reports:new' %}">New Report</a>
       {% endif %}
 
     </div>
-    <div class="table-responsive border rounded p-1">
-      <table class="table">
+    <div class="table-responsive border rounded">
+      <table class="table table-sm">
         <thead>
           <tr class="table-primary">
             <th class="font-weight-bold">Name</th>
@@ -24,7 +24,7 @@
         <tbody>
           {% for r in object_list %}
           <tr>
-            <td><a class="nav-link" href="{% url 'reports:detail' r.slug %}">{{ r.name }}</a></td>
+            <td><a class="nav-link text-primary" href="{% url 'reports:detail' r.slug %}">{{ r.name }}</a></td>
             <td>{{ r.get_view_type_display }}</td>
             <td>{{ r.owner }}</td>
             <td>{{ r.modified_at }}</td>

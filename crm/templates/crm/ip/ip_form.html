@@ -5,84 +5,115 @@
 
 {% block css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
 {% endblock %}
 
 {% block body %}
-<div class="container-fluid">
-   <div class="row justify-content-center">
-      <div class="col-lg-12">
-         <div class="card border-0 rounded-4">
+<div class="row justify-content-center">
 
-            <!-- HEADER -->
-            <div class="card-header bg-primary text-white">
-               <h4 class="mb-0">
-                  <i class="fa fa-network-wired me-2"></i> Add IP Range
-               </h4>
-            </div>
+   <div class="col-12">
 
-            <!-- BODY -->
-            <div class="card-body">
-               <form method="post" novalidate>
-                  {% csrf_token %}
+      <div class="card shadow-sm form-card">
 
-                  <div class="row">
-                     {% for fm in form %}
+         <!-- Header -->
+         <div class="card-header bg-primary text-white">
+            <h5 class="mb-0 d-flex align-items-center">
+               <i class="fas fa-network-wired me-2"></i>
+               Add IP Range
+            </h5>
+         </div>
 
-                     {% if fm.field.widget.input_type == "checkbox" %}
-                     <!-- CHECKBOX -->
-                     <div class="col-md-6 mb-3">
-                        <div class="row align-items-center">
-                           <div class="col-md-4">
-                              {{ fm.label_tag }}
-                           </div>
-                           <div class="col-md-8">
-                              <div class="form-check">
-                                 {{ fm }}
-                              </div>
-                              <small class="text-danger">{{ fm.errors|striptags }}</small>
-                           </div>
+         <!-- Body -->
+         <div class="card-body">
+
+            <form method="post" novalidate>
+               {% csrf_token %}
+
+               <div class="row g-3">
+
+                  {% for fm in form %}
+
+                  {% if fm.field.widget.input_type == "checkbox" %}
+
+                  <!-- Checkbox -->
+                  <div class="col-lg-6">
+                     <div class="row align-items-center field-row">
+
+                        <div class="col-md-4">
+                           <label class="form-label-custom">
+                              {{ fm.label }}
+                           </label>
                         </div>
-                     </div>
 
-                     {% else %}
-                     <!-- INPUT -->
-                     <div class="col-md-6 mb-3">
-                        <div class="row align-items-center">
-                           <div class="col-md-4">
-                              {{ fm.label_tag }}
-                           </div>
-                           <div class="col-md-8">
+                        <div class="col-md-8">
+
+                           <div class="form-check">
                               {{ fm }}
-                              <small class="text-danger">{{ fm.errors|striptags }}</small>
                            </div>
+
+                           {% if fm.errors %}
+                           <small class="text-danger error-text">
+                              {{ fm.errors|striptags }}
+                           </small>
+                           {% endif %}
                         </div>
                      </div>
-                     {% endif %}
-
-                     {% endfor %}
                   </div>
 
-                  <!-- NON FIELD ERRORS -->
-                  {% if form.non_field_errors %}
-                  <div class="alert alert-danger mt-3">
-                     {% for error in form.non_field_errors %}
-                        <div>{{ error }}</div>
-                     {% endfor %}
+                  {% else %}
+
+                  <!-- Input Field -->
+                  <div class="col-lg-6">
+                     <div class="row align-items-center field-row">
+
+                        <div class="col-md-4">
+                           <label class="form-label form-label-custom">
+                              {{ fm.label }}
+                           </label>
+                        </div>
+
+                        <div class="col-md-8">
+
+                           {{ fm }}
+
+                           {% if fm.errors %}
+                           <small class="text-danger error-text">
+                              {{ fm.errors|striptags }}
+                           </small>
+                           {% endif %}
+                        </div>
+                     </div>
                   </div>
+
                   {% endif %}
 
-                  <!-- BUTTONS -->
-                  <div class="d-flex justify-content-between mt-4">
-                     <a href="{% url 'ip-list' %}" class="btn btn-outline-secondary btn-sm">
-                        Cancel
-                     </a>
-                     <button type="submit" class="btn btn-primary btn-sm">
-                        Save
-                     </button>
-                  </div>
+                  {% endfor %}
 
-               </form>
-            </div>
+               </div>
+
+               <!-- Non Field Errors -->
+               {% if form.non_field_errors %}
+               <div class="alert alert-danger mt-4 mb-0">
+                  {% for error in form.non_field_errors %}
+                  <div>{{ error }}</div>
+                  {% endfor %}
+               </div>
+               {% endif %}
+
+               <!-- Buttons -->
+               <div class="d-flex justify-content-between align-items-center mt-4 pt-2 border-top">
+
+                  <a href="{% url 'ip-list' %}" class="btn btn-outline-secondary btn-sm">
+                     Cancel
+                  </a>
+
+                  <button type="submit" class="btn btn-primary btn-sm px-4">
+                     Save
+                  </button>
+
+               </div>
+
+            </form>
 
          </div>
       </div>

@@ -1,0 +1,53 @@
+{% extends 'crm/base.html' %}
+{% block title %} Role Form{% endblock %}
+{% block body %}
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-12">
+        <div class="card shadow-sm mt-2">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">
+                    {% if object %}Edit Role: {{ object.name }}{% else %}Create New Role{% endif %}
+                </h5>
+            </div>
+            <div class="card-body p-2">
+                <form method="post" class="row g-2">
+                    {% csrf_token %}
+                    
+                    <div class="col-md-6">
+                        <label for="id_name" class="form-label fw-semibold">Name</label>
+                        <input type="text" name="name" id="id_name" class="form-control" 
+                               value="{{ form.name.value|default_if_none:'' }}" required>
+                        {% if form.name.errors %}
+                            <div class="text-danger small mt-1">{{ form.name.errors|join:", " }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="id_code" class="form-label fw-semibold">Code</label>
+                        <input type="text" name="code" id="id_code" class="form-control" 
+                               value="{{ form.code.value|default_if_none:'' }}" required>
+                        {% if form.code.errors %}
+                            <div class="text-danger small mt-1">{{ form.code.errors|join:", " }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-12 my-3">
+                        <div class="form-check form-switch">
+                            <input type="checkbox" name="is_active" id="id_is_active" class="form-check-input" 
+                                   {% if form.is_active.value or form.is_active.value is None %}checked{% endif %}>
+                            <label for="id_is_active" class="form-check-label fw-semibold">Active Status</label>
+                        </div>
+                    </div>
+
+                    <hr class="text-muted my-2">
+
+                    <div class="col-12 d-flex justify-content-end gap-2">
+                        <a href="{% url 'role-list' %}" class="btn btn-light border">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

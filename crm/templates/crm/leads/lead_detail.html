@@ -119,7 +119,7 @@
                     {% for field in s.fields %}
                     {% if field in viewable_fields %}
                         <div class="profile-item">
-                            <span class="profile-label text-right">{{ lead|get_verbose_name:field }}</span>
+                            <span class="profile-label text-end">{{ lead|get_verbose_name:field }}</span>
                             <span class="profile-value text-wrap">{{ lead|get_field_value:field }}</span>
                         </div>
                     {% endif %}
@@ -138,7 +138,7 @@
                                 <tr>
                                 {% endif %}
 
-                                    <td class="label-cell text-right">
+                                    <td class="label-cell text-end">
                                         {{ lead|get_verbose_name:field }}
                                     </td>
 

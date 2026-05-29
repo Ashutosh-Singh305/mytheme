@@ -6,294 +6,297 @@
 {% block css %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-table@1.27.2/dist/bootstrap-table.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-<style>
-  .select,
-  #locale {
-    width: 100%;
-  }
-
-  .like {
-    margin-right: 10px;
-  }
-</style>
-<style>
-  .bootstrap-table .fixed-table-container .table thead th,
-  .bootstrap-table .fixed-table-header th {
-    position: sticky;
-    /* top: 0; */
-    z-index: 2;
-
-    /* background-color: #007bff !important; */
-    /* safest */
-    /* color: #fff !important; */
-    font-weight: 600 !important;
-  }
-
-  .bootstrap-table .btn {
-    padding: 0.5rem 0.5rem !important;
-    font-size: 0.875rem !important;
-  }
-
-  .bootstrap-table .search input {
-    height: 30px !important;
-    padding: 0.5rem 0.5rem !important;
-    font-size: 0.875rem !important;
-    width: 190px !important;
-    /* optional width control */
-  }
-
-  /* ===== MATRIX PRO ===== */
-
-  /* Sticky first column */
-  .bootstrap-table .table tbody td:first-child,
-  .bootstrap-table .table thead th:first-child,
-  .bootstrap-table .table tfoot td:first-child {
-    position: sticky;
-    left: 0;
-    background: #fff;
-    z-index: 3;
-    font-weight: 600;
-  }
-
-  /* Header sticky fix */
-  .bootstrap-table .table thead th {
-    position: sticky;
-    top: 0;
-    z-index: 4;
-  }
-
-  /* Footer sticky */
-  .bootstrap-table .table tfoot td {
-    position: sticky;
-    bottom: 0;
-    background: #f8f9fa;
-    z-index: 3;
-  }
-
-  /* Heatmap base */
-
-
-  /* Smooth look */
-  .bootstrap-table td {
-    transition: background-color 0.2s ease;
-  }
-</style>
-<style>
-  #reportDetails table th {
-    width: 15%;
-    white-space: nowrap;
-    background: #f8f9fa;
-    font-weight: 600;
-  }
-
-  #reportDetails table td {
-    width: 35%;
-    word-break: break-word;
-    white-space: normal;
-  }
-
-  /* Prevent long comma lists from breaking layout */
-  #reportDetails td {
-    max-width: 300px;
-  }
-</style>
+<link rel="stylesheet" href="/static/css/bootstrap_table.css">
 {% endblock %}
 
 {% block body %}
-<div class="card">
-  <div class="card-body">
+<div class="card shadow-sm border-0">
+    <div class="card-body p-2">
 
-    <!-- HEADER -->
+        <!-- HEADER -->
+        <div class="mb-0">
 
-    <div class="mb-0">
+            <!-- TOP ROW -->
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
 
-      <!-- TOP ROW -->
-      <div class="d-flex justify-content-between align-items-center">
+                <!-- LEFT -->
+                <div class="d-flex align-items-center"
+                     data-bs-toggle="collapse"
+                     data-bs-target="#reportDetails"
+                     style="cursor:pointer;">
 
-        <!-- LEFT: REPORT NAME -->
-        <div data-toggle="collapse" data-target="#reportDetails" style="cursor: pointer;">
+                    <strong class="fs-6">
+                        {{ report.name }}
+                    </strong>
 
-          <strong>{{ report.name }}</strong>
-          <i class="fas fa-chevron-down ml-2" id="collapseIcon"></i>
-        </div>
+                    <i class="fas fa-chevron-down ms-2"
+                       id="collapseIcon"></i>
+                </div>
 
-        <!-- RIGHT: ACTION BUTTONS -->
-        <div>
-          {% if perms.reports.change_report %}
-          <a href="{% url 'reports:edit' report.slug %}?step=filters" class="btn btn-sm btn-primary">
-            + Add Filters
-          </a>
+                <!-- RIGHT ACTIONS -->
+                <div class="d-flex flex-wrap gap-2">
 
-          <a href="{% url 'reports:edit' report.slug %}" class="btn btn-sm btn-warning">
-            Edit
-          </a>
-          {% endif %}
+                    {% if perms.reports.change_report %}
 
-          <!-- <a class="btn btn-sm btn-primary" href="{% url 'reports:detail' report.slug %}">Details</a> -->
-          <a class="btn btn-secondary btn-sm" href="{% url 'reports:list' %}">Back</a>
-        </div>
+                    <a href="{% url 'reports:edit' report.slug %}?step=filters"
+                       class="btn btn-primary btn-sm">
+                        + Add Filters
+                    </a>
 
-      </div>
+                    <a href="{% url 'reports:edit' report.slug %}"
+                       class="btn btn-warning btn-sm">
+                        Edit
+                    </a>
 
-      
-      <!-- COLLAPSIBLE SECTION -->
-      <div id="reportDetails" class="collapse mt-3">
+                    {% endif %}
 
-        <div class="card">
-          <div class="card-body p-2">
+                    <a class="btn btn-secondary btn-sm"
+                       href="{% url 'reports:list' %}">
+                        Back
+                    </a>
 
-            <div class="table-responsive">
-
-              <div class="table-responsive d-none d-md-block">
-                <!-- DESKTOP TABLE -->
-                <table class="table table-sm table-bordered mb-0">
-                  <tbody>
-
-                    <tr>
-                      <th>Model</th>
-                      <td><code>{{ report.base_model|cut:"crm." }}</code></td>
-
-                      <th>View</th>
-                      <td><small class="badge badge-info">{{ report.get_view_type_display }}</small></td>
-                    </tr>
-
-                    <tr>
-                      <th>Fields</th>
-                      <td>{{ verbose.fields|join:", "|default:"—" }}</td>
-
-                      <th>Row Groups</th>
-                      <td>{{ verbose.row_groups|join:", "|default:"—" }}</td>
-                    </tr>
-
-                    <tr>
-                      <th>Column Groups</th>
-                      <td>{{ verbose.col_groups|join:", "|default:"—" }}</td>
-
-                      <th>Measures</th>
-                      <td>{{ verbose.measures|join:", "|default:"—" }}</td>
-                    </tr>
-
-                    <tr>
-                      <th>Limit</th>
-                      <td>{{ effective_limit|default:"—" }}</td>
-
-                      <th>Owner</th>
-                      <td>{{ report.owner|default:"—" }}</td>
-                    </tr>
-
-                    <tr>
-                      <th>Filters</th>
-                      <td>{{ verbose.filters|join:", "|default:"—" }}</td>
-
-                      <th>Description</th>
-                      <td>{{ report.description }}</td>
-                    </tr>
-
-                  </tbody>
-                </table>
-              </div>
-
-
-              <!-- MOBILE VIEW -->
-              <div class="d-block d-md-none table-responsive">
-
-                <table class="table table-sm table-bordered mb-0">
-                  <tbody>
-
-                    <tr>
-                      <th>Model</th>
-                      <td><code>{{ report.base_model|cut:"crm." }}</code></td>
-                    </tr>
-
-                    <tr>
-                      <th>View</th>
-                      <td><small class="badge badge-info">{{ report.get_view_type_display }}</small></td>
-                    </tr>
-
-                    <tr>
-                      <th>Fields</th>
-                      <td>{{ verbose.fields|join:", "|default:"—" }}</td>
-                    </tr>
-                    <tr>
-                      <th>Row Groups</th>
-                      <td>{{ verbose.row_groups|join:", "|default:"—" }}</td>
-                    </tr>
-
-                    <tr>
-                      <th>Column Groups</th>
-                      <td>{{ verbose.col_groups|join:", "|default:"—" }}</td>
-                    </tr>
-                    <tr>
-                      <th>Measures</th>
-                      <td>{{ verbose.measures|join:", "|default:"—" }}</td>
-                    </tr>
-
-
-                    <tr>
-                      <th>Limit</th>
-                      <td>{{ effective_limit|default:"—" }}</td>
-                    </tr>
-                    <tr>
-                      <th>Owner</th>
-                      <td>{{ report.owner|default:"—" }}</td>
-                    </tr>
-
-                    <tr>
-                      <th>Filters</th>
-                      <td>{{ verbose.filters|join:", "|default:"—" }}</td>
-                    </tr>
-                    <tr>
-                      <th>Description</th>
-                      <td>{{ report.description }}</td>
-                    </tr>
-
-                  </tbody>
-                </table>
-
-              </div>
+                </div>
 
             </div>
 
-          </div>
+            <!-- COLLAPSE DETAILS -->
+            <div id="reportDetails" class="collapse mt-3">
+
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-2">
+
+                        <!-- DESKTOP -->
+                        <div class="table-responsive d-none d-md-block">
+
+                            <table class="table table-bordered table-sm align-middle mb-0">
+
+                                <tbody>
+
+                                    <tr>
+                                        <th>Model</th>
+                                        <td>
+                                            <code>
+                                                {{ report.base_model|cut:"crm." }}
+                                            </code>
+                                        </td>
+
+                                        <th>View</th>
+                                        <td>
+                                            <span class="badge bg-info">
+                                                {{ report.get_view_type_display }}
+                                            </span>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Fields</th>
+                                        <td>
+                                            {{ verbose.fields|join:", "|default:"—" }}
+                                        </td>
+
+                                        <th>Row Groups</th>
+                                        <td>
+                                            {{ verbose.row_groups|join:", "|default:"—" }}
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Column Groups</th>
+                                        <td>
+                                            {{ verbose.col_groups|join:", "|default:"—" }}
+                                        </td>
+
+                                        <th>Measures</th>
+                                        <td>
+                                            {{ verbose.measures|join:", "|default:"—" }}
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Limit</th>
+                                        <td>
+                                            {{ effective_limit|default:"—" }}
+                                        </td>
+
+                                        <th>Owner</th>
+                                        <td>
+                                            {{ report.owner|default:"—" }}
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Filters</th>
+                                        <td>
+                                            {{ verbose.filters|join:", "|default:"—" }}
+                                        </td>
+
+                                        <th>Description</th>
+                                        <td>
+                                            {{ report.description|default:"—" }}
+                                        </td>
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+                        </div>
+
+                        <!-- MOBILE -->
+                        <div class="d-block d-md-none">
+
+                            <table class="table table-bordered table-sm mb-0 align-middle">
+
+                                <tbody>
+
+                                    <tr>
+                                        <th>Model</th>
+                                        <td>
+                                            <code>
+                                                {{ report.base_model|cut:"crm." }}
+                                            </code>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>View</th>
+                                        <td>
+                                            <span class="badge bg-info">
+                                                {{ report.get_view_type_display }}
+                                            </span>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Fields</th>
+                                        <td>
+                                            {{ verbose.fields|join:", "|default:"—" }}
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Row Groups</th>
+                                        <td>
+                                            {{ verbose.row_groups|join:", "|default:"—" }}
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Column Groups</th>
+                                        <td>
+                                            {{ verbose.col_groups|join:", "|default:"—" }}
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Measures</th>
+                                        <td>
+                                            {{ verbose.measures|join:", "|default:"—" }}
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Limit</th>
+                                        <td>
+                                            {{ effective_limit|default:"—" }}
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Owner</th>
+                                        <td>
+                                            {{ report.owner|default:"—" }}
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Filters</th>
+                                        <td>
+                                            {{ verbose.filters|join:", "|default:"—" }}
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <th>Description</th>
+                                        <td>
+                                            {{ report.description|default:"—" }}
+                                        </td>
+                                    </tr>
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+
         </div>
 
-      </div>
+        <!-- TABLES -->
+        {% if payload.view == "tabular" %}
+        <table id="reportTable"
+               data-toolbar="#toolbar"
+               data-search="true"
+               data-show-refresh="true"
+               data-show-toggle="true"
+               data-show-fullscreen="true"
+               data-show-columns="true"
+               data-show-columns-toggle-all="true"
+               data-show-export="true"
+               data-click-to-select="true"
+               data-detail-formatter="detailFormatter"
+               data-minimum-count-columns="2"
+               data-show-pagination-switch="true"
+               data-pagination="true"
+               data-id-field="id"
+               data-page-list="[10,25,50,100,'all']"
+               data-show-footer="true"
+               data-side-pagination="server"
+               data-response-handler="responseHandler"
+               class="table-sm">
+        </table>
+        {% endif %}
+
+        {% if payload.view == "summary" %}
+        <table id="summaryTable"
+               data-toolbar="#toolbar"
+               data-search="true"
+               data-show-refresh="true"
+               data-show-toggle="true"
+               data-show-fullscreen="true"
+               data-show-columns="true"
+               data-show-columns-toggle-all="true"
+               data-show-export="true"
+               data-show-pagination-switch="true"
+               data-pagination="true"
+               data-page-list="[10,25,50,100,'all']"
+               data-side-pagination="server"
+               data-response-handler="summaryResponseHandler"
+               class="table-sm">
+        </table>
+        {% endif %}
+
+        {% if payload.view == "matrix" %}
+        <table id="matrixTable"
+               data-search="true"
+               data-show-refresh="true"
+               data-show-toggle="true"
+               data-show-fullscreen="true"
+               data-show-pagination-switch="true"
+               data-show-columns="true"
+               data-show-export="true"
+               data-pagination="true"
+               data-side-pagination="server"
+               data-page-list="[10,25,50,100,'all']"
+               data-response-handler="matrixResponseHandler"
+               class="table-sm">
+        </table>
+        {% endif %}
 
     </div>
-
-    <!-- ================= TABULAR (BOOTSTRAP TABLE) ================= -->
-    {% if payload.view == "tabular" %}
-    <table id="reportTable" data-toolbar="#toolbar" data-search="true" data-show-refresh="true" data-show-toggle="true"
-      data-show-fullscreen="true" data-show-columns="true" data-show-columns-toggle-all="true" data-show-export="true"
-      data-click-to-select="true" data-detail-formatter="detailFormatter" data-minimum-count-columns="2"
-      data-show-pagination-switch="true" data-pagination="true" data-id-field="id"
-      data-page-list="[10, 25, 50, 100, 'all']" data-show-footer="true" data-side-pagination="server"
-      data-response-handler="responseHandler">
-      <!-- data-detail-view="true" -->
-    </table>
-
-    {% endif %}
-
-    <!-- ================= SUMMARY ================= -->
-    {% if payload.view == "summary" %}
-    <table id="summaryTable" data-toolbar="#toolbar" data-search="true" data-show-refresh="true" data-show-toggle="true"
-      data-show-fullscreen="true" data-show-columns="true" data-show-columns-toggle-all="true" data-show-export="true"
-      data-show-pagination-switch="true" data-pagination="true" data-page-list="[10, 25, 50, 100, 'all']"
-      data-side-pagination="server" data-response-handler="summaryResponseHandler">
-    </table>
-    <!-- data-detail-view="true" -->
-    {% endif %}
-
-    <!-- ================= MATRIX ================= -->
-    {% if payload.view == "matrix" %}
-    <table id="matrixTable" data-search="true" data-show-refresh="true" data-show-toggle="true"
-      data-show-fullscreen="true" data-show-pagination-switch="true" data-show-columns="true" data-show-export="true"
-      data-pagination="true" data-side-pagination="server" data-page-list="[10,25,50,100,'all']"
-      data-response-handler="matrixResponseHandler">
-    </table>
-    {% endif %}
-  </div>
 </div>
 {% endblock %}
 

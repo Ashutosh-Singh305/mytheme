@@ -1,245 +1,288 @@
 {% extends 'crm/base.html' %}
 {% load static %}
-{% block title %}Update User{% endblock title %}
+
+{% block title %}Update User | Django Admin{% endblock %}
+
 {% block css %}
-<!-- Select2 CSS -->
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/user_form.css' %}">
 {% endblock %}
+
 {% block body %}
-<div class="container-fluid">
-  <div class="row justify-content-center">
-    <div class="col-12 col-lg-12">
-      <div class="card shadow-lg border-0 rounded-4">
-        <div class="card-header bg-primary text-white rounded-top-4">
-          <h4 class="mb-0"><i class="bi bi-person-gear me-2"></i>Update Employee</h4>
-        </div>
-        <div class="card-body">
-          <form method="post" novalidate>
-            {% csrf_token %}
+<div class="content mt-1">
+  <form method="post" novalidate id="user-reg-form">
+    {% csrf_token %}
 
-            <!-- USER DETAILS -->
-            <div class="card border mb-4">
-              <div class="card-header bg-light">
-                <h5 class="mb-0">
-                  <i class="bi bi-person-fill me-2"></i>
-                  User Details
-                </h5>
-              </div>
+    <div class="row">
+      <div class="col-12">
 
-              <div class="card-body">
-
-                <div class="row">
-
-                  {% for field in user_form %}
-
-                  {% if field.field.widget.input_type == "checkbox" %}
-
-                  <!-- CHECKBOX -->
-                  <div class="col-md-6 mb-3">
-
-                    <div class="row align-items-center">
-
-                      <div class="col-md-4">
-                        <label class="fw-semibold">
-                          {{ field.label }}
-                        </label>
-                      </div>
-
-                      <div class="col-md-8">
-
-                        <div class="form-check">
-                          {{ field }}
-                        </div>
-
-                        {% if field.errors %}
-                        <div class="text-danger small">
-                          {{ field.errors|striptags }}
-                        </div>
-                        {% endif %}
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                  {% else %}
-
-                  <!-- NORMAL FIELD -->
-                  <div class="col-md-6 mb-3">
-
-                    <div class="row align-items-center">
-
-                      <div class="col-md-4">
-                        <label class="fw-semibold">
-                          {{ field.label }}
-                        </label>
-                      </div>
-
-                      <div class="col-md-8">
-
-                        <div class="input-group">
-
-                          {{ field }}
-
-                          {% if field.name == 'password1' %}
-                          <a class="input-group-text bg-white" href="javascript:void(0);" id="togglePassword1">
-                            <i class="fa fa-eye"></i>
-                          </a>
-
-                          {% elif field.name == 'password2' %}
-                          <a class="input-group-text bg-white" href="javascript:void(0);" id="togglePassword2">
-                            <i class="fa fa-eye"></i>
-                          </a>
-                          {% endif %}
-
-                        </div>
-
-                        {% if field.errors %}
-                        <div class="text-danger small">
-                          {{ field.errors|striptags }}
-                        </div>
-                        {% endif %}
-
-                      </div>
-
-                    </div>
-
-                  </div>
-
-                  {% endif %}
-
-                  {% endfor %}
-
-                </div>
-
-              </div>
-            </div>
-
-
-            <!-- PROFILE DETAILS -->
-            <div class="card border mb-4">
-
-              <div class="card-header bg-light">
-                <h5 class="mb-0">
-                  <i class="bi bi-person-badge-fill me-2"></i>
+        <div class="card card-primary card-outline-tabs shadow-sm bg-white mb-2">
+          <div class="card-header p-0 border-bottom-0 bg-white">
+            <ul class="nav nav-tabs" id="jazzmin-tabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="general-tab-btn" data-bs-toggle="tab" data-bs-target="#general"
+                  type="button" role="tab">
+                  General
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="personal-tab-btn" data-bs-toggle="tab" data-bs-target="#personal"
+                  type="button" role="tab">
+                  Personal info
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="profile-tab-btn" data-bs-toggle="tab" data-bs-target="#profile"
+                  type="button" role="tab">
                   Profile Details
-                </h5>
-              </div>
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="permissions-tab-btn" data-bs-toggle="tab" data-bs-target="#permissions"
+                  type="button" role="tab">
+                  Permissions
+                </button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="dates-tab-btn" data-bs-toggle="tab" data-bs-target="#dates" type="button"
+                  role="tab">
+                  Important dates
+                </button>
+              </li>
+            </ul>
+          </div>
 
-              <div class="card-body">
+          <div class="card-body p-2">
+            <div class="tab-content" id="jazzmin-tabs-content">
 
-                <div class="row">
-
-                  {% for field in profile_form %}
-
-                  <div class="col-md-6 mb-3">
-
-                    <div class="row align-items-center">
-
-                      <div class="col-md-4">
-                        <label class="fw-semibold">
-                          {{ field.label }}
-                        </label>
+              <div class="tab-pane fade show active" id="general" role="tabpanel">
+                <div class="row pt-2">
+                  {% for fm in user_form %}
+                  {% if fm.name not in 'password,password1,password2,groups,user_permissions,is_active,is_staff,is_superuser,last_login,date_joined,first_name,last_name,email' %}
+                  <div class="col-md-6">
+                    <div class="admin-form-row">
+                      <div class="admin-label-col">{{ fm.label_tag }}</div>
+                      <div class="admin-field-col">
+                        {{ fm }}
+                        {% if fm.help_text %}<span class="admin-help-text">{{ fm.help_text|safe }}</span>{% endif %}
+                        {% if fm.errors %}<span class="text-danger small d-block">{{ fm.errors|striptags }}</span>{% endif %}
                       </div>
-
-                      <div class="col-md-8">
-
-                        {{ field }}
-
-                        {% if field.errors %}
-                        <div class="text-danger small">
-                          {{ field.errors|striptags }}
-                        </div>
-                        {% endif %}
-
-                      </div>
-
                     </div>
-
                   </div>
-
+                  {% endif %}
                   {% endfor %}
 
+                  <div class="col-md-6">
+                    <div class="admin-form-row">
+                      <div class="admin-label-col">
+                        <label>Password:</label>
+                      </div>
+                      <div class="admin-field-col">
+                        <div class="text-muted small py-1 shadow-sm mb-1"
+                          style="font-family: monospace; background: #f8f9fa; padding: 6px 12px; border-radius: 4px; border: 1px dashed #ced4da; max-width: 100%;">
+                          Raw passwords are not stored.
+                        </div>
+                        <span class="admin-help-text mt-1" style="font-size: 0.75rem;">
+                          Passwords are encrypted using a secure cryptographic hash. You can change the password using
+                          <a href="{% url 'user-password-change' user.pk %}"
+                            class="fw-bold text-primary text-decoration-underline">this form</a>.
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
+              </div>
 
+              <div class="tab-pane fade" id="personal" role="tabpanel">
+                <div class="row pt-2">
+                  {% for fm in user_form %}
+                  {% if fm.name == 'first_name' or fm.name == 'last_name' or fm.name == 'email' %}
+                  <div class="col-md-6">
+                    <div class="admin-form-row">
+                      <div class="admin-label-col">{{ fm.label_tag }}</div>
+                      <div class="admin-field-col">
+                        {{ fm }}
+                        {% if fm.help_text %}<span class="admin-help-text">{{ fm.help_text|safe }}</span>{% endif %}
+                        {% if fm.errors %}<span class="text-danger small d-block">{{ fm.errors|striptags }}</span>{% endif %}
+                      </div>
+                    </div>
+                  </div>
+                  {% endif %}
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="tab-pane fade" id="profile" role="tabpanel">
+                <div class="row pt-2">
+                  {% for fm in profile_form %}
+                  <div class="col-md-6">
+                    <div class="admin-form-row">
+                      <div class="admin-label-col">{{ fm.label_tag }}</div>
+                      <div class="admin-field-col">
+                        {{ fm }}
+                        {% if fm.errors %}<span class="text-danger small d-block">{{ fm.errors|striptags }}</span>{% endif %}
+                      </div>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="tab-pane fade" id="permissions" role="tabpanel">
+                <div class="pt-2">
+                  <div class="row">
+                    {% for fm in user_form %}
+                    {% if fm.name == 'is_active' or fm.name == 'is_staff' or fm.name == 'is_superuser' %}
+                    <div class="col-md-6">
+                      <div class="admin-form-row">
+                        <div class="admin-label-col">{{ fm.label }}</div>
+                        <div class="admin-field-col">
+                          <div class="form-check">{{ fm }}</div>
+                          {% if fm.help_text %}<span class="admin-help-text">{{ fm.help_text|safe }}</span>{% endif %}
+                          {% if fm.errors %}<span class="text-danger small d-block">{{ fm.errors|striptags }}</span>{% endif %}
+                        </div>
+                      </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                  </div>
+
+                  <hr class="text-muted opacity-25 my-3">
+
+                  <div class="admin-form-row flex-column">
+                    <div class="d-flex w-100 mb-2">
+                      <div style="width: 15%; font-size: 0.85rem; color: #333333; font-weight: bold;">Groups</div>
+                      <div style="width: 85%;">
+                        <div class="selector" id="groups_selector">
+                          <div class="selector-available">
+                            <h2 class="bg-info">Available groups</h2>
+                            <div class="selector-filter"><input type="text" placeholder="Filter" class="filter-input">
+                            </div>
+                            <select multiple size="6" class="available-box">
+                              {% for group in all_groups %}
+                              {% if group.id not in user_group_ids %}
+                              <option value="{{ group.id }}">{{ group.name }}</option>
+                              {% endif %}
+                              {% endfor %}
+                            </select>
+                            <a href="#" class="selector-chooseall">Choose all <i class="fas fa-arrow-right-long ms-1"
+                                style="font-size:0.7rem"></i></a>
+                          </div>
+                          <div class="selector-controls">
+                            <button type="button" class="move-right bg-primary"><i class="fas fa-angle-right"></i></button>
+                            <button type="button" class="move-left bg-danger"><i class="fas fa-angle-left"></i></button>
+                          </div>
+                          <div class="selector-chosen">
+                            <h2 class="chosen-header bg-primary">Chosen groups</h2>
+                            <div class="selector-filter"><input type="text" placeholder="Filter" class="filter-input">
+                            </div>
+                            <select multiple size="6" name="groups" id="id_groups" class="chosen-box">
+                              {% for group in all_groups %}
+                              {% if group.id in user_group_ids %}
+                              <option value="{{ group.id }}">{{ group.name }}</option>
+                              {% endif %}
+                              {% endfor %}
+                            </select>
+                            <a href="#" class="selector-clearall"><i class="fas fa-arrow-left-long me-1"
+                                style="font-size:0.7rem"></i> Remove all</a>
+                          </div>
+                        </div>
+                        <span class="admin-help-text mt-2"><i class="fas fa-plus text-success me-1"></i> The groups this
+                          user belongs to.</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="admin-form-row flex-column border-0">
+                    <div class="d-flex w-100">
+                      <div style="width: 15%; font-size: 0.85rem; color: #333333; font-weight: bold;">User permissions
+                      </div>
+                      <div style="width: 85%;">
+                        <div class="selector" id="permissions_selector">
+                          <div class="selector-available">
+                            <h2 class="bg-info">Available user permissions</h2>
+                            <div class="selector-filter"><input type="text" placeholder="Filter" class="filter-input">
+                            </div>
+                            <select multiple size="10" class="available-box">
+                              {% for perm in all_permissions %}
+                              {% if perm.id not in user_perm_ids %}
+                              <option value="{{ perm.id }}">
+                                {{ perm.content_type.app_label|capfirst }} | {{ perm.content_type.model }} | {{ perm.name }}
+                              </option>
+                              {% endif %}
+                              {% endfor %}
+                            </select>
+                            <a href="#" class="selector-chooseall">Choose all <i class="fas fa-arrow-right-long ms-1"
+                                style="font-size:0.7rem"></i></a>
+                          </div>
+                          <div class="selector-controls">
+                            <button type="button" class="move-right bg-primary"><i class="fas fa-angle-right"></i></button>
+                            <button type="button" class="move-left bg-danger"><i class="fas fa-angle-left"></i></button>
+                          </div>
+                          <div class="selector-chosen">
+                            <h2 class="chosen-header bg-primary">Chosen user permissions</h2>
+                            <div class="selector-filter"><input type="text" placeholder="Filter" class="filter-input">
+                            </div>
+                            <select multiple size="10" name="user_permissions" id="id_user_permissions"
+                              class="chosen-box">
+                              {% for perm in all_permissions %}
+                              {% if perm.id in user_perm_ids %}
+                              <option value="{{ perm.id }}">
+                                {{ perm.content_type.app_label|capfirst }} | {{ perm.content_type.model }} | {{ perm.name }}
+                              </option>
+                              {% endif %}
+                              {% endfor %}
+                            </select>
+                            <a href="#" class="selector-clearall"><i class="fas fa-arrow-left-long me-1"
+                                style="font-size:0.7rem"></i> Remove all</a>
+                          </div>
+                        </div>
+                        <span class="admin-help-text mt-2">Specific permissions for this user.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="tab-pane fade" id="dates" role="tabpanel">
+                <div class="row pt-2">
+                  {% for fm in user_form %}
+                  {% if fm.name == 'last_login' or fm.name == 'date_joined' %}
+                  <div class="col-md-6">
+                    <div class="admin-form-row">
+                      <div class="admin-label-col">{{ fm.label_tag }}</div>
+                      <div class="admin-field-col">
+                        {{ fm }}
+                        {% if fm.errors %}<span class="text-danger small d-block">{{ fm.errors|striptags }}</span>{% endif %}
+                      </div>
+                    </div>
+                  </div>
+                  {% endif %}
+                  {% endfor %}
+                </div>
               </div>
 
             </div>
-
-
-            <!-- NON FIELD ERRORS -->
-
-            {% if user_form.non_field_errors %}
-            <div class="alert alert-danger">
-
-              {% for error in user_form.non_field_errors %}
-              <div>{{ error }}</div>
-              {% endfor %}
-
-            </div>
-            {% endif %}
-
-
-            {% if profile_form.non_field_errors %}
-            <div class="alert alert-danger">
-
-              {% for error in profile_form.non_field_errors %}
-              <div>{{ error }}</div>
-              {% endfor %}
-
-            </div>
-            {% endif %}
-
-
-            <!-- BUTTONS -->
-            <div class="d-flex justify-content-between mt-4">
-
-              <a href="{% url 'user-list' %}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-left-circle"></i>
-                Cancel
-              </a>
-
-              <button type="submit" class="btn btn-success btn-sm">
-                <i class="bi bi-check-circle-fill me-1"></i>
-                Update
-              </button>
-
-            </div>
-
-          </form>
+          </div>
         </div>
+
+        <div class="card card-body bg-light border-0 shadow-sm p-3 mb-5">
+          <div class="d-flex justify-content-end align-items-center">
+            <a href="{% url 'user-list' %}" class="btn btn-default btn-sm border text-secondary px-3 me-2"
+              style="background: #fff;">Cancel</a>
+            <button type="submit" class="btn btn-success btn-sm px-4 fw-medium"><i class="fa fa-save me-1"></i>
+              Save</button>
+          </div>
+        </div>
+
       </div>
     </div>
-  </div>
+  </form>
 </div>
-
 {% endblock %}
 
 {% block Script %}
-<script>
-  $(document).ready(function () {
-
-    $('#id_groups').select2({
-      placeholder: "Select Groups",
-      allowClear: true,
-      width: '100%'
-    });
-
-    $('#id_manager').select2({
-      placeholder: "Select Manager",
-      allowClear: true,
-      width: '100%'
-    });
-
-    $('#id_branch').select2({
-      placeholder: "Select Branch",
-      allowClear: true,
-      width: '100%'
-    });
-
-  });
-</script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-<script src="/static/js/select2.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'js/form.js' %}"></script>
+<script src="{% static 'js/user_form.js' %}"></script>
 {% endblock %}
