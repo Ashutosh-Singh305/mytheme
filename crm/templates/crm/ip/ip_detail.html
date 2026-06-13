@@ -5,7 +5,7 @@
 {% block body %}
 
 <!-- HEADER -->
-<div class="d-flex justify-content-between align-items-center mb-2">
+<!-- <div class="d-flex justify-content-between align-items-center mb-2">
 
   <div>
     <h4 class="mb-0 fw-semibold">
@@ -24,11 +24,11 @@
   </span>
   {% endif %}
 
-</div>
+</div> -->
 
 <!-- TOP SUMMARY CARD -->
 <div class="card border-0 shadow-sm mb-2">
-  <div class="p-1">
+  <div class="card-body">
 
     <div class="d-flex justify-content-between align-items-center flex-wrap">
 
@@ -39,13 +39,6 @@
       </div>
 
       <div class="mt-2 mt-md-0">
-
-        <a href="{% url 'ip-create' %}" class="btn btn-primary btn-sm">
-
-          <i class="fas fa-pen me-1"></i>
-          New
-        </a>
-
         <a href="{% url 'ip-edit' ip.pk %}" class="btn btn-primary btn-sm">
 
           <i class="fas fa-pen me-1"></i>
@@ -74,20 +67,21 @@
 
 <!-- TABS CARD -->
 <div class="card shadow-sm">
-  <!-- TABS -->
-  <div class="card-header bg-white p-0">
+  <div class="card-body">
+    <!-- TABS -->
+    <div class="ms-2">
 
-    <ul class="nav nav-tabs card-header-tabs" id="detailTabs" role="tablist">
+      <ul class="nav nav-tabs card-header-tabs" id="detailTabs" role="tablist">
 
-      <li class="nav-item">
+        <li class="nav-item">
 
-        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#general" type="button">
+          <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#general" type="button">
 
-          General
-        </button>
-      </li>
+            General
+          </button>
+        </li>
 
-      <!-- <li class="nav-item">
+        <!-- <li class="nav-item">
 
         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#audit" type="button">
 
@@ -95,72 +89,72 @@
         </button>
       </li> -->
 
-    </ul>
+      </ul>
 
-  </div>
+    </div>
 
-  <!-- TAB CONTENT -->
-  <div class="card-body">
+    <!-- TAB CONTENT -->
+    <div class="card-body">
 
-    <div class="tab-content">
+      <div class="tab-content">
 
-      <!-- GENERAL TAB -->
-      <div class="tab-pane fade show active" id="general">
+        <!-- GENERAL TAB -->
+        <div class="tab-pane fade show active" id="general">
 
-        <div class="row">
+          <div class="row">
 
-          <label class="col-md-3 text-muted small">
-            Start IP
-          </label>
+            <label class="col-md-3">
+              Start IP
+            </label>
 
-          <div class="col-md-9 fw-medium">
-            {{ ip.start_ip }}
+            <div class="col-md-9 fw-medium">
+              {{ ip.start_ip }}
+            </div>
+
+          </div>
+
+          <div class="row">
+
+            <label class="col-md-3">
+              End IP
+            </label>
+
+            <div class="col-md-9 fw-medium">
+              {{ ip.end_ip }}
+            </div>
+
+          </div>
+
+          <div class="row">
+
+            <label class="col-md-3">
+              Status
+            </label>
+
+            <div class="col-md-9">
+
+              {% if ip.is_active %}
+              <span class="badge bg-success">
+                Active
+              </span>
+              {% else %}
+              <span class="badge bg-secondary">
+                Inactive
+              </span>
+              {% endif %}
+
+            </div>
+
           </div>
 
         </div>
 
-        <div class="row">
-
-          <label class="col-md-3 text-muted small">
-            End IP
-          </label>
-
-          <div class="col-md-9 fw-medium">
-            {{ ip.end_ip }}
-          </div>
-
-        </div>
+        <!-- AUDIT TAB -->
+        <!-- <div class="tab-pane fade" id="audit">
 
         <div class="row">
 
-          <label class="col-md-3 text-muted small">
-            Status
-          </label>
-
-          <div class="col-md-9">
-
-            {% if ip.is_active %}
-            <span class="badge bg-success">
-              Active
-            </span>
-            {% else %}
-            <span class="badge bg-secondary">
-              Inactive
-            </span>
-            {% endif %}
-
-          </div>
-
-        </div>
-
-      </div>
-
-      <!-- AUDIT TAB -->
-      <!-- <div class="tab-pane fade" id="audit">
-
-        <div class="row">
-
-          <label class="col-md-3 text-muted small">
+          <label class="col-md-3">
             Created By
           </label>
 
@@ -172,7 +166,7 @@
 
         <div class="row">
 
-          <label class="col-md-3 text-muted small">
+          <label class="col-md-3">
             Modified By
           </label>
 
@@ -184,7 +178,7 @@
 
         <div class="row">
 
-          <label class="col-md-3 text-muted small">
+          <label class="col-md-3">
             Created At
           </label>
 
@@ -196,7 +190,7 @@
 
         <div class="row mb-0">
 
-          <label class="col-md-3 text-muted small">
+          <label class="col-md-3">
             Modified At
           </label>
 
@@ -208,8 +202,9 @@
 
       </div> -->
 
-    </div>
+      </div>
 
+    </div>
   </div>
 </div>
 {% endblock %}

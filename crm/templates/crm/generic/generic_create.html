@@ -8,178 +8,154 @@
 {% block css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 <style>
+    /* Clean validation outline overrides */
     .is-invalid {
-        border: 1px solid #dc3545;
+        border-color: #dc3545 !important;
+        background-image: none !important; /* Prevents double icons on dense inputs */
     }
-    .alert-danger {
+    
+    .alert-sticky-top {
         position: sticky;
-        top: 10px;
-        z-index: 1000;
-    }
-
-    .nav-tabs .nav-link {
-        position: relative;
-    }
-
-    .tab-error-icon {
-        font-size: 12px;
+        top: 1rem;
+        z-index: 1050;
     }
 </style>
 {% endblock %}
 
-
 {% block body %}
 
-<div class="card shadow-sm border-0">
+{% if form.errors %}
+<div class="alert alert-danger alert-dismissible fade show alert-sticky-top shadow-sm mb-3 mx-auto" style="max-width: 98%;" role="alert">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-exclamation-circle me-2 fs-5"></i>
+        <div>
+            <strong>Error!</strong> Please correct the flagged fields in the tabs below.
+        </div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endif %}
 
+<div class="card shadow-sm border-0 rounded-3 overflow-hidden">
     <form method="post" enctype="multipart/form-data" novalidate>
-
         {% csrf_token %}
 
-        <!-- ERROR -->
-        {% if form.errors %}
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-
-            <strong>Error!</strong>
-            Please correct the errors below.
-
-            <button type="button" class="btn-close" data-bs-dismiss="alert">
-            </button>
-
-        </div>
-        {% endif %}
-
-        <!-- HEADER -->
-        <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
-
-            <h5 class="text-primary mb-0">
-                {{ title }}
-            </h5>
-
-            <div class="d-flex gap-1">
-
-                <button class="btn btn-primary btn-sm" type="submit">
-                    Save
-                </button>
-
-                <a href="javascript:history.back()" class="btn btn-secondary btn-sm">
-
-                    Back
+        <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="text-dark fw-semibold mb-0">{{ title }}</h5>
+            <div class="d-flex gap-2">
+                <a href="javascript:history.back()" class="btn btn-secondary btn-sm px-3">
+                    <i class="fas fa-arrow-left me-1"></i> Back
                 </a>
-
+                <button class="btn btn-primary btn-sm px-3" type="submit">
+                    <i class="fas fa-save me-1"></i> Save
+                </button>
             </div>
-
         </div>
 
-        <!-- TAB HEADER -->
-        <div class="border-bottom">
-
-            <ul class="nav nav-tabs" id="formTabs" role="tablist">
-
+        <div class="mt-2 border-bottom px-3">
+            <ul class="nav nav-tabs border-bottom-0" id="formTabs" role="tablist">
                 {% for fs in fieldsets %}
-                <li class="nav-item">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link {% if forloop.first %}active{% endif %} d-flex align-items-center gap-2" 
+                            data-bs-toggle="tab"
+                            data-bs-target="#{{ fs.id }}" 
+                            type="button"
+                            role="tab">
+                        
+                        <span>{{ fs.title }}</span>
 
-                    <button class="nav-link {% if forloop.first %}active{% endif %}" data-bs-toggle="tab"
-                        data-bs-target="#{{ fs.id }}" type="button">
+                        {% for fname in fs.fields %}
+                            {% with field=form|get_field:fname %}
+                                {% if field.errors and forloop.first %}
+                                    <span class="badge bg-danger rounded-circle p-1" style="width: 6px; height: 6px;" title="Contains errors">
+                                        <span class="visually-hidden">Error</span>
+                                    </span>
+                                {% endif %}
+                            {% endwith %}
+                        {% endfor %}
 
-                        {{ fs.title }}
                     </button>
-
                 </li>
                 {% endfor %}
             </ul>
-
         </div>
 
-        <!-- TAB BODY -->
-        <div class="card-body p-2">
-
-            <div class="tab-content">
-
+        <div class="card-body">
+            <div class="tab-content" id="formTabsContent">
                 {% for fs in fieldsets %}
-                <div class="tab-pane {% if forloop.first %}show active{% endif %}" id="{{ fs.id }}">
-                    <div class="row">
+                <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="{{ fs.id }}" role="tabpanel">
+                    <div class="row g-3">
 
                         {% for fname in fs.fields %}
                         {% with field=form|get_field:fname %}
-
                         {% if field %}
-                        <div class="col-md-6 mb-1">
-
-                            <label class="form-label">
-
+                        <div class="col-md-6">
+                            
+                            <label class="form-label small mb-1">
                                 {{ field.label }}
-
                                 {% if field.field.required %}
                                 <span class="text-danger">*</span>
                                 {% endif %}
-
                             </label>
 
-                            {% if field.errors %}
-                            {% render_field field class="form-control form-control-sm is-invalid" %}
+                            {% if field.field.widget.input_type == "select" %}
+                                {% if field.errors %}
+                                    {% render_field field class="form-select form-select-sm is-invalid" %}
+                                {% else %}
+                                    {% render_field field class="form-select form-select-sm" %}
+                                {% endif %}
                             {% else %}
-                            {% render_field field class="form-control form-control-sm" %}
+                                {% if field.errors %}
+                                    {% render_field field class="form-control form-control-sm is-invalid" %}
+                                {% else %}
+                                    {% render_field field class="form-control form-control-sm" %}
+                                {% endif %}
                             {% endif %}
 
                             {% if field.errors %}
-                            <div class="text-danger small mt-1">
-                                {{ field.errors|join:", " }}
+                            <div class="text-danger small mt-1 d-block">
+                                <i class="fas fa-info-circle me-1"></i>{{ field.errors|join:", " }}
                             </div>
                             {% endif %}
 
                         </div>
                         {% endif %}
-
                         {% endwith %}
                         {% endfor %}
 
                     </div>
-
                 </div>
                 {% endfor %}
             </div>
-
         </div>
 
-        <!-- FOOTER BUTTON -->
-        <div class="border-top p-2 d-flex justify-content-end gap-1">
-
-            <button class="btn btn-primary btn-sm" type="submit">
-                Save
-            </button>
-
-            <a href="javascript:history.back()" class="btn btn-secondary btn-sm">
-
-                Back
+        <div class="card-footer bg-white border-top py-3 d-flex justify-content-end gap-2">
+            <a href="javascript:history.back()" class="btn btn-secondary btn-sm px-3">
+                <i class="fas fa-arrow-left me-1"></i> Back
             </a>
-
+            <button class="btn btn-primary btn-sm px-3" type="submit">
+                <i class="fas fa-save me-1"></i> Save
+            </button>
         </div>
 
     </form>
-
 </div>
+
 {% endblock %}
 
-
 {% block Script %}
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-
 <script>
     document.addEventListener("DOMContentLoaded", () => {
-
         const form = document.querySelector("form");
 
         function openErrorTab(field) {
-
             const pane = field.closest(".tab-pane");
             if (!pane) return;
 
-            bootstrap.Tab.getOrCreateInstance(
-                document.querySelector(
-                    `[data-bs-target="#${pane.id}"]`
-                )
-            ).show();
+            const tabTrigger = document.querySelector(`[data-bs-target="#${pane.id}"]`);
+            if (tabTrigger) {
+                bootstrap.Tab.getOrCreateInstance(tabTrigger).show();
+            }
 
             setTimeout(() => {
                 field.focus();
@@ -187,29 +163,23 @@
                     behavior: "smooth",
                     block: "center"
                 });
-            }, 100);
+            }, 150);
         }
 
-        // CLIENT VALIDATION
+        // HTML5 Client-Side Validation Error Catching
         form.addEventListener("submit", e => {
-
-            const invalidField =
-                form.querySelector(":invalid");
-
+            const invalidField = form.querySelector(":invalid");
             if (invalidField) {
                 e.preventDefault();
                 openErrorTab(invalidField);
             }
         });
 
-        // DJANGO SERVER ERRORS
-        const firstError =
-            document.querySelector(".is-invalid");
-
+        // Django Server-Side Rendered Validation Routing
+        const firstError = document.querySelector(".is-invalid");
         if (firstError) {
             openErrorTab(firstError);
         }
-
     });
 </script>
 {% endblock %}

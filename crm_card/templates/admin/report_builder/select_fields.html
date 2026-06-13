@@ -1,0 +1,49 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container" style="display: flex; justify-content: center; align-items: center; min-height: 75vh;">
+    <div class="card shadow-lg" style="width: 50rem;">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Select Fields for Report: {{ model_name }}</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="selectAll">
+                        <label class="form-check-label font-weight-bold" for="selectAll">
+                            Select All
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group" style="max-height: 300px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 5px; padding: 15px;">
+                    {% for field_name, field_label in fields %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="fields" id="{{ field_name }}" value="{{ field_name }}">
+                            <label class="form-check-label" for="{{ field_name }}">{{ field_label }}</label>
+                        </div>
+                    {% empty %}
+                        <p>No fields available for this model.</p>
+                    {% endfor %}
+                </div>
+
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-success btn-lg">Next</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Select all/none toggle
+    document.getElementById('selectAll').addEventListener('change', function () {
+        const checkboxes = document.querySelectorAll('input[name="fields"]');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+</script>
+{% endblock %}

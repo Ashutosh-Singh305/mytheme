@@ -8,9 +8,9 @@ CUSTOM_FK_MATCH_FIELDS = {
     'crm.Branch': ['branch_name'],
     'crm.Agent': ['agent_code', 'name'],
     # Add others as needed
+    'crm.Product': ['name'],
 }
 
-# User Profile Model with Role
 # User Profile Model with Role
 ROLE_CHOICES = [
         ('Admin', 'Admin'),
@@ -139,24 +139,46 @@ LEAD_TYPE_CHOICES = [
 
 LEAD_STATUS_CHOICES = [
     ('new', 'New'),
-    ('Future Lead', 'Future Lead'),
-    ('follow_up', 'Follow-UP'),
+    ('interested', 'Interested'),
     ('waiting_for_docs', 'Waiting For Docs'),
+    ('follow_up', 'Follow UP'),
+    ('call_back', 'Call Back'),
+    ('not_eligible', 'Not Eligible'),
+    ('not_interested', 'Not Interested'),
+    ('ofb', 'OFB'),
     ('OTP', 'OTP'),
-    ('Ringing', 'Ringing'),
-    ('Not_Interested', 'Not Interested'),
+    ('Scorecard Approved','Scorecard Approved'),
+    ('underwriting', 'Underwriting'),
+    ('reject', 'Reject'),
+    ('reject_relook', 'Reject Relook'),
+    ('approved', 'Approved'),
+    ('approved_hold', 'Approved Hold'),
+    ('hold', 'Hold'),
+    ('disbursed', 'Disbursed'),
+    ('Future Lead', 'Future Lead'),
+    ('UW Hold','UW Hold'),
+    ('Declined','Declined'),
+    # Newly added status
     ('loan_needed', 'Loan Needed'),
+    ('card_needed','Card Needed'),
+    # Card Process Status
+    
+    # Step - 1
+    ('soft_approved', 'Soft Approved'),
+    # step - 2
+    ('vkyc_done', 'VKYC Done'),
+    ('vkyc_pending', 'VKYC Pending'),
+    ('biometric', 'Biometric'),
+    # step -3
+    ('card_approved','Card Approved'),
+    ('card_rejected','Card Rejected'),
+    # Step - 4 
+    ('card_out', 'Card Out'),
+    
+    ('Ringing','Ringing'),
     ('Switched_Off', 'Switched Off'),
     ('invalid_number', 'Invalid Number'),
-
-    # Card Process Status
-    ('Approved', 'Approved'),
-    ('VKYC Pending', 'VKYC Pending'),
-    ('Bio Pending', 'Bio Pending'),
-    ('KYC Done', 'KYC Done'),
-    ('Curing', 'Curing'),
-    ('WIP', 'WIP'),
-    ('Card Out', 'Card Out'),
+    # 
 ]
 
 CALL_LOG_STATUS_CHOICES = [
@@ -167,18 +189,18 @@ CALL_LOG_STATUS_CHOICES = [
     ('call_back', 'Call Back'),
     ('not_eligible', 'Not Eligible'),
     ('not_interested', 'Not Interested'),
-    # ('ofb', 'OFB'),
+    ('ofb', 'OFB'),
     ('OTP', 'OTP'),
     ('Scorecard Approved','Scorecard Approved'),
-    # ('underwriting', 'Underwriting'),
+    ('underwriting', 'Underwriting'),
     ('reject', 'Reject'),
-    # ('reject_relook', 'Reject Relook'),
-    # ('approved', 'Approved'),
-    # ('approved_hold', 'Approved Hold'),
+    ('reject_relook', 'Reject Relook'),
+    ('approved', 'Approved'),
+    ('approved_hold', 'Approved Hold'),
     ('hold', 'Hold'),
-    # ('disbursed', 'Disbursed'),
+    ('disbursed', 'Disbursed'),
     ('Future Lead', 'Future Lead'),
-    # ('UW Hold','UW Hold'),
+    ('UW Hold','UW Hold'),
     ('Declined','Declined'),
     # Newly added status
     ('Ringing','Ringing'),
@@ -287,6 +309,7 @@ CANDIDATE_SOURCE_CHOICE = [
     ("WorkIndia", "WorkIndia"),
     ("Social Media", "Social Media"),
     ("Company Website", "Company Website"),
+    ("Jobhai", "Job Hai"),
 ]
 
 CANDIDATE_DEPARTMENT_CHOICE = [

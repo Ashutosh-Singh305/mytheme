@@ -1,0 +1,194 @@
+{% extends 'crm/base.html' %}
+
+{% block title %}My Profile{% endblock %}
+
+{% block css %}
+<style>
+    .profile-row {
+        padding: 6px 0;
+        border-bottom: 1px solid #f1f1f1;
+    }
+
+    .profile-label {
+        font-weight: 600;
+        color: #6c757d;
+    }
+
+    .profile-value {
+        font-weight: 500;
+        color: #212529;
+    }
+
+    .profile-card {
+        border: 0;
+        border-radius: 12px;
+    }
+</style>
+{% endblock css %}
+
+{% block body %}
+
+
+<!-- Header -->
+<div class="row mb-3">
+    <div class="col-12">
+        <h4 class="text-primary fw-bold mb-0">
+            <i class="bi bi-person-fill me-2"></i>
+            My Profile
+        </h4>
+    </div>
+</div>
+
+<div class="row g-3">
+
+    <!-- Left Profile Card -->
+    <div class="col-lg-4 col-md-5">
+        <div class="card profile-card shadow-sm h-100">
+            <div class="card-body text-center">
+
+                <i class="bi bi-person-circle fs-1 text-primary mb-3"></i>
+
+                <h5 class="fw-semibold mb-1">
+                    {{ my_profile.user.first_name }}
+                    {{ my_profile.user.last_name }}
+                </h5>
+
+                <p class="text-muted mb-3">
+                    {{ my_profile.role|default:"-" }}
+                </p>
+
+                <hr>
+
+                <div class="text-start">
+
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="fw-semibold text-muted">
+                            Emp Code
+                        </span>
+                        <span>
+                            {{ my_profile.emp_code|default:"-" }}
+                        </span>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-semibold text-muted">
+                            Branch
+                        </span>
+                        <span>
+                            {{ my_profile.branch.name|default:"-" }}
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Details Card -->
+    <div class="col-lg-8 col-md-7">
+        <div class="card profile-card shadow-sm">
+            <div class="card-body">
+
+                <h5 class="text-primary fw-semibold mb-4">
+                    User Details
+                </h5>
+
+                <!-- Full Name -->
+                <div class="row profile-row">
+                    <div class="col-md-4 profile-label">
+                        Full Name
+                    </div>
+                    <div class="col-md-8 profile-value">
+                        {{ my_profile.user.first_name }}
+                        {{ my_profile.user.last_name }}
+                    </div>
+                </div>
+
+                <!-- Username -->
+                <div class="row profile-row">
+                    <div class="col-md-4 profile-label">
+                        Username
+                    </div>
+                    <div class="col-md-8 profile-value">
+                        {{ my_profile.user.username }}
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="row profile-row">
+                    <div class="col-md-4 profile-label">
+                        Email
+                    </div>
+                    <div class="col-md-8 profile-value">
+                        {{ my_profile.user.email }}
+                    </div>
+                </div>
+
+                <!-- Employee Code -->
+                <div class="row profile-row">
+                    <div class="col-md-4 profile-label">
+                        Employee Code
+                    </div>
+                    <div class="col-md-8 profile-value">
+                        {{ my_profile.emp_code|default:"-" }}
+                    </div>
+                </div>
+
+                <!-- Role -->
+                <div class="row profile-row">
+                    <div class="col-md-4 profile-label">
+                        Role
+                    </div>
+                    <div class="col-md-8 profile-value">
+                        {{ my_profile.role|default:"-" }}
+                    </div>
+                </div>
+
+                <!-- Manager -->
+                <div class="row profile-row">
+                    <div class="col-md-4 profile-label">
+                        Manager
+                    </div>
+                    <div class="col-md-8 profile-value">
+                        {{ my_profile.manager.username|default:"-" }}
+                    </div>
+                </div>
+
+                <!-- Branch -->
+                <div class="row profile-row border-0">
+                    <div class="col-md-4 profile-label">
+                        Branch
+                    </div>
+                    <div class="col-md-8 profile-value">
+                        {{ my_profile.branch.name|default:"-" }}
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="mt-4 d-flex justify-content-end flex-wrap gap-2">
+
+                    <a href="{% url 'changepassword' %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-key me-1"></i>
+                        Change Password
+                    </a>
+
+                    <form method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="bi bi-box-arrow-right me-1"></i>
+                            Sign Out
+                        </button>
+                    </form>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block Script %}
+{% endblock %}

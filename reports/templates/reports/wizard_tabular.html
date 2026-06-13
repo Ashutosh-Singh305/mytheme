@@ -1,115 +1,165 @@
 {% extends "reports/base.html" %}
+{% load static %}
+
 {% block title %}New Report — Select Fields{% endblock %}
 
+{% block css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  /* Dedicated scrolling frame container matching theme viewport aesthetics */
+  .scroll-box {
+    max-height: 300px;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 0.375rem;
+    background-color: #fff;
+  }
+  .field-item {
+    transition: background-color 0.15s ease-in-out;
+  }
+  .field-item:hover {
+    background-color: #f8f9fa;
+  }
+</style>
+{% endblock css %}
+
 {% block body %}
-<div class="card">
-  <div class="card-body">
+<div class="content mt-1">
+  <form method="post" novalidate id="select-fields-form">
+    {% csrf_token %}
 
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb" class="mb-4">
-      <ol class="breadcrumb bg-white px-3 py-2 border rounded">
-        {% for label, url in breadcrumbs %}
-          {% if url %}
-            <li class="breadcrumb-item"><a href="{{ url }}">{{ label }}</a></li>
-          {% else %}
-            <li class="breadcrumb-item active" aria-current="page">{{ label }}</li>
-          {% endif %}
-        {% endfor %}
-      </ol>
-    </nav>
+    <div class="row g-2">
+      <div class="col-12">
 
-    <h4 class="card-title">Select Fields</h4>
+        <nav aria-label="breadcrumb" class="mb-2">
+          <ol class="breadcrumb bg-white px-2 py-1 border rounded shadow-sm small m-0">
+            {% for label, url in breadcrumbs %}
+              {% if url %}
+                <li class="breadcrumb-item"><a href="{{ url }}" class="text-decoration-none text-primary fw-medium">{{ label }}</a></li>
+              {% else %}
+                <li class="breadcrumb-item active text-muted" aria-current="page">{{ label }}</li>
+              {% endif %}
+            {% endfor %}
+          </ol>
+        </nav>
 
-    <form method="post">
-      {% csrf_token %}
+        <div class="card shadow-sm bg-white mb-2">
+          <div class="card-header rounded-top-4">
+            <h5 class="card-title m-0">
+              <i class="fas fa-check-square text-primary me-2"></i>Select Fields
+            </h5>
+          </div>
 
-      <!-- 🔍 SEARCH BOX -->
-      <div class="form-group mb-2">
-        <input type="text"
-               id="field-search"
-               class="form-control form-control-sm"
-               placeholder="Search fields...">
-      </div>
+          <div class="card-body">
+            
+            <div class="mb-2 position-relative">
+              <input type="text" 
+                     id="field-search" 
+                     class="form-control form-control-sm ps-4 shadow-none" 
+                     placeholder="Search target operational fields...">
+              <i class="fas fa-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted small" style="pointer-events: none;"></i>
+            </div>
 
-      <!-- SELECT ALL -->
-      <div class="d-flex align-items-center mb-2">
-        <input type="checkbox" id="select-all-fields" class="mr-2">
-        <label for="select-all-fields" class="mb-0 font-weight-bold">
-          Select All
-        </label>
-      </div>
-
-      <!-- SCROLLABLE FIELD LIST -->
-      <div style="
-          border: 1px solid #ddd;
-          padding: 10px;
-          border-radius: 4px;
-          max-height: 300px;
-          overflow-y: auto;
-        ">
-
-        <div class="custom-checkbox-list" id="field-list">
-
-          {% for checkbox in form.fields %}
-            <div class="field-item">
-              <label>
-                {{ checkbox.tag }} {{ checkbox.choice_label }}
+            <div class="form-check mb-2 ps-4.5">
+              <input type="checkbox" id="select-all-fields" class="form-check-input shadow-none">
+              <label for="select-all-fields" class="form-check-label fw-bold text-dark small" style="user-select: none;">
+                Select All
               </label>
             </div>
-          {% endfor %}
 
+            <div class="scroll-box p-1">
+              <div class="d-flex flex-column gap-1" id="field-list">
+                {% for checkbox in form.fields %}
+                  <div class="field-item p-1 rounded border border-transparent">
+                    <div class="form-check m-0 ps-4.5">
+                      {{ checkbox.tag }}
+                      <label class="form-check-label d-block fw-medium small" style="cursor: pointer; user-select: none;">
+                        {{ checkbox.choice_label }}
+                      </label>
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+            <div class="text-end mt-2">
+              <button type="submit" class="btn btn-primary btn-sm shadow-none">
+                Next <i class="fas fa-chevron-right ms-1 small"></i>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-
-      <div class="mt-3">
-        <button class="btn btn-primary btn-sm" type="submit">Next</button>
-      </div>
-
-    </form>
-  </div>
+    </div>
+  </form>
 </div>
 {% endblock %}
 
 {% block Script %}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
-
   const selectAll = document.getElementById("select-all-fields");
   const checkboxes = document.querySelectorAll('input[name="fields"]');
-
-  // ✅ SELECT ALL LOGIC
-  selectAll.addEventListener("change", function () {
-    checkboxes.forEach(cb => cb.checked = selectAll.checked);
-  });
-
-  checkboxes.forEach(cb => {
-    cb.addEventListener("change", function () {
-      if (!cb.checked) {
-        selectAll.checked = false;
-      } else if ([...checkboxes].every(c => c.checked)) {
-        selectAll.checked = true;
-      }
-    });
-  });
-
-  // 🔍 SEARCH FILTER LOGIC
   const searchInput = document.getElementById("field-search");
   const items = document.querySelectorAll(".field-item");
 
-  searchInput.addEventListener("keyup", function () {
-    const query = this.value.toLowerCase().trim();
+  if (!selectAll || checkboxes.length === 0) return;
 
-    items.forEach(item => {
-      const text = item.innerText.toLowerCase();
-
-      if (text.includes(query)) {
-        item.style.display = "";
-      } else {
-        item.style.display = "none";
+  // Add native form-check-input styles to raw Django fields inside loop execution
+  checkboxes.forEach(cb => {
+    cb.classList.add('form-check-input', 'shadow-none');
+    
+    // Bind unique label pairing targets safely
+    const label = cb.nextElementSibling;
+    if (label && label.tagName === 'LABEL') {
+      if(cb.id) {
+        label.setAttribute('for', cb.id);
       }
-    });
+    }
   });
 
+  // Get active checkboxes that aren't hidden by the filter
+  const getVisibleCheckboxes = () => {
+    return Array.from(checkboxes).filter(cb => {
+      const parentItem = cb.closest('.field-item');
+      return parentItem && parentItem.style.display !== 'none';
+    });
+  };
+
+  // Select All Toggling Logic (scoped to visible fields only)
+  selectAll.addEventListener("change", function () {
+    const visibleBoxes = getVisibleCheckboxes();
+    visibleBoxes.forEach(cb => cb.checked = selectAll.checked);
+  });
+
+  // Checkbox Event Mutation Observer Loop
+  document.addEventListener("change", function (e) {
+    if (e.target && e.target.name === "fields") {
+      const visibleBoxes = getVisibleCheckboxes();
+      if (visibleBoxes.length > 0) {
+        selectAll.checked = visibleBoxes.every(c => c.checked);
+      }
+    }
+  });
+
+  // Clean, Instantaneous Search Filter Input Handlers
+  if (searchInput && items.length > 0) {
+    searchInput.addEventListener("input", function () {
+      const query = this.value.toLowerCase().trim();
+
+      items.forEach(item => {
+        const text = item.innerText.toLowerCase();
+        item.style.display = text.includes(query) ? "" : "none";
+      });
+
+      // Recalculate Select All status based on new visibility scope
+      const visibleBoxes = getVisibleCheckboxes();
+      if (visibleBoxes.length > 0) {
+        selectAll.checked = visibleBoxes.every(c => c.checked);
+      } else {
+        selectAll.checked = false;
+      }
+    });
+  }
 });
 </script>
 {% endblock Script %}

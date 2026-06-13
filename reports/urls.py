@@ -34,6 +34,6 @@ urlpatterns = [
     # Export CSV by Ashutosh on 1 dec 2025
     path("<slug:slug>/export/csv/", views.export_report_csv, name="report_export_csv"),
     
-    path("<slug:slug>/api/", views.run_report_api, name="run_report_api"),
+     path("<slug:slug>/api/", views.run_report_api, name="run_report_api"),
 
 ]

@@ -10,130 +10,66 @@
 <link rel="stylesheet" href="/static/css/bootstrap_table.css">
 {% endblock %}
 {% block body %}
-<div class="card shadow-sm border-0">
+<div class="card">
+    <div class="card-body">
+        <h4 class="mb-3">Lead Status History</h4>
 
-    <div class="card-body p-2">
-
-        <h4 class="mb-3 fw-semibold">
-            Lead Status History
-        </h4>
-
-        <!-- FILTER FORM -->
-        <form id="filterForm" class="row g-3 mb-3">
+        <form id="filterForm" class="row mb-3">
 
             <!-- USER -->
-            <div class="col-lg-3 col-md-6">
-                <label class="form-label fw-semibold">
-                    User
-                </label>
-
-                <select name="user_id"
-                        id="user_id"
-                        class="form-select select2">
-
-                    <option value="">
-                        All Users
-                    </option>
-
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">User</label>
+                <select name="user_id" id="user_id" class="form-control select2">
+                    <option value="">All Users</option>
                     {% for u in users %}
-                    <option value="{{ u.id }}"
-                        {% if selected_user == u.id|stringformat:"s" %}
-                            selected
-                        {% endif %}>
-
+                    <option value="{{ u.id }}" {% if selected_user == u.id|stringformat:"s" %}selected{% endif %}>
                         {{ u.get_full_name|default:u.username }}
-
                     </option>
                     {% endfor %}
-
                 </select>
             </div>
 
             <!-- NEW STATUS -->
-            <div class="col-lg-3 col-md-6">
-                <label class="form-label fw-semibold">
-                    New Status
-                </label>
-
-                <select name="new_status"
-                        id="new_status"
-                        class="form-select select2"
-                        multiple>
-
+            <div class="col-md-3">
+                <label class="form-label fw-semibold">New Status</label>
+                <select name="new_status" id="new_status" class="form-control select2" multiple>
+                    <option value="">All Status</option>
                     {% for key, label in status_choices %}
-                    <option value="{{ key }}">
-                        {{ label }}
-                    </option>
+                    <option value="{{ key }}">{{ label }}</option>
                     {% endfor %}
                 </select>
             </div>
 
             <!-- START DATE -->
-            <div class="col-lg-2 col-md-6">
-                <label class="form-label fw-semibold">
-                    Start Date
-                </label>
-
-                <input type="date"
-                       id="start_date"
-                       name="start_date"
-                       value="{{ start_date }}"
-                       class="form-control">
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">Start Date</label>
+                <input type="date" id="start_date" name="start_date" value="{{ start_date }}" class="form-control">
             </div>
 
             <!-- END DATE -->
-            <div class="col-lg-2 col-md-6">
-                <label class="form-label fw-semibold">
-                    End Date
-                </label>
-
-                <input type="date"
-                       id="end_date"
-                       name="end_date"
-                       value="{{ end_date }}"
-                       class="form-control">
+            <div class="col-md-2">
+                <label class="form-label fw-semibold">End Date</label>
+                <input type="date" id="end_date" name="end_date" value="{{ end_date }}" class="form-control">
             </div>
 
             <!-- BUTTON -->
-            <div class="col-lg-2 col-md-12 d-flex align-items-end">
-
-                <button type="submit"
-                        class="btn btn-primary w-100">
-                    Run Report
-                </button>
-
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary btn-sm">Run Report</button>
             </div>
 
         </form>
-
         <!-- INFO -->
-        <div id="infoBox"
-             class="alert alert-info py-2">
+        <div id="infoBox" class="alert alert-info">
             Please select any one filter to view report.
         </div>
 
         <!-- TABLE -->
-        <div class="table-responsive">
-
-            <table id="reportTable"
-                   data-search="true"
-                   data-show-refresh="true"
-                   data-show-toggle="true"
-                   data-show-fullscreen="true"
-                   data-show-pagination-switch="true"
-                   data-show-columns="true"
-                   data-show-export="true"
-                   data-pagination="true"
-                   data-page-list="[10,25,50,100]"
-                   data-side-pagination="server"
-                   class="table table-bordered table-sm">
-
-            </table>
-
-        </div>
-
+        <table id="reportTable" data-search="true" data-show-refresh="true" data-show-toggle="true"
+            data-show-fullscreen="true" data-show-pagination-switch="true" data-show-columns="true"
+            data-show-export="true" data-pagination="true" data-page-list="[10, 25, 50, 100]"
+            data-side-pagination="server" class="table table-bordered table-sm rounded-4 overflow-hidden">
+        </table>
     </div>
-
 </div>
 {% endblock %}
 
@@ -180,7 +116,7 @@
 
         if (v.includes("approved")) return `<span class="badge bg-success">${value}</span>`;
         if (v.includes("declined")) return `<span class="badge bg-danger">${value}</span>`;
-        if (v.includes("underwriting")) return `<span class="badge bg-warning ">${value}</span>`;
+        if (v.includes("underwriting")) return `<span class="badge bg-warning text-dark">${value}</span>`;
 
         return `<span class="badge bg-secondary">${value}</span>`;
     }
@@ -216,6 +152,7 @@
                 { field: 'old_status', title: 'Old Status', sortable: true, formatter: statusFormatter },
                 { field: 'new_status', title: 'New Status', sortable: true, formatter: statusFormatter },
                 { field: 'changed_by', title: 'Changed By', sortable: true },
+                { field: 'assigned_to', title: 'Assigned To', sortable: true },
                 { field: 'changed_at', title: 'Date', sortable: true, formatter: dateFormatter }
             ],
 
@@ -303,4 +240,5 @@
     loadTable();
     {% endif %}
 </script>
+
 {% endblock %}

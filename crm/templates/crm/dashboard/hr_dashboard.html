@@ -6,60 +6,40 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style id="cardstyle01">
     .candidate-row.active {
-        border: 1px solid #007bff;
         background: #f0f8ff;
-    }
-
-    .label-font {
-        font-weight: 600;
-        font-size: 15px;
     }
 </style>
 {% endblock %}
 
 {% block body %}
-
 <!-- HEADER -->
-<div class="row mb-2">
-    <div class="col-12">
-        <div class="card p-2">
-            <div
-                class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2">
+<div class="card mb-3 border-0 shadow-sm">
+    <div class="card-body bg-white rounded-5">
+        <div class="d-flex flex-row align-items-center justify-content-between gap-2">
 
-                <!-- LEFT -->
-                <div class="col-lg-7">
-                    <h4 class="mb-1">HR Dashboard</h4>
-                    <small class="text-muted">
-                        Welcome {{ request.user.username }} |
-                        {{ request.user.userprofile.branch.name }}
-                    </small>
-                </div>
-
-                <!-- RIGHT -->
-                <div class="col-lg-4 p-1">
-                    <div class="d-flex flex-column flex-sm-row gap-1">
-                        <input
-                            type="text"
-                            id="candidateSearch"
-                            class="form-control form-control-sm"
-                            placeholder="Search mobile / name / emp code">
-
-                        <button
-                            class="btn btn-primary btn-sm"
-                            type="button"
-                            onclick="applycandidateSearchh()">
-                            Search
-                        </button>
-                    </div>
-                </div>
-
+            <div class="min-w-0 flex-grow-1">
+                <h5 class="mb-0 text-truncate fs-6 fs-sm-5">HR Dashboard</h5>
+                <small class="text-muted d-block text-truncate small">
+                    Welcome, {{ request.user.username }}
+                </small>
             </div>
+
+            <div class="flex-shrink-0" style="width: 45%; max-width: 220px; min-width: 140px;">
+                <div class="input-group input-group-sm gap-1">
+                    <input type="text" id="searchInput" class="form-control" placeholder="Search...">
+                    <button class="btn btn-primary btn-sm" onclick="applySearch()" type="button" aria-label="Search">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
 
+
 <!-- KPI CARDS -->
-<div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-2 mb-4">
+<div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-2 mb-3">
 
     <div class="col">
         <div class="card kpi-metric-card metric-calls shadow-sm border-0">
@@ -67,9 +47,9 @@
                 <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
                     <i class="bi bi-person-plus-fill fs-6"></i>
                 </div>
-                <div class="ms-2 text-start">
+                <div class="ms-2 text-center">
                     <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">New Candidate</h6>
-                    <h4 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ new_candidates|default:0 }}</h4>
+                    <h5 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ new_candidates|default:0 }}</h5>
                 </div>
             </div>
         </div>
@@ -81,9 +61,9 @@
                 <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
                     <i class="bi bi-telephone-outbound-fill fs-6"></i>
                 </div>
-                <div class="ms-2 text-start">
+                <div class="ms-2 text-center">
                     <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Contacted Today</h6>
-                    <h4 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ contacted_today|default:0 }}</h4>
+                    <h5 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ contacted_today|default:0 }}</h5>
                 </div>
             </div>
         </div>
@@ -95,9 +75,9 @@
                 <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
                     <i class="bi bi-calendar2-check-fill fs-6"></i>
                 </div>
-                <div class="ms-2 text-start">
+                <div class="ms-2 text-center">
                     <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Interview Today</h6>
-                    <h4 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ interviews_today|default:0 }}</h4>
+                    <h5 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ interviews_today|default:0 }}</h5>
                 </div>
             </div>
         </div>
@@ -109,9 +89,9 @@
                 <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
                     <i class="bi bi-award-fill fs-6"></i>
                 </div>
-                <div class="ms-2 text-start">
+                <div class="ms-2 text-center">
                     <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Shortlisted</h6>
-                    <h4 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ shortlisted|default:0 }}</h4>
+                    <h5 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ shortlisted|default:0 }}</h5>
                 </div>
             </div>
         </div>
@@ -123,9 +103,9 @@
                 <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
                     <i class="bi bi-door-open-fill fs-6"></i>
                 </div>
-                <div class="ms-2 text-start">
+                <div class="ms-2 text-center">
                     <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Joining Soon</h6>
-                    <h4 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ joining_soon|default:0 }}</h4>
+                    <h5 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ joining_soon|default:0 }}</h5>
                 </div>
             </div>
         </div>
@@ -137,9 +117,9 @@
                 <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
                     <i class="bi bi-journal-bookmark-fill fs-6"></i>
                 </div>
-                <div class="ms-2 text-start">
-                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Training Pending</h6>
-                    <h4 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ training_pending|default:0 }}</h4>
+                <div class="ms-2 text-center">
+                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Live Employees</h6>
+                    <h5 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ active_candidates_count|default:0 }}</h5>
                 </div>
             </div>
         </div>
@@ -148,13 +128,12 @@
 </div>
 
 <!-- MAIN -->
-<div class="row g-2">
+<div class="row g-3">
     <!-- Left PANEL -->
     <div class="col-md-7" id="lead_details_left">
         <div class="card position-relative shadow-sm h-100">
-
-            <div class="card-header mb-0 p-1">
-                <h5>Candidate Details</h5>
+            <div class="card-header mb-0 rounded-top-4">
+                <h6>Candidate Details</h6>
             </div>
 
             <!-- STATIC STRUCTURE (IMPORTANT FIX) -->
@@ -166,11 +145,11 @@
                     <!-- LEFT -->
                     <div class="d-flex align-items-center gap-2 flex-nowrap">
 
-                        <a href="#" id="callLink" class="text-decoration-none text-nowrap">
-                            📞 <span id="ld_mobile">-</span>
+                        <a href="#" id="callLink" class="text-nowrap">
+                            <i class="bi bi-telephone-fill fs-7 text-success"></i> <span id="ld_mobile">-</span>
                         </a>
 
-                        <span class="badge badge bg-warning  text-nowrap" id="ld_status">
+                        <span class="badge bg-warning  text-nowrap" id="ld_status">
                             -
                         </span>
 
@@ -206,7 +185,7 @@
                     <div class="col-md-6">
 
                         <div class=" row align-items-center">
-                            <label class="col-5 label-font">Name</label>
+                            <label class="col-5 label">Name<span class="text-danger">*</span></label>
                             <div class="col-7 mt-1">
                                 <input id="ld_name"  type="text"
                                     class="form-control form-control-sm" disabled>
@@ -215,10 +194,11 @@
                         
 
                         <div class=" row align-items-center">
-                            <label class="col-5 label-font">Applied For</label>
+                            <label class="col-5 label">Applied For<span class="text-danger">*</span></label>
                             <div class="col-7 mt-1">
                                 <select id="ld_applied_for" class="form-select form-control-sm" 
                                     disabled>
+                                    <option value="" selected disabled>Select Applied For</option>
                                     {% for key, label in position_applied_for_choices %}
                                     <option value="{{ key }}">{{ label }}</option>
                                     {% endfor %}
@@ -227,7 +207,7 @@
                         </div>
 
                         <div class=" row align-items-center">
-                            <label class="col-5 label-font">Experience</label>
+                            <label class="col-5 label">Experience</label>
                             <div class="col-7 mt-1">
                                 <input id="ld_experince"  class="form-control form-control-sm"
                                     disabled>
@@ -235,7 +215,7 @@
                         </div>
 
                         <div class="row align-items-center">
-                            <label class="col-5 label-font">Area</label>
+                            <label class="col-5 label">Area</label>
                             <div class="col-7 mt-1">
                                 <input id="id_candidate_area"  type="text"
                                     class="form-control form-control-sm" disabled>
@@ -243,7 +223,7 @@
                         </div>
 
                         <div class="row align-items-center">
-                            <label class="col-5 label-font">Calling Date</label>
+                            <label class="col-5 label">Calling Date</label>
                             <div class="col-7 mt-1">
                                 <input id="ld_calling_date"  type="text"
                                     class="form-control form-control-sm" placeholder="DD/MM/YYYY" autocomplete="off"
@@ -252,7 +232,7 @@
                         </div>
 
                         <div class="row align-items-center">
-                            <label class="col-5 label-font">DOJ</label>
+                            <label class="col-5 label">DOJ</label>
                             <div class="col-7 mt-1">
                                 <input id="id_doj" type="text" 
                                     class="form-control form-control-sm" placeholder="DD/MM/YYYY" autocomplete="off"
@@ -264,24 +244,28 @@
                     <!-- RIGHT -->
                     <div class="col-md-6">
                         <div class="row align-items-center" id="mobileFieldRow">
-                            <label class="col-5 label-font">Mobile No.</label>
+                            <label class="col-5 label">Mobile No.<span class="text-danger">*</span></label>
                             <div class="col-7 mt-1">
-                                <input id="ld_mobile_form"  type="number"
-                                    class="form-control form-control-sm" disabled>
+                                <input id="ld_mobile_form" 
+                                    type="tel" 
+                                    placeholder="Enter Mobile No." 
+                                    class="form-control form-control-sm" 
+                                    oninput="liveValidateMobile(this)">
                             </div>
                         </div>
                         <div class="row align-items-center">
-                            <label class="col-5 label-font">Interview Date</label>
+                            <label class="col-5 label">Interview Date</label>
                             <div class="col-7 mt-1">
                                 <input id="ld_interview_date"  type="text" placeholder="DD/MM/YYYY"
                                     class="form-control form-control-sm" autocomplete="off" disabled>
                             </div>
                         </div>
                         <div class="row align-items-center">
-                            <label class="col-5 label-font">Source</label>
+                            <label class="col-5 label">Source<span class="text-danger">*</span></label>
                             <div class="col-7 mt-1">
                                 <select id="ld_source" class="form-select form-select-sm" 
                                     disabled>
+                                    <option value="" selected disabled>Select Source</option>
                                     {% for key, label in source_choices %}
                                     <option value="{{ key }}">{{ label }}</option>
                                     {% endfor %}
@@ -289,7 +273,7 @@
                             </div>
                         </div>
                         <div class="row align-items-center">
-                            <label class="col-5 label-font">Recruiter</label>
+                            <label class="col-5 label">Recruiter<span class="text-danger">*</span></label>
                             <div class="col-7 mt-1">
                                 <select id="ld_recruiter" class="form-select form-select-sm"  disabled>
                                     <option value="" selected disabled>Select Recruiter</option>
@@ -308,21 +292,21 @@
 
 
                         <div class="row align-items-center" id="assignRow">
-                            <label class="col-5 label-font">Assigned To</label>
+                            <label class="col-5 label">Assigned To</label>
                             <div class="col-7 mt-1">
                                 <input id="ld_assign_to"  type="text"
                                     class="form-control form-control-sm" readonly>
                             </div>
                         </div>
                         <div class="row align-items-center" id="modifiedRow">
-                            <label class="col-5 label-font">Modified by</label>
+                            <label class="col-5 label">Modified by</label>
                             <div class="col-7 mt-1">
                                 <input id="ld_modified_by"  type="text"
                                     class="form-control form-control-sm" readonly>
                             </div>
                         </div>
 
-                        <div class=" row align-items-center label-font" id="lastUpdatedRow">
+                        <div class=" row align-items-center label" id="lastUpdatedRow">
                             <label class="col-5 ">Last Updt.</label>
                             <div class="col-7 mt-1">
                                 <input id="ld_modified_date" type="text" 
@@ -335,7 +319,7 @@
 
                 <hr class="mb-1 mt-1">
                 <div class="row">
-                    <label class="col-3 label-font">Status</label>
+                    <label class="col-3 label">Status</label>
                     <div class="col-9 mt-1">
                         <select id="ld_candidate_status" class="form-select form-select-sm" >
                             {% for key, label in candidate_status_choices %}
@@ -377,21 +361,21 @@
     </div>
 
     <!-- Right -->
-    <div class="col-md-5 grid-margin stretch-card">
-        <div class="card">
-            <div class="card-header p-1">
+    <div class="col-md-5 stretch-card">
+        <div class="card position-relative shadow-sm h-100">
+            <div class="card-header rounded-top-4">
+                <div class="d-flex flex-row justify-content-between align-items-center gap-1">
 
-                <!-- TITLE (TOP ROW) -->
-                <div class="mb-2">
-                    <h5 class="mb-0">My Candidates</h5>
-                </div>
-
-                <!-- FILTER ROW -->
-                <div class="d-flex flex-nowrap justify-content-between align-items-center ml-0">
+                    <!-- Title -->
                     <div class="mb-0">
-                        <!-- APPLIED FOR -->
-                        <select id="appliedForFilter" class="form-select form-select-sm" style="width: 160px;"
-                            onchange="applyFilter()">
+                        <h6>My Candidates</h6>
+                    </div>
+
+                    <!-- Inline Filters -->
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-1" style="width: 320px;">
+
+                        <!-- Applied For Filter -->
+                        <select id="appliedForFilter" class="form-select form-select-sm"  onchange="applyFilter()">
                             <option value="" {% if not request.GET.applied_for %}selected{% endif %}>
                                 All Applied For
                             </option>
@@ -401,11 +385,9 @@
                             </option>
                             {% endfor %}
                         </select>
-                    </div>
-                    <div class="text-end mb-0">
-                        <!-- STATUS -->
-                        <select id="candidateStatusfilter" class="form-select form-select-sm ml-1"
-                            style="width: 150px;" onchange="applyFilter()">
+
+                        <!-- Status Filter -->
+                        <select id="candidateStatusfilter" class="form-select form-select-sm" onchange="applyFilter()">
                             <option value="" {% if not request.GET.status %}selected{% endif %}>
                                 All Status
                             </option>
@@ -415,14 +397,14 @@
                             </option>
                             {% endfor %}
                         </select>
+
                     </div>
                 </div>
-
             </div>
 
             <div class="table-responsive border rounded p-1 d-md-block d-none">
                 <table class="table table-fixed table-sm">
-                    <thead class="o">
+                    <thead class="">
                         <tr class="table-primary">
                             <!-- <th onclick="sortTable('name')" style="font-weight: 600;">Name</th> -->
                             <th style="font-weight: 600;">Name</th>
@@ -454,17 +436,17 @@
                             </td> -->
 
                             <!-- ACTIONS -->
-                            <td class="text-center">
+                            <td class="text-end d-flex gap-1 justify-content-center">
 
                                 <!-- CALL -->
-                                <a href="tel:{{ candidate.phone }}" class="btn btn-success btn-sm w-48">
-                                    Call
+                                <a href="tel:{{ candidate.phone }}" class="btn btn-outline-success btn-sm w-48">
+                                    <i class="bi bi-telephone-fill fs-7"></i>
                                 </a>
 
                                 <!-- OPEN -->
-                                <a class="btn btn-primary btn-sm open-btn w-48"
+                                <a class="btn btn-outline-primary btn-sm open-btn w-48"
                                     href="/crm/CandidateOnboarding/{{ candidate.id }}">
-                                    Open
+                                    <i class="bi bi-eye-fill fs-7"></i>
                                 </a>
 
                             </td>
@@ -486,7 +468,7 @@
                         <div class="p-2 d-flex flex-column">
 
                             <!-- Header -->
-                            <div class="d-flex justify-content-between align-items-start flex-wrap">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap">
 
                                 <h6 class="mb-0 text-truncate" style="max-width: 70%;">
                                     {{ candidate.full_name }}
@@ -509,19 +491,18 @@
                             <div class="mt-1 text-center">
                                 <div class="d-flex justify-content-between">
 
-                                    <a href="tel:{{ candidate.phone }}" class="btn btn-success btn-sm">
-                                        Call
-                                    </a>
-
                                     <a class="btn btn-primary btn-sm open-btn"
                                         href="/crm/CandidateOnboarding/{{ candidate.id }}">
-                                        Open
+                                        <i class="bi bi-telephone-fill fs-7"></i>
                                     </a>
 
+                                    <a href="tel:{{ candidate.phone }}" class="btn btn-success btn-sm">
+                                        <i class="bi bi-eye-fill fs-7"></i>
+                                    </a>
                                 </div>
                                 <hr class="my-1">
                             </div>
-
++
                         </div>
 
                     </div>
@@ -533,9 +514,9 @@
             <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-2 p-2">
 
                 <!-- Left Text -->
-                <p class="text-muted small mb-0 text-center text-md-start">
+                <p class="text-muted small mb-0 text-center text-md-center">
                     Showing
-                    {{ page_obj.start_index }}
+                    {{ page_obj.center_index }}
                     to
                     {{ page_obj.end_index }}
                     of
@@ -603,5 +584,5 @@
 <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
 <script src="/static/daterangepicker/daterangepicker.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/inputmask/5.0.8/jquery.inputmask.min.js"></script>
-<script src="/static/dashboard/hr_dashboard.js"></script>
+<script src="{% static 'dashboard/hr_dashboard.js' %}?v=2.0.0"></script>
 {% endblock %}

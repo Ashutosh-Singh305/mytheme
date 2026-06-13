@@ -1,50 +1,125 @@
-<!DOCTYPE html>
 {% load static %}
+<!DOCTYPE html>
 <html lang="en">
-<meta charset="UTF-8">
-<!-- Required meta tags -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Probebot | 403</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardExperts | 403 Access Forbidden</title>
 
-<link rel="stylesheet" href="{% static 'css/style.css' %}"><!-- End layout styles-->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #f9faff;
+            color: #1e293b;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        /* Navbar link styles */
+        .nav-link-custom {
+            color: #64748b;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: color 0.2s ease;
+        }
+        .nav-link-custom:hover {
+            color: #4f46e5;
+        }
+
+        /* Indigo Gradient for the 403 Text */
+        .gradient-text {
+            font-size: calc(6rem + 4vw);
+            font-weight: 800;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        /* Modern Solid Primary Button */
+        .btn-custom-primary {
+            background-color: #4f46e5;
+            border-color: #4f46e5;
+            color: #ffffff;
+            font-weight: 500;
+            padding: 0.6rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+        }
+        .btn-custom-primary:hover {
+            background-color: #4338ca;
+            border-color: #4338ca;
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+        }
+
+        /* Outlined Button for Navbar */
+        .btn-custom-outline {
+            border: 1px solid #4f46e5;
+            color: #4f46e5;
+            font-weight: 500;
+            padding: 0.5rem 1.25rem;
+            border-radius: 0.5rem;
+            background: transparent;
+            transition: all 0.2s ease;
+        }
+        .btn-custom-outline:hover {
+            background-color: #4f46e5;
+            color: #ffffff;
+        }
+
+        /* Center Illustration Styling Wrapper */
+        .illustration-container {
+            max-width: 450px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+
+        /* Bottom Support Box styling */
+        .support-alert {
+            background-color: #f1f5f9;
+            border-radius: 0.75rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 2rem;
+            font-size: 0.95rem;
+            color: #334155;
+        }
+        .support-alert a {
+            color: #4f46e5;
+            text-decoration: underline;
+            font-weight: 600;
+        }
+    </style>
 </head>
-
 <body>
-    <div class="container-scroller">
-        <div class="container-fluid page-body-wrapper full-page-wrapper">
-            <div class="content-wrapper d-flex align-items-center text-center error-page bg-primary">
-                <div class="row flex-grow">
-                    <div class="col-lg-7 mx-auto text-white">
-                        <div class="row align-items-center d-flex flex-row">
-                            <div class="col-lg-6 text-lg-right pr-lg-4">
-                                <h1 class="display-1 mb-0">403</h1>
-                            </div>
-                            <div class="col-lg-6 error-page-divider text-lg-left pl-lg-4">
-                                <h2>SORRY!</h2>
-                                <h3 class="font-weight-light">
-                                    {{ error_message|default:"You do not have permission to access this page." }}
-                                </h3>
-                            </div>
-                        </div>
-                        <div class="row mt-5">
-                            <div class="col-12 text-center mt-xl-2">
-                                <a class="text-white font-weight-medium" href="{% url 'my_profile' %}">Back to
-                                    Profile</a> / <a class="text-white font-weight-medium" href="{% url 'login' %}">Back to
-                                    Login</a>
-                            </div>
-                        </div>
-                        <div class="row mt-5">
-                            <div class="col-12 mt-xl-2">
-                                <!-- <p class="text-white font-weight-medium text-center">Copyright &copy; 2020 All rights reserved.</p> -->
-                            </div>
-                        </div>
-                    </div>
+    <main class="container text-center py-5">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8 col-lg-6">
+                
+                <h1 class="gradient-text mb-2">403</h1>
+                <h2 class="fw-bold tracking-tight mb-3 fs-3">Access Forbidden</h2>
+                
+                <p class="text-muted mb-4 px-md-4">
+                    {{ error_message|default:"Oops! You don't have permission to access this page. Please check the URL or return to the homepage." }}
+                </p>
+
+                <div class="mb-5">
+                    <a href="{% url 'my_profile' %}" class="btn btn-sm btn-custom-primary d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-house-fill"></i> Back to Profile
+                    </a>
+                    <a href="{% url 'login' %}" class="btn btn-custom-primary btn-sm d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-house-fill"></i> Back to Login
+                    </a>
                 </div>
             </div>
-            <!-- content-wrapper ends -->
         </div>
-        <!-- page-body-wrapper ends -->
-    </div>
-</body>
+    </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
 </html>

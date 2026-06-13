@@ -1,0 +1,124 @@
+{% extends "crm/base" %}
+{% block title %}Product List{% endblock %}
+
+{% block body %}
+<div class="page-header">
+  <h3 class="page-title">Products</h3>
+  <nav aria-label="breadcrumb">
+    <a href="{% url 'product_create' %}" class="btn btn-primary btn-sm">Add Product</a>
+  </nav>
+</div>
+
+<div class="row">
+  <div class="col-lg-12 stretch-card grid-margin">
+    <div class="card">
+      <div class="card-body">
+        <h4>
+          Total Products: {{ page_obj.paginator.count }}
+        </h4>
+
+        <div class="table-responsive border rounded p-1">
+          <table class="table">
+            <thead class="table-primary">
+              <tr>
+                <th>#</th>
+                <th>Icon</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Active</th>
+                <th class="text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for product in page_obj %}
+              <tr>
+                <td>{{ product.id }}</td>
+                <td>
+                  {% if product.product_icon %}
+                  <img src="{{ product.product_icon.url }}" width="32">
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{% url 'product_detail' product.pk %}" class="text-decoration-none text-primary">
+                    <h6>{{ product.name|default_if_none:"" }}</h6>
+                  </a>
+                </td>
+                <td>{{ product.product_category.name|default_if_none:"-" }}</td>
+                <td>
+                  {% if product.is_active %}
+                  <span class="badge bg-success">Active</span>
+                  {% else %}
+                  <span class="badge bg-secondary">Inactive</span>
+                  {% endif %}
+                </td>
+                <td class="text-center">
+                  <!-- Desktop full buttons -->
+                  <div class="d-none d-md-inline">
+                    <a href="{% url 'product_update' product.pk %}" class="btn btn-primary btn-sm">Edit</a>
+                    <a href="{% url 'product_delete' product.pk %}" class="btn btn-danger btn-sm">Delete</a>
+                  </div>
+                  <!-- Mobile dropdown -->
+                  <div class="dropdown d-inline-block d-md-none">
+                    <button class="btn btn-link p-0" type="button" id="actionDropdown{{ product.pk }}"
+                      data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 24px;">
+                      &#x22EE;
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="actionDropdown{{ product.pk }}">
+                      <a class="dropdown-item text-primary" href="{% url 'product_update' product.pk %}">Edit</a>
+                      <a class="dropdown-item text-danger" href="{% url 'product_delete' product.pk %}">Delete</a>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="6" class="text-center">No products found.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination controls -->
+        <div class="d-flex mt-4 flex-wrap">
+          <p class="text-muted">
+            Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} products
+          </p>
+          <nav class="ml-auto">
+            <ul class="pagination separated pagination-primary">
+              {% if page_obj.has_previous %}
+              <li class="page-item">
+                <a href="?page={{ page_obj.previous_page_number }}" class="page-link"><i
+                    class="icon-arrow-left"></i></a>
+              </li>
+              {% else %}
+              <li class="page-item disabled">
+                <a class="page-link"><i class="icon-arrow-left"></i></a>
+              </li>
+              {% endif %}
+              {% for num in page_obj.paginator.page_range %}
+              {% if page_obj.number == num %}
+              <li class="page-item active"><a class="page-link">{{ num }}</a></li>
+              {% else %}
+              <li class="page-item"><a href="?page={{ num }}" class="page-link">{{ num }}</a></li>
+              {% endif %}
+              {% endfor %}
+              {% if page_obj.has_next %}
+              <li class="page-item">
+                <a href="?page={{ page_obj.next_page_number }}" class="page-link"><i class="icon-arrow-right"></i></a>
+              </li>
+              {% else %}
+              <li class="page-item disabled">
+                <a class="page-link"><i class="icon-arrow-right"></i></a>
+              </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+        <!-- End pagination controls -->
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

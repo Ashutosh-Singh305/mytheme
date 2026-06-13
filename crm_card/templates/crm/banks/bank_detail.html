@@ -1,0 +1,90 @@
+{% extends 'crm/base.html' %}
+
+{% block title %} Dashboard {% endblock %}
+{% block css %}
+
+{% endblock %}
+
+{% block body %}
+<div class="card">
+    <div class="p-2 mb-4">
+        <h3 class="mb-3 p-2 text-primary">{{ bank.name }} Details</h3>
+
+        <!-- Basic Information -->
+        <div class="profile-section">
+            <h5>Basic Information</h5>
+            <div class="profile-item"><span class="profile-label">Name</span><span class="profile-value">{{ bank.name|default_if_none:'' }}</span></div>
+            <div class="profile-item"><span class="profile-label">Code</span><span class="profile-value">{{ bank.code|default_if_none:'' }}</span></div>
+            <div class="profile-item"><span class="profile-label">Status</span>
+                <span class="profile-value">
+                    {% if bank.status %}
+                        <span class="badge bg-success">Active</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="profile-section">
+            <h5>Contact Information</h5>
+            <div class="profile-item"><span class="profile-label">Contact Person</span><span class="profile-value">{{ bank.contact_person|default_if_none:'' }}</span></div>
+            <div class="profile-item"><span class="profile-label">Email</span><span class="profile-value">{{ bank.contact_email|default_if_none:'' }}</span></div>
+            <div class="profile-item"><span class="profile-label">Phone</span><span class="profile-value">{{ bank.contact_phone|default_if_none:'' }}</span></div>
+            <div class="profile-item"><span class="profile-label">Address</span><span class="profile-value">{{ bank.address|default_if_none:'' }}</span></div>
+        </div>
+
+        <!-- Agreement Details -->
+        <div class="profile-section">
+            <h5>Agreement Details</h5>
+            <div class="profile-item"><span class="profile-label">Start Date</span><span class="profile-value">{{ bank.agreement_start_date|date:"d-m-Y" }}</span></div>
+            <div class="profile-item"><span class="profile-label">End Date</span><span class="profile-value">{{ bank.agreement_end_date|date:"d-m-Y" }}</span></div>
+            <div class="profile-item"><span class="profile-label">Status</span><span class="profile-value">{{ bank.agreement_status|default_if_none:'' }}</span></div>
+            <div class="profile-item">
+                <span class="profile-label">Document</span>
+                <span class="profile-value">
+                    {% if bank.agreement_document %}
+                        <a href="{{ bank.agreement_document.url }}" target="_blank" class="text-decoration-none">View Document</a>
+                    {% else %}
+                        No document uploaded
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Products & Commission -->
+        <div class="profile-section">
+            <h5>Products & Commission</h5>
+            <div class="profile-item">
+                <span class="profile-label">Products Offered</span>
+                <span class="profile-value">
+                    {% for product in bank.products_offered.all %}
+                        <span class="badge bg-primary">{{ product.name }}</span>
+                    {% empty %}
+                        No products linked
+                    {% endfor %}
+                </span>
+            </div>
+            <div class="profile-item"><span class="profile-label">Max Commission (%)</span><span class="profile-value">{{ bank.max_commission_percent|default_if_none:'0.00' }}%</span></div>
+        </div>
+
+        <!-- Audit Trail -->
+        <div class="profile-section">
+            <h5>Audit Trail</h5>
+            <div class="profile-item"><span class="profile-label">Created By</span><span class="profile-value">{{ bank.created_by|default_if_none:'' }}</span></div>
+            <div class="profile-item"><span class="profile-label">Created At</span><span class="profile-value">{{ bank.created_date|date:"d-m-Y H:i" }}</span></div>
+            <div class="profile-item"><span class="profile-label">Modified By</span><span class="profile-value">{{ bank.modified_by|default_if_none:'' }}</span></div>
+            <div class="profile-item"><span class="profile-label">Modified At</span><span class="profile-value">{{ bank.modified_date|date:"d-m-Y H:i" }}</span></div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="mt-4">
+            <a href="{% url 'bank_update' bank.pk %}" class="btn btn-primary btn-sm">Edit</a>
+            <a href="{% url 'bank_delete' bank.pk %}"
+               class="btn btn-danger btn-sm">Delete</a>
+            <a href="{% url 'bank_list' %}" class="btn btn-secondary btn-sm">Back</a>
+        </div>
+    </div>
+</div>
+{% endblock body %}

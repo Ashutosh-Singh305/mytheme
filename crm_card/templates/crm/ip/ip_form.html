@@ -1,0 +1,122 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+
+{% block title %}IP Range Create{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+{% endblock %}
+
+{% block body %}
+<div class="row justify-content-center">
+
+   <div class="col-12">
+
+      <div class="card shadow-sm form-card">
+
+         <!-- Header -->
+         <div class="card-header">
+            <h5 class="mb-0 d-flex align-items-center">
+               <i class="fas fa-network-wired me-2"></i>
+               Add IP Range
+            </h5>
+         </div>
+
+         <!-- Body -->
+         <div class="card-body">
+
+            <form method="post" novalidate>
+               {% csrf_token %}
+
+               <div class="row g-3">
+
+                  {% for fm in form %}
+
+                  {% if fm.field.widget.input_type == "checkbox" %}
+
+                  <!-- Checkbox -->
+                  <div class="col-lg-6">
+                     <div class="row align-items-center field-row">
+
+                        <div class="col-md-4">
+                           <label class="form-label-custom">
+                              {{ fm.label }}
+                           </label>
+                        </div>
+
+                        <div class="col-md-8">
+
+                           <div class="form-check">
+                              {{ fm }}
+                           </div>
+
+                           {% if fm.errors %}
+                           <small class="text-danger error-text">
+                              {{ fm.errors|striptags }}
+                           </small>
+                           {% endif %}
+                        </div>
+                     </div>
+                  </div>
+
+                  {% else %}
+
+                  <!-- Input Field -->
+                  <div class="col-lg-6">
+                     <div class="row align-items-center field-row">
+
+                        <div class="col-md-4">
+                           <label class="form-label form-label-custom">
+                              {{ fm.label }}
+                           </label>
+                        </div>
+
+                        <div class="col-md-8">
+
+                           {{ fm }}
+
+                           {% if fm.errors %}
+                           <small class="text-danger error-text">
+                              {{ fm.errors|striptags }}
+                           </small>
+                           {% endif %}
+                        </div>
+                     </div>
+                  </div>
+
+                  {% endif %}
+
+                  {% endfor %}
+
+               </div>
+
+               <!-- Non Field Errors -->
+               {% if form.non_field_errors %}
+               <div class="alert alert-danger mt-4 mb-0">
+                  {% for error in form.non_field_errors %}
+                  <div>{{ error }}</div>
+                  {% endfor %}
+               </div>
+               {% endif %}
+
+               <!-- Buttons -->
+               <div class="text-end p-2 border-top">
+
+                  <a href="{% url 'ip-list' %}" class="btn btn-secondary btn-sm">
+                     Cancel
+                  </a>
+
+                  <button type="submit" class="btn btn-primary btn-sm">
+                     Save
+                  </button>
+
+               </div>
+
+            </form>
+
+         </div>
+      </div>
+   </div>
+</div>
+{% endblock %}

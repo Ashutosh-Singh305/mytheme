@@ -1,0 +1,19 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3>Upload Leads from CSV</h3>
+  </div>
+  <div class="card-body">
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button class="btn btn-success" type="submit">
+        <i class="fas fa-upload"></i> Upload
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

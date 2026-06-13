@@ -1,0 +1,120 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+
+{% block title %}Upload Summary{% endblock %}
+
+{% block body %}
+
+<div class="card shadow-sm border-0">
+    
+    <!-- Header -->
+    <div class="card-header bg-white">
+        <h5 class="mb-0">
+            📊 Upload Summary
+        </h5>
+    </div>
+
+    <div class="p-1">
+
+        <!-- Summary Cards -->
+        <div class="row g-3 mb-4 text-center">
+
+            <div class="col-12 col-md-4">
+                <div class="card border-success bg-success-subtle h-100">
+                    <div class="card-body py-1">
+                        <h2 class="fw-bold text-success mb-1">
+                            {{ created }}
+                        </h2>
+                        <div class="text-muted small">
+                            Created
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <div class="card border-primary bg-primary-subtle h-100">
+                    <div class="card-body py-1">
+                        <h2 class="fw-bold text-primary mb-1">
+                            {{ updated }}
+                        </h2>
+                        <div class="text-muted small">
+                            Updated
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-12 col-md-4">
+                <div class="card border-danger bg-danger-subtle h-100">
+                    <div class="card-body py-1">
+                        <h2 class="fw-bold text-danger mb-1">
+                            {{ skipped }}
+                        </h2>
+                        <div class="text-muted small">
+                            Skipped
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Skipped Rows -->
+        {% if skipped_rows %}
+        <div class="mb-4">
+
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <h6 class="mb-0 text-danger fw-semibold">
+                    ⚠️ Skipped Rows
+                </h6>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-sm align-middle mb-0">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 140px;">Excel Row</th>
+                            <th>Error Message</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for row, error in skipped_rows %}
+                        <tr>
+                            <td>
+                                {{ row }}
+                            </td>
+                            <td class="text-danger">
+                                {{ error }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+        </div>
+        {% endif %}
+
+        <!-- Buttons -->
+        <div class="d-flex justify-content-end gap-2 mt-4">
+
+            <a href="{% url 'crm-data-upload' %}"
+               class="btn btn-outline-secondary btn-sm">
+                🔄 Upload Another
+            </a>
+
+            <a href="/crm/data-upload/"
+               class="btn btn-primary btn-sm">
+                🏠 Back to Upload
+            </a>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

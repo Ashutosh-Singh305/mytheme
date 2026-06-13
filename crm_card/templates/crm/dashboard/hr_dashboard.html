@@ -1,0 +1,607 @@
+{% extends 'crm/base.html' %}
+{% load static%}
+{% block title %} HR Dashboard {% endblock %}
+{% block css %}
+<link rel="stylesheet" href="/static/daterangepicker/daterangepicker.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style id="cardstyle01">
+    .candidate-row.active {
+        border: 1px solid #007bff;
+        background: #f0f8ff;
+    }
+
+    .label-font {
+        font-weight: 600;
+        font-size: 15px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+
+<!-- HEADER -->
+<div class="row mb-2">
+    <div class="col-12">
+        <div class="card p-2">
+            <div
+                class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2">
+
+                <!-- LEFT -->
+                <div class="col-lg-7">
+                    <h4 class="mb-1">HR Dashboard</h4>
+                    <small class="text-muted">
+                        Welcome {{ request.user.username }} |
+                        {{ request.user.userprofile.branch.name }}
+                    </small>
+                </div>
+
+                <!-- RIGHT -->
+                <div class="col-lg-4 p-1">
+                    <div class="d-flex flex-column flex-sm-row gap-1">
+                        <input
+                            type="text"
+                            id="candidateSearch"
+                            class="form-control form-control-sm"
+                            placeholder="Search mobile / name / emp code">
+
+                        <button
+                            class="btn btn-primary btn-sm"
+                            type="button"
+                            onclick="applycandidateSearchh()">
+                            Search
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KPI CARDS -->
+<div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-2 mb-4">
+
+    <div class="col">
+        <div class="card kpi-metric-card metric-calls shadow-sm border-0">
+            <div class="card-body p-2 d-flex align-items-center">
+                <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
+                    <i class="bi bi-person-plus-fill fs-6"></i>
+                </div>
+                <div class="ms-2 text-start">
+                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">New Candidate</h6>
+                    <h4 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ new_candidates|default:0 }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card kpi-metric-card metric-followup shadow-sm border-0">
+            <div class="card-body p-2 d-flex align-items-center">
+                <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
+                    <i class="bi bi-telephone-outbound-fill fs-6"></i>
+                </div>
+                <div class="ms-2 text-start">
+                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Contacted Today</h6>
+                    <h4 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ contacted_today|default:0 }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card kpi-metric-card metric-hot shadow-sm border-0">
+            <div class="card-body p-2 d-flex align-items-center">
+                <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
+                    <i class="bi bi-calendar2-check-fill fs-6"></i>
+                </div>
+                <div class="ms-2 text-start">
+                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Interview Today</h6>
+                    <h4 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ interviews_today|default:0 }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card kpi-metric-card metric-interest shadow-sm border-0">
+            <div class="card-body p-2 d-flex align-items-center">
+                <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
+                    <i class="bi bi-award-fill fs-6"></i>
+                </div>
+                <div class="ms-2 text-start">
+                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Shortlisted</h6>
+                    <h4 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ shortlisted|default:0 }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card kpi-metric-card metric-app shadow-sm border-0">
+            <div class="card-body p-2 d-flex align-items-center">
+                <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
+                    <i class="bi bi-door-open-fill fs-6"></i>
+                </div>
+                <div class="ms-2 text-start">
+                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Joining Soon</h6>
+                    <h4 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ joining_soon|default:0 }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col">
+        <div class="card kpi-metric-card metric-disb shadow-sm border-0">
+            <div class="card-body p-2 d-flex align-items-center">
+                <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
+                    <i class="bi bi-journal-bookmark-fill fs-6"></i>
+                </div>
+                <div class="ms-2 text-start">
+                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Training Pending</h6>
+                    <h4 class="mb-0 fw-bold mt-1" style="line-height: 1.1;">{{ training_pending|default:0 }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- MAIN -->
+<div class="row g-2">
+    <!-- Left PANEL -->
+    <div class="col-md-7" id="lead_details_left">
+        <div class="card position-relative shadow-sm h-100">
+
+            <div class="card-header mb-0 p-1">
+                <h5>Candidate Details</h5>
+            </div>
+
+            <!-- STATIC STRUCTURE (IMPORTANT FIX) -->
+            <div class="card-body p-2">
+
+                <!-- Header Section -->
+                <div class="d-flex justify-content-between align-items-center flex-nowrap mb-1">
+
+                    <!-- LEFT -->
+                    <div class="d-flex align-items-center gap-2 flex-nowrap">
+
+                        <a href="#" id="callLink" class="text-decoration-none text-nowrap">
+                            📞 <span id="ld_mobile">-</span>
+                        </a>
+
+                        <span class="badge badge bg-warning  text-nowrap" id="ld_status">
+                            -
+                        </span>
+
+                    </div>
+
+                    <!-- RIGHT BUTTONS -->
+                    <div class="d-flex gap-1 flex-nowrap">
+
+                        <button type="button"
+                            id="newBtn"
+                            class="btn btn-outline-primary btn-sm"
+                            onclick="handleNewCancel()"
+                            title="New">
+
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+
+                        <button id="editBtn"
+                            class="btn btn-outline-primary btn-sm"
+                            onclick="toggleEdit()">
+
+                            Edit
+                        </button>
+
+                    </div>
+
+                </div>
+                <hr class="mb-0 mt-0">
+                <!-- Two Column Layout -->
+                <div class="row">
+
+                    <!-- LEFT -->
+                    <div class="col-md-6">
+
+                        <div class=" row align-items-center">
+                            <label class="col-5 label-font">Name</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_name"  type="text"
+                                    class="form-control form-control-sm" disabled>
+                            </div>
+                        </div>
+                        
+
+                        <div class=" row align-items-center">
+                            <label class="col-5 label-font">Applied For</label>
+                            <div class="col-7 mt-1">
+                                <select id="ld_applied_for" class="form-select form-control-sm" 
+                                    disabled>
+                                    {% for key, label in position_applied_for_choices %}
+                                    <option value="{{ key }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class=" row align-items-center">
+                            <label class="col-5 label-font">Experience</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_experince"  class="form-control form-control-sm"
+                                    disabled>
+                            </div>
+                        </div>
+
+                        <div class="row align-items-center">
+                            <label class="col-5 label-font">Area</label>
+                            <div class="col-7 mt-1">
+                                <input id="id_candidate_area"  type="text"
+                                    class="form-control form-control-sm" disabled>
+                            </div>
+                        </div>
+
+                        <div class="row align-items-center">
+                            <label class="col-5 label-font">Calling Date</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_calling_date"  type="text"
+                                    class="form-control form-control-sm" placeholder="DD/MM/YYYY" autocomplete="off"
+                                    disabled>
+                            </div>
+                        </div>
+
+                        <div class="row align-items-center">
+                            <label class="col-5 label-font">DOJ</label>
+                            <div class="col-7 mt-1">
+                                <input id="id_doj" type="text" 
+                                    class="form-control form-control-sm" placeholder="DD/MM/YYYY" autocomplete="off"
+                                    disabled>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- RIGHT -->
+                    <div class="col-md-6">
+                        <div class="row align-items-center" id="mobileFieldRow">
+                            <label class="col-5 label-font">Mobile No.</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_mobile_form"  type="number"
+                                    class="form-control form-control-sm" disabled>
+                            </div>
+                        </div>
+                        <div class="row align-items-center">
+                            <label class="col-5 label-font">Interview Date</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_interview_date"  type="text" placeholder="DD/MM/YYYY"
+                                    class="form-control form-control-sm" autocomplete="off" disabled>
+                            </div>
+                        </div>
+                        <div class="row align-items-center">
+                            <label class="col-5 label-font">Source</label>
+                            <div class="col-7 mt-1">
+                                <select id="ld_source" class="form-select form-select-sm" 
+                                    disabled>
+                                    {% for key, label in source_choices %}
+                                    <option value="{{ key }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row align-items-center">
+                            <label class="col-5 label-font">Recruiter</label>
+                            <div class="col-7 mt-1">
+                                <select id="ld_recruiter" class="form-select form-select-sm"  disabled>
+                                    <option value="" selected disabled>Select Recruiter</option>
+                                    {% for user in recruiters %}
+                                        <option value="{{ user.id }}">
+                                            {% if user.first_name or user.last_name %}
+                                                {{ user.first_name }} {{ user.last_name }}
+                                            {% else %}
+                                                {{ user.username }}
+                                            {% endif %}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+
+                        <div class="row align-items-center" id="assignRow">
+                            <label class="col-5 label-font">Assigned To</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_assign_to"  type="text"
+                                    class="form-control form-control-sm" readonly>
+                            </div>
+                        </div>
+                        <div class="row align-items-center" id="modifiedRow">
+                            <label class="col-5 label-font">Modified by</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_modified_by"  type="text"
+                                    class="form-control form-control-sm" readonly>
+                            </div>
+                        </div>
+
+                        <div class=" row align-items-center label-font" id="lastUpdatedRow">
+                            <label class="col-5 ">Last Updt.</label>
+                            <div class="col-7 mt-1">
+                                <input id="ld_modified_date" type="text" 
+                                    class="form-control form-control-sm" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <hr class="mb-1 mt-1">
+                <div class="row">
+                    <label class="col-3 label-font">Status</label>
+                    <div class="col-9 mt-1">
+                        <select id="ld_candidate_status" class="form-select form-select-sm" >
+                            {% for key, label in candidate_status_choices %}
+                            <option value="{{ key }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+
+                    </div>
+
+                    <div class="col-12 mt-2">
+                        <!-- Notes -->
+                        <textarea id="note" class="form-control" style="resize: vertical;"></textarea>
+                        <hr class="mb-1 mt-1">
+                    </div>
+
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="">
+                        <button id="prevBtn" class="btn btn-outline-primary btn-sm" onclick="preCandidate()">⬅ Previous</button>
+                    </div>
+                    <div class=" ">
+                        <button class="btn btn-outline-success btn-sm" onclick="saveCandidate()">Save</button>
+                    </div>
+                    <div class="">
+                        <button id="nextBtn" class="btn btn-outline-primary btn-sm" onclick="nextCandidate()">Next ➡</button>
+                    </div>
+                </div>
+            </div><!-- card body -->
+
+            <div id="candidateLoader" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; 
+                        background:rgba(255,255,255,0.7); z-index:10; 
+                        align-items:center; justify-content:center;">
+
+                <div class="spinner-border text-primary" role="status"></div>
+            </div><!-- loader -->
+
+        </div> <!-- card -->
+
+    </div>
+
+    <!-- Right -->
+    <div class="col-md-5 grid-margin stretch-card">
+        <div class="card">
+            <div class="card-header p-1">
+
+                <!-- TITLE (TOP ROW) -->
+                <div class="mb-2">
+                    <h5 class="mb-0">My Candidates</h5>
+                </div>
+
+                <!-- FILTER ROW -->
+                <div class="d-flex flex-nowrap justify-content-between align-items-center ml-0">
+                    <div class="mb-0">
+                        <!-- APPLIED FOR -->
+                        <select id="appliedForFilter" class="form-select form-select-sm" style="width: 160px;"
+                            onchange="applyFilter()">
+                            <option value="" {% if not request.GET.applied_for %}selected{% endif %}>
+                                All Applied For
+                            </option>
+                            {% for key, label in position_applied_for_choices %}
+                            <option value="{{ key }}" {% if request.GET.applied_for == key %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="text-end mb-0">
+                        <!-- STATUS -->
+                        <select id="candidateStatusfilter" class="form-select form-select-sm ml-1"
+                            style="width: 150px;" onchange="applyFilter()">
+                            <option value="" {% if not request.GET.status %}selected{% endif %}>
+                                All Status
+                            </option>
+                            {% for key, label in candidate_status_choices %}
+                            <option value="{{ key }}" {% if request.GET.status == key %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="table-responsive border rounded p-1 d-md-block d-none">
+                <table class="table table-fixed table-sm">
+                    <thead class="o">
+                        <tr class="table-primary">
+                            <!-- <th onclick="sortTable('name')" style="font-weight: 600;">Name</th> -->
+                            <th style="font-weight: 600;">Name</th>
+                            <th style="font-weight: 600;">Status</th>
+                            <!-- <th style="font-weight: 600;">Interview Date</th> -->
+                            <th class="text-center" style="font-weight: 600;">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for candidate in candidates %}
+                        <tr class="h-100 candidate-row" data-id="{{ candidate.id }}" style="cursor:pointer;">
+
+                            <!-- NAME -->
+                            <td>
+                                {{ candidate.full_name }}
+                            </td>
+
+                            <!-- STATUS -->
+                            <td>
+                                <span class="badge bg-warning">
+                                    {{ candidate.get_candidate_status_display }}
+                                </span>
+                            </td>
+
+                            <!-- INTERVIEW DATE -->
+                            <!-- <td>
+                                {{ candidate.interview_date|date:"d/m/Y"|default:"-" }}
+                            </td> -->
+
+                            <!-- ACTIONS -->
+                            <td class="text-center">
+
+                                <!-- CALL -->
+                                <a href="tel:{{ candidate.phone }}" class="btn btn-outline-success btn-sm w-48">
+                                    <i class="bi bi-telephone-fill fs-7"></i>
+                                </a>
+
+                                <!-- OPEN -->
+                                <a class="btn btn-outline-primary btn-sm open-btn w-48"
+                                    href="/crm/CandidateOnboarding/{{ candidate.id }}">
+                                    <i class="bi bi-eye-fill fs-7"></i>
+                                </a>
+
+                            </td>
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div> <!--  table-responsive -->
+
+            <div class="row d-md-none d-lg-none">
+
+                {% for candidate in candidates %}
+
+                <div class="col-md-12 mb-0">
+                    <div class="card h-100 candidate-row {% if forloop.first %}active{% endif %}"
+                        data-id="{{ candidate.id }}" style="cursor:pointer;">
+
+                        <div class="p-2 d-flex flex-column">
+
+                            <!-- Header -->
+                            <div class="d-flex justify-content-between align-items-start flex-wrap">
+
+                                <h6 class="mb-0 text-truncate" style="max-width: 70%;">
+                                    {{ candidate.full_name }}
+                                </h6>
+
+                                <span class="badge badge-warning ml-2" style="white-space: nowrap;">
+                                    {{ candidate.get_candidate_status_display }}
+                                </span>
+
+                            </div>
+                            <!-- Info -->
+                            <div class="mb-1 d-flex justify-content-between">
+                                <span>
+                                    <small class="text-muted">Interview Date</small> :
+                                    <small>{{ candidate.interview_date|date:"d/m/Y"|default:"-" }}</small>
+                                </span>
+                            </div>
+
+                            <!-- 👇 PUSH ACTIONS TO BOTTOM -->
+                            <div class="mt-1 text-center">
+                                <div class="d-flex justify-content-between">
+
+                                    <a href="tel:{{ candidate.phone }}" class="btn btn-success btn-sm">
+                                        Call
+                                    </a>
+
+                                    <a class="btn btn-primary btn-sm open-btn"
+                                        href="/crm/CandidateOnboarding/{{ candidate.id }}">
+                                        Open
+                                    </a>
+
+                                </div>
+                                <hr class="my-1">
+                            </div>
+
+                        </div>
+
+                    </div>
+                </div>
+                {% endfor %}
+
+            </div>
+            <!-- Pagination Controls -->
+            <div class="d-flex flex-column flex-md-row align-items-center justify-content-between gap-2 p-2">
+
+                <!-- Left Text -->
+                <p class="text-muted small mb-0 text-center text-md-start">
+                    Showing
+                    {{ page_obj.start_index }}
+                    to
+                    {{ page_obj.end_index }}
+                    of
+                    {{ page_obj.paginator.count }}
+                    products
+                </p>
+
+                <!-- Pagination -->
+                <nav aria-label="Pagination">
+
+                    <ul class="pagination pagination-sm mb-0 flex-wrap justify-content-center">
+
+                        <!-- Previous -->
+                        {% if page_obj.has_previous %}
+                        <li class="page-item">
+                            <a href="?page={{ page_obj.previous_page_number }}&status={{ request.GET.status }}&search={{ request.GET.search }}"
+                                class="page-link">
+                                <i class="bi bi-arrow-left"></i>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">
+                                <i class="bi bi-arrow-left"></i>
+                            </span>
+                        </li>
+                        {% endif %}
+
+                        <!-- Current Page -->
+                        <li class="page-item active">
+                            <span class="page-link">
+                                {{ page_obj.number }}
+                            </span>
+                        </li>
+
+                        <!-- Next -->
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a href="?page={{ page_obj.next_page_number }}&status={{ request.GET.status }}&search={{ request.GET.search }}"
+                                class="page-link">
+                                <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">
+                                <i class="bi bi-arrow-right"></i>
+                            </span>
+                        </li>
+                        {% endif %}
+
+                    </ul>
+
+                </nav>
+
+            </div>
+            <!-- End Pagination Controls -->
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block Script %}
+<!-- DateRangePikar -->
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+<script src="/static/daterangepicker/daterangepicker.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/inputmask/5.0.8/jquery.inputmask.min.js"></script>
+<script src="/static/dashboard/hr_dashboard.js"></script>
+{% endblock %}

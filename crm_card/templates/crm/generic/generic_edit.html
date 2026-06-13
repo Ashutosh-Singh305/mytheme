@@ -1,0 +1,283 @@
+{% extends 'crm/base.html' %}
+{% load widget_tweaks %}
+{% load custom_filters %}
+
+{% block title %} {{ title }} {% endblock %}
+
+{% block css %}
+<link rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<style>
+    .is-invalid {
+        border: 1px solid #dc3545;
+    }
+
+    .alert-danger {
+        position: sticky;
+        top: 10px;
+        z-index: 1000;
+    }
+
+    .nav-tabs .nav-link {
+        position: relative;
+    }
+
+    .tab-error-icon {
+        font-size: 12px;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+
+<div class="card shadow-sm border-0">
+
+    <form method="post"
+        enctype="multipart/form-data"
+        novalidate>
+
+        {% csrf_token %}
+
+        <!-- ERROR -->
+        {% if form.errors %}
+        <div class="alert alert-danger alert-dismissible fade show m-2"
+            role="alert">
+
+            <strong>Error!</strong>
+            Please correct the errors below.
+
+            <button type="button"
+                class="btn-close"
+                data-bs-dismiss="alert">
+            </button>
+
+        </div>
+        {% endif %}
+
+        <!-- HEADER -->
+        <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+
+            <h5 class="text-primary mb-0">
+                {{ title }}
+            </h5>
+
+            <div class="d-flex gap-1">
+
+                <button class="btn btn-primary btn-sm"
+                    type="submit">
+                    Update
+                </button>
+
+                <a href="javascript:history.back()"
+                    class="btn btn-secondary btn-sm">
+                    Back
+                </a>
+
+            </div>
+
+        </div>
+
+        <!-- TAB HEADER -->
+        <div class="border-bottom">
+
+            <ul class="nav nav-tabs"
+                id="formTabs"
+                role="tablist">
+
+                {% for fs in fieldsets %}
+                <li class="nav-item">
+
+                    <button class="nav-link {% if forloop.first %}active{% endif %}"
+                        data-bs-toggle="tab"
+                        data-bs-target="#{{ fs.id }}"
+                        type="button">
+
+                        {{ fs.title }}
+
+                    </button>
+
+                </li>
+                {% endfor %}
+            </ul>
+
+        </div>
+
+        <!-- TAB BODY -->
+        <div class="card-body">
+
+            <div class="tab-content">
+
+                {% for fs in fieldsets %}
+                <div class="tab-pane fade {% if forloop.first %}show active{% endif %}"
+                    id="{{ fs.id }}">
+
+                    <div class="row">
+
+                        {% for fname in fs.fields %}
+                        {% with field=form|get_field:fname %}
+
+                        {% if field %}
+                        <div class="col-md-6 mb-1">
+
+                            <label class="form-label">
+
+                                {{ field.label }}
+
+                                {% if field.field.required %}
+                                <span class="text-danger">*</span>
+                                {% endif %}
+
+                            </label>
+
+                            {% if field.errors %}
+                                {% if field.field.widget.input_type == "select" %}
+                                    {% render_field field class="form-select form-select-sm is-invalid" %}
+                                {% else %}
+                                    {% render_field field class="form-control form-control-sm is-invalid" %}
+                                {% endif %}
+                            {% else %}
+                                {% if field.field.widget.input_type == "select" %}
+                                    {% render_field field class="form-select form-select-sm" %}
+                                {% else %}
+                                    {% render_field field class="form-control form-control-sm" %}
+                                {% endif %}
+                            {% endif %}
+
+                            {% if field.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ field.errors|join:", " }}
+                            </div>
+                            {% endif %}
+
+                        </div>
+                        {% endif %}
+
+                        {% endwith %}
+                        {% endfor %}
+
+                    </div>
+
+                </div>
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+        <!-- FOOTER -->
+        <div class="border-top p-2 d-flex justify-content-end gap-1">
+
+            <button class="btn btn-primary btn-sm"
+                type="submit">
+                Update
+            </button>
+
+            <a href="javascript:history.back()"
+                class="btn btn-secondary btn-sm">
+                Back
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
+
+{% endblock %}
+
+{% block Script %}
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+    const form = document.querySelector("form");
+
+    function openErrorTab(field) {
+
+        const pane =
+            field.closest(".tab-pane");
+
+        if (!pane) return;
+
+        const tabBtn =
+            document.querySelector(
+                `[data-bs-target="#${pane.id}"]`
+            );
+
+        if (!tabBtn) return;
+
+        bootstrap.Tab
+            .getOrCreateInstance(tabBtn)
+            .show();
+
+        setTimeout(() => {
+
+            field.focus();
+
+            field.scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+        }, 100);
+    }
+
+    // CLIENT VALIDATION
+    form.addEventListener("submit", e => {
+
+        const invalidField =
+            form.querySelector(":invalid");
+
+        if (invalidField) {
+
+            e.preventDefault();
+
+            openErrorTab(invalidField);
+        }
+    });
+
+    // SERVER VALIDATION
+    const invalidFields =
+        document.querySelectorAll(
+            ".is-invalid"
+        );
+
+    if (invalidFields.length > 0) {
+
+        openErrorTab(
+            invalidFields[0]
+        );
+
+        invalidFields.forEach(field => {
+
+            const pane =
+                field.closest(".tab-pane");
+
+            if (!pane) return;
+
+            const tabBtn =
+                document.querySelector(
+                    `[data-bs-target="#${pane.id}"]`
+                );
+
+            if (
+                tabBtn &&
+                !tabBtn.querySelector(
+                    ".tab-error-icon"
+                )
+            ) {
+
+                tabBtn.insertAdjacentHTML(
+                    "beforeend",
+                    `
+                    <span class="tab-error-icon text-danger ms-1">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </span>
+                    `
+                );
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

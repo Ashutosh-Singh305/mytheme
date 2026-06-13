@@ -15,7 +15,7 @@
     <div class="sf-left d-flex align-items-center flex-wrap">
 
         <!-- Object Icon -->
-        <div class="sf-object-icon flex-shrink-0">
+        <div class="sf-object-icon">
             {{ lv.object_name|slice:":1" }}
         </div>
 
@@ -25,7 +25,7 @@
             <div class="dropdown">
 
                 <button
-                    class="btn p-0 border-0 bg-transparent sf-title-dropdown d-flex align-items-center flex-wrap dropdown-toggle"
+                    class="btn p-0 border-0 bg-transparent sf-title-dropdown dropdown-toggle"
                     type="button" data-bs-toggle="dropdown" aria-expanded="false">
 
                     <span class="text-truncate">
@@ -176,171 +176,173 @@
 
 
     <div class="card">
-        <div id="table-wrapper" class="table-responsive">
-            <table class="table custom-table align-middle table-sm">
-                <!-- SELECTION BANNER -->
-                <div id="selection-banner" class="alert alert-light d-none mb-2">
-                    <span id="selection-count"></span>
-                    <a href="#" id="select-all-link" class="ms-2 d-none text-primary">
-                        Select all {{ page_obj.paginator.count }}
-                    </a>
-                </div>
+        <div class="card-body p-0">
+            <div id="table-wrapper" class="table-responsive rounded-top-4">
+                <table class="table custom-table align-middle">
+                    <!-- SELECTION BANNER -->
+                    <div id="selection-banner" class="alert alert-light d-none mb-2">
+                        <span id="selection-count"></span>
+                        <a href="#" id="select-all-link" class="ms-2 d-none text-primary">
+                            Select all {{ page_obj.paginator.count }}
+                        </a>
+                    </div>
 
-                <!-- TABLE HEADER -->
-                <thead>
-                    <tr class="table-primary">
+                    <!-- TABLE HEADER -->
+                    <thead>
+                        <tr class="table-primary">
 
-                        <!-- PAGE SELECT -->
-                        {% if perms.crm.can_export_data %}
-                        <th>
-                            <input type="checkbox" id="select-page">
-                        </th>
-                        {% endif %}
-                        <th>
-                            <a class="text-decoration-none"
-                                href="?filter={{ lv.pk }}&sort=id&dir={% if current_sort == 'id' and current_dir == 'asc' %}desc{% else %}asc{% endif %}">
-                                ID
-                                {% if current_sort == 'id' %}
-                                {% if current_dir == 'asc' %}▲{% else %}▼{% endif %}
+                            <!-- PAGE SELECT -->
+                            {% if perms.crm.can_export_data %}
+                            <th>
+                                <input type="checkbox" id="select-page">
+                            </th>
+                            {% endif %}
+                            <th>
+                                <a class="text-decoration-none"
+                                    href="?filter={{ lv.pk }}&sort=id&dir={% if current_sort == 'id' and current_dir == 'asc' %}desc{% else %}asc{% endif %}">
+                                    ID
+                                    {% if current_sort == 'id' %}
+                                    {% if current_dir == 'asc' %}▲{% else %}▼{% endif %}
+                                    {% endif %}
+                                </a>
+                            </th>
+
+
+                            {% for f in fields %}
+                            <th class="text-capitalize font-weight-bold">
+
+                                {% if current_sort == f.name %}
+                                {% if current_dir == "asc" %}
+                                <a href="?filter={{ lv.pk }}&sort={{ f.name }}&dir=desc&page={{ page_obj.number }}"
+                                    class="text-decoration-none">
+                                    {{ f.label }} ▲
+                                </a>
+                                {% else %}
+                                <a href="?filter={{ lv.pk }}&sort={{ f.name }}&dir=asc&page={{ page_obj.number }}"
+                                    class="text-decoration-none">
+                                    {{ f.label }} ▼
+                                </a>
                                 {% endif %}
-                            </a>
-                        </th>
+                                {% else %}
+                                <a href="?filter={{ lv.pk }}&sort={{ f.name }}&dir=asc&page={{ page_obj.number }}"
+                                    class="text-decoration-none">
+                                    {{ f.label }}
+                                </a>
+                                {% endif %}
 
+                            </th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
 
-                        {% for f in fields %}
-                        <th class="text-capitalize font-weight-bold">
+                    <!-- TABLE BODY -->
+                    <tbody>
+                        {% for row in rows %}
+                        <tr>
 
-                            {% if current_sort == f.name %}
-                            {% if current_dir == "asc" %}
-                            <a href="?filter={{ lv.pk }}&sort={{ f.name }}&dir=desc&page={{ page_obj.number }}"
-                                class="text-decoration-none">
-                                {{ f.label }} ▲
-                            </a>
-                            {% else %}
-                            <a href="?filter={{ lv.pk }}&sort={{ f.name }}&dir=asc&page={{ page_obj.number }}"
-                                class="text-decoration-none">
-                                {{ f.label }} ▼
-                            </a>
-                            {% endif %}
-                            {% else %}
-                            <a href="?filter={{ lv.pk }}&sort={{ f.name }}&dir=asc&page={{ page_obj.number }}"
-                                class="text-decoration-none">
-                                {{ f.label }}
-                            </a>
+                            <!-- ROW CHECKBOX -->
+                            {% if perms.crm.can_export_data %}
+                            <td>
+                                <input type="checkbox" name="selected_ids" value="{{ row.pk }}" class="row-checkbox">
+                            </td>
                             {% endif %}
 
-                        </th>
+                            <td>
+                                <a href="{% url 'crm_object_detail' lv.object_name row.pk %}" class="text-decoration-none">
+                                    {{ row.pk }}
+                                </a>
+                            </td>
+
+                            {% for f in fields %}
+                            {% with value=row|attr:f.name %}
+                            <td>{{ value|default_if_none:""|safe }}</td>
+                            {% endwith %}
+                            {% endfor %}
+
+                        </tr>
                         {% endfor %}
-                    </tr>
-                </thead>
+                    </tbody>
 
-                <!-- TABLE BODY -->
-                <tbody>
-                    {% for row in rows %}
-                    <tr>
-
-                        <!-- ROW CHECKBOX -->
-                        {% if perms.crm.can_export_data %}
-                        <td>
-                            <input type="checkbox" name="selected_ids" value="{{ row.pk }}" class="row-checkbox">
-                        </td>
-                        {% endif %}
-
-                        <td>
-                            <a href="{% url 'crm_object_detail' lv.object_name row.pk %}" class="text-decoration-none">
-                                {{ row.pk }}
-                            </a>
-                        </td>
-
-                        {% for f in fields %}
-                        {% with value=row|attr:f.name %}
-                        <td>{{ value|default_if_none:""|safe }}</td>
-                        {% endwith %}
-                        {% endfor %}
-
-                    </tr>
-                    {% endfor %}
-                </tbody>
-
-            </table>
-        </div>
-
-        <!-- Pagination -->
-        <div class="d-flex p-1 flex-column flex-md-row align-items-center justify-content-between gap-2 mt-2 mb-3">
-
-            <!-- Showing Text -->
-            <p class="text-muted mb-0 small">
-                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }}
-                of {{ page_obj.paginator.count }} entries
-            </p>
+                </table>
+            </div>
+            
 
             <!-- Pagination -->
-            <nav aria-label="Page navigation">
-                <ul class="pagination pagination-sm mb-0">
+            <div class="d-flex p-3 flex-column flex-md-row align-items-center justify-content-between gap-2">
 
-                    <!-- Previous -->
-                    {% if page_obj.has_previous %}
-                    <li class="page-item">
-                        <a class="page-link"
-                            href="?filter={{ lv.pk }}&page={{ page_obj.previous_page_number }}{% if current_sort %}&sort={{ current_sort }}&dir={{ current_dir }}{% endif %}">
-                            <i class="bi bi-chevron-left"></i>
-                        </a>
-                    </li>
-                    {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link">
-                            <i class="bi bi-chevron-left"></i>
-                        </span>
-                    </li>
-                    {% endif %}
+                <!-- Showing Text -->
+                <p class="text-muted mb-0 small">
+                    Showing {{ page_obj.start_index }} to {{ page_obj.end_index }}
+                    of {{ page_obj.paginator.count }} entries
+                </p>
 
-                    <!-- Page Numbers -->
-                    {% for num in page_obj.paginator.page_range %}
+                <!-- Pagination -->
+                <nav aria-label="Page navigation">
+                    <ul class="pagination pagination-sm mb-0">
 
-                    {% if num <= 10 or num == page_obj.paginator.num_pages %} {% if num == page_obj.number %} <li
-                        class="page-item active">
-                        <span class="page-link">
-                            {{ num }}
-                        </span>
-                        </li>
-                        {% else %}
+                        <!-- Previous -->
+                        {% if page_obj.has_previous %}
                         <li class="page-item">
                             <a class="page-link"
-                                href="?filter={{ lv.pk }}&page={{ num }}{% if current_sort %}&sort={{ current_sort }}&dir={{ current_dir }}{% endif %}">
-                                {{ num }}
-                            </a>
-                        </li>
-                        {% endif %}
-
-                        {% elif num == 11 %}
-                        <li class="page-item disabled">
-                            <span class="page-link">...</span>
-                        </li>
-                        {% endif %}
-
-                        {% endfor %}
-
-                        <!-- Next -->
-                        {% if page_obj.has_next %}
-                        <li class="page-item">
-                            <a class="page-link"
-                                href="?filter={{ lv.pk }}&page={{ page_obj.next_page_number }}{% if current_sort %}&sort={{ current_sort }}&dir={{ current_dir }}{% endif %}">
-                                <i class="bi bi-chevron-right"></i>
+                                href="?filter={{ lv.pk }}&page={{ page_obj.previous_page_number }}{% if current_sort %}&sort={{ current_sort }}&dir={{ current_dir }}{% endif %}">
+                                <i class="bi bi-chevron-left"></i>
                             </a>
                         </li>
                         {% else %}
                         <li class="page-item disabled">
                             <span class="page-link">
-                                <i class="bi bi-chevron-right"></i>
+                                <i class="bi bi-chevron-left"></i>
                             </span>
                         </li>
                         {% endif %}
 
-                </ul>
-            </nav>
+                        <!-- Page Numbers -->
+                        {% for num in page_obj.paginator.page_range %}
+
+                        {% if num <= 5 or num == page_obj.paginator.num_pages %} {% if num == page_obj.number %} <li
+                            class="page-item active">
+                            <span class="page-link">
+                                {{ num }}
+                            </span>
+                            </li>
+                            {% else %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                    href="?filter={{ lv.pk }}&page={{ num }}{% if current_sort %}&sort={{ current_sort }}&dir={{ current_dir }}{% endif %}">
+                                    {{ num }}
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            {% elif num == 11 %}
+                            <li class="page-item disabled">
+                                <span class="page-link">...</span>
+                            </li>
+                            {% endif %}
+
+                            {% endfor %}
+
+                            <!-- Next -->
+                            {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link"
+                                    href="?filter={{ lv.pk }}&page={{ page_obj.next_page_number }}{% if current_sort %}&sort={{ current_sort }}&dir={{ current_dir }}{% endif %}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">
+                                    <i class="bi bi-chevron-right"></i>
+                                </span>
+                            </li>
+                            {% endif %}
+
+                    </ul>
+                </nav>
+            </div>
         </div>
     </div>
-
 </form>
 
 

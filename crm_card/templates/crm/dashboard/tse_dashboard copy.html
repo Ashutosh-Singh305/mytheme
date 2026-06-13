@@ -1,0 +1,339 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+{% block title %} Dashboard {% endblock %}
+{% block css %}
+<link rel="stylesheet" href="/static/daterangepicker/daterangepicker.css">
+<link rel="stylesheet" href="{% static 'css/list.css' %}">
+<style id="cardstyle01">
+    .lead-row.active {
+        border: 1px solid #6366f1 !important;
+        background-color: #f8fafc !important;
+    }
+</style>
+
+{% endblock %}
+
+{% block body %}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card p-3">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                <div>
+                    <h4 class="mb-1 fw-bold text-dark">TSE Dashboard</h4>
+                    <small class="text-muted">
+                        Welcome {{ request.user.username }} | {{ request.user.userprofile.branch.name }}
+                    </small>
+                </div>
+                <div class="d-flex align-items-center gap-2 w-100 w-md-auto">
+                    <input type="text" id="searchInput" class="form-control form-control-sm" placeholder="Search mobile / name" style="max-width: 300px;">
+                    <button class="btn btn-primary btn-sm px-4" onclick="applySearch()">Search</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4 text-center">
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card h-100 kpi-metric-card metric-calls shadow-sm">
+            <div class="card-body">
+                <h6 class="mb-2 small fw-semibold text-uppercase opacity-75">Calls Today</h6>
+                <h3 class="mb-0 fw-bold">{{ calls_today|default:0 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card h-100 kpi-metric-card metric-followup shadow-sm">
+            <div class="card-body">
+                <h6 class="mb-2 small fw-semibold text-uppercase opacity-75">Follow-UP</h6>
+                <h3 class="mb-0 fw-bold">{{ followups_today|default:0 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card h-100 kpi-metric-card metric-hot shadow-sm">
+            <div class="card-body">
+                <h6 class="mb-2 small fw-semibold text-uppercase opacity-75">Hot Lead</h6>
+                <h3 class="mb-0 fw-bold">{{ hot_leads|default:0 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card h-100 kpi-metric-card metric-interest shadow-sm">
+            <div class="card-body">
+                <h6 class="mb-2 small fw-semibold text-uppercase opacity-75">Interested</h6>
+                <h3 class="mb-0 fw-bold">{{ interested_leads|default:0 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card h-100 kpi-metric-card metric-app shadow-sm">
+            <div class="card-body">
+                <h6 class="mb-2 small fw-semibold text-uppercase opacity-75">Application</h6>
+                <h3 class="mb-0 fw-bold">{{ applications|default:0 }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-4 col-lg-2">
+        <div class="card h-100 kpi-metric-card metric-disb shadow-sm">
+            <div class="card-body">
+                <h6 class="mb-2 small fw-semibold text-uppercase opacity-75">Disbursed</h6>
+                <h3 class="mb-0 fw-bold">₹{{ disbursed_amount|default:"0" }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-7" id="lead_details_left">
+        <div class="card position-relative h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0 fw-bold text-dark">Lead Details</h5>
+                <div class="gap-1 d-flex">
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#leadModal">New</button>
+                    <button id="editBtn" class="btn btn-sm btn-outline-primary" onclick="toggleEdit()">Edit</button>
+                </div>
+            </div>
+            
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <a href="#" id="dailercallLink" class="fs-5 fw-bold text-decoration-none text-primary">
+                        📞 <span id="ld_mobile">-</span>
+                    </a>
+                    <span class="badge bg-primary px-3 py-2" id="ld_status">-</span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold text-secondary mb-1">Name</label>
+                            <input id="ld_name" type="text" class="form-control form-control-sm" disabled>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold text-secondary mb-1">Location</label>
+                            <input id="ld_location" class="form-control form-control-sm" disabled>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold text-secondary mb-1">Company</label>
+                            <input id="ld_company" class="form-control form-control-sm" disabled>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold text-secondary mb-1">Emp. Status</label>
+                            <select id="ld_employment_type" class="form-select form-select-sm" disabled>
+                                <option value="" disabled selected>--- Select Emp. Status ---</option>
+                                {% for value,label in employment_type_choices %}
+                                <option value="{{ value }}">{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold text-secondary mb-1">Salary</label>
+                            <input id="ld_salary" type="number" class="form-control form-control-sm" disabled>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold text-secondary mb-1">Card Details</label>
+                            <textarea id="ld_cc_details" class="form-control form-control-sm" rows="1" disabled></textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold text-secondary mb-1">Assign To</label>
+                            <input id="ld_assign_to" type="text" class="form-control form-control-sm" readonly>
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label fw-semibold text-secondary mb-1">Last Update</label>
+                            <input id="ld_last_updated" type="text" class="form-control form-control-sm" disabled readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mt-2">
+                    <div class="col-6">
+                        <label class="form-label fw-semibold text-secondary mb-1">Status</label>
+                        <select id="ld_status_drp" class="form-select form-select-sm">
+                            <option value="new">New</option>
+                            <option value="Not_Interested">Not Interested</option>
+                            <option value="Future Lead">Future Lead</option>
+                            <option value="follow_up">Follow-UP</option>
+                            <option value="waiting_for_docs">Waiting For Docs</option>
+                            <option value="OTP">OTP</option>
+                            <option value="Ringing">Ringing</option>
+                            <option value="loan_needed">Loan Needed</option>
+                            <option value="Switched_Off">Switched Off</option>
+                            <option value="invalid_number">Invalid Number</option>
+                        </select>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold text-secondary mb-1">FU Date</label>
+                        <input type="text" id="followup" class="form-control form-control-sm" placeholder="DD/MM/YYYY HH:mm" autocomplete="off">
+                    </div>
+                    <div class="col-12">
+                        <textarea id="note" class="form-control" rows="3" placeholder="Add custom interactions summary..." style="resize: vertical;"></textarea>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <button class="btn btn-outline-primary btn-sm px-3" onclick="prevLead()">⬅ Previous</button>
+                    <button class="btn btn-outline-success btn-sm px-4" onclick="saveLead()">Save</button>
+                    <button class="btn btn-outline-primary btn-sm px-3" onclick="nextLead()">Next ➡</button>
+                </div>
+            </div>
+
+            <div id="leadLoader" style="display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); z-index:10; align-items:center; justify-content:center;">
+                <div class="spinner-border text-primary" role="status"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="card h-100">
+            <div class="card-header">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-2">
+                    <h5 class="mb-0 fw-bold text-dark">My Leads</h5>
+                    <div class="d-flex gap-2">
+                        <select id="leadSourceFilter" class="form-select form-select-sm" onchange="applyFilter()">
+                            <option value="" {% if not request.GET.lead_source %}selected{% endif %}>All Sources</option>
+                            {% for key,label in lead_type_choices %}
+                            <option value="{{ key }}" {% if request.GET.lead_source == key %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <select id="statusFilter" class="form-select form-select-sm" onchange="applyFilter()">
+                            <option value="" {% if not request.GET.status %}selected{% endif %}>All Status</option>
+                            <option value="new" {% if request.GET.status == "new" %}selected{% endif %}>New</option>
+                            <option value="waiting_for_docs" {% if request.GET.status == "waiting_for_docs" %}selected{% endif %}>Waiting for Docs</option>
+                            <option value="OTP" {% if request.GET.status == "OTP" %}selected{% endif %}>OTP</option>
+                            <option value="follow_up" {% if request.GET.status == "follow_up" %}selected{% endif %}>Follow-UP</option>
+                            <option value="Not_Interested" {% if request.GET.status == "Not_Interested" %}selected{% endif %}>Not Interested</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table custom-table align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3" onclick="sortTable('name')">Name</th>
+                                <th>Status</th>
+                                <th>FU Date</th>
+                                <th class="text-center pe-3">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for lead in leads %}
+                            <tr class="lead-row {% if forloop.first %}active{% endif %}" data-id="{{ lead.id }}">
+                                <td class="ps-3 fw-medium">{{ lead.name }}</td>
+                                <td><span class="badge bg-light text-primary border border-primary px-2 py-1">{{ lead.get_status_display }}</span></td>
+                                <td class="text-muted">{{ lead.follow_up_date|date:"d/m/Y"|default:"-" }}</td>
+                                <td class="text-center pe-3">
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <a href="tel:{{ lead.mobile_number }}" class="btn btn-success btn-sm py-1"><i class="bi bi-telephone-fill me-1"></i>Call</a>
+                                        <a class="btn btn-primary btn-sm py-1" href="/crm/Lead/{{ lead.id }}"><i class="bi bi-eye"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="card-footer bg-transparent border-top d-flex align-items-center justify-content-between p-3">
+                <p class="text-muted small mb-0">
+                    Showing {{ page_obj.start_index|default:0 }} to {{ page_obj.end_index|default:0 }} of {{ page_obj.paginator.count|default:0 }} entries
+                </p>
+                <nav>
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if page_obj.has_previous %}
+                        <li class="page-item"><a href="?page={{ page_obj.previous_page_number }}&status={{ request.GET.status }}&search={{ request.GET.search }}" class="page-link"><i class="bi bi-chevron-left"></i></a></li>
+                        {% else %}
+                        <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-left"></i></span></li>
+                        {% endif %}
+                        <li class="page-item active"><span class="page-link">{{ page_obj.number|default:1 }}</span></li>
+                        {% if page_obj.has_next %}
+                        <li class="page-item"><a href="?page={{ page_obj.next_page_number }}&status={{ request.GET.status }}&search={{ request.GET.search }}" class="page-link"><i class="bi bi-chevron-right"></i></a></li>
+                        {% else %}
+                        <li class="page-item disabled"><span class="page-link"><i class="bi bi-chevron-right"></i></span></li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="leadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white py-3">
+                <h5 class="modal-title fw-bold">Create New Lead</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="leadForm" method="POST">
+                {% csrf_token %}
+                <div class="modal-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold">Name <span class="text-danger">*</span></label>
+                                <input name="name" type="text" class="form-control" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold">Mobile No. <span class="text-danger">*</span></label>
+                                <input type="text" name="mobile_number" class="form-control" maxlength="10" pattern="\d{10}" inputmode="numeric" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold">Location</label>
+                                <input name="location" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold">Lead Source <span class="text-danger">*</span></label>
+                                <select name="lead_source" class="form-select" required>
+                                    <option value="" disabled selected>Select Source</option>
+                                    {% for value, label in lead_type_choices %}
+                                    <option value="{{ value }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold">Status <span class="text-danger">*</span></label>
+                                <select name="status" class="form-select" required>
+                                    <option value="new">New</option>
+                                    <option value="Not_Interested">Not Interested</option>
+                                    <option value="follow_up">Follow-UP</option>
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold">Follow-up Date</label>
+                                <input type="text" name="follow_up_date" id="modal_followup" class="form-control" placeholder="DD/MM/YYYY HH:mm">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-light btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-3">Create Lead</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block Script %}
+<script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+<script src="/static/daterangepicker/daterangepicker.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/inputmask/5.0.8/jquery.inputmask.min.js"></script>
+<script src="/static/dashboard/tse_dashboard.js"></script>
+{% endblock %}

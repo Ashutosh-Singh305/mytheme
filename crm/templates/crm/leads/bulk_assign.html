@@ -1,23 +1,32 @@
 {% extends 'crm/base.html' %}
 {% load static %}
 {% block title %} Bulk Assign Leads {% endblock %}
-{% block css %}
-<link rel="stylesheet" href="{% static 'css/list.css' %}">
-{% endblock css %}
 {% block body %}
 
 <div class="card">
+  <div class="card-body">
 
   <!-- HEADER -->
-  <div class="card-header p-2">
+  <div class="card-header">
 
     <div class="d-flex flex-column flex-xl-row justify-content-between gap-2">
 
-      <h5 class="mb-0">
+      <h6 class="mb-0">
         Bulk Lead Assignment
-      </h5>
+      </h6>
 
       <div class="row g-1 w-100 w-xl-auto">
+
+        <div class="col-12 col-sm-6 col-lg">
+          <select id="productFilter" class="form-select form-select-sm mr-2">
+            <option value="">All Products</option>
+            {% for product in products %}
+            <option value="{{ product.id }}" {% if product.id|stringformat:"s" == selected_product %}selected{% endif %}>
+              {{ product.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
 
         <div class="col-12 col-sm-6 col-lg">
           <select id="leadSourceFilter" class="form-select form-select-sm">
@@ -30,6 +39,17 @@
             <option value="{{ key }}" {% if key == selected_lead_source %}selected{% endif %}>
 
               {{ label }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-12 col-sm-6 col-lg">
+          <select id="teamLeadFilter" class="form-select form-select-sm mr-2">
+            <option value="">All Team Leads</option>
+            {% for user in team_leads %}
+            <option value="{{ user.id }}" {% if user.id|stringformat:"s" == selected_team_lead %}selected{% endif %}>
+              {{ user.username }}
             </option>
             {% endfor %}
           </select>
@@ -298,62 +318,71 @@
     </div>
 
     <!-- PAGINATION -->
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mt-3">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mt-4 flex-wrap">
 
-      <p class="text-muted mb-0">
-        Showing {{ page_obj.start_index }}
-        to {{ page_obj.end_index }}
-        of {{ page_obj.paginator.count }}
-        entries
+      <p class="text-muted small mb-0">
+        Showing <strong>{{ page_obj.start_index }}</strong> to <strong>{{ page_obj.end_index }}
+        </strong> of <strong>{{ page_obj.paginator.count }}</strong> entries
       </p>
 
-      <ul class="pagination pagination-sm mb-0 flex-wrap">
-        {% if page_obj.has_previous %}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ page_obj.previous_page_number }}
-            {% if selected_status %}&status={{ selected_status }}{% endif %}
-            {% if selected_lead_source %}&lead_source={{ selected_lead_source }}{% endif %}
-            {% if selected_assigned_to %}&assigned_to={{ selected_assigned_to }}{% endif %}
-            &per_page={{ per_page }}">
-            «
-          </a>
-        </li>
-        {% endif %}
+      <nav class="ms-md-auto" aria-label="Page navigation">
+        <ul class="pagination pagination-sm mb-0 flex-wrap">
 
-        {% for num in page_obj.paginator.page_range %}
-        {% if num == page_obj.number %}
-        <li class="page-item active">
-          <span class="page-link">{{ num }}</span>
-        </li>
-        {% else %}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ num }}
-                {% if selected_status %}&status={{ selected_status }}{% endif %}
-                {% if selected_lead_source %}&lead_source={{ selected_lead_source }}{% endif %}
-                {% if selected_assigned_to %}&assigned_to={{ selected_assigned_to }}{% endif %}
-                &per_page={{ per_page }}">
-            {{ num }}
-          </a>
-        </li>
-        {% endif %}
-        {% endfor %}
+          {% if page_obj.has_previous %}
+          <li class="page-item">
+            <a class="page-link"
+              href="?page={{ page_obj.previous_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_lead_source %}&lead_source={{ selected_lead_source }}{% endif %}{% if selected_assigned_to %}&assigned_to={{ selected_assigned_to }}{% endif %}{% if selected_team_lead %}&team_lead={{ selected_team_lead }}{% endif %}{% if selected_product %}&product={{ selected_product }}{% endif %}&per_page={{ per_page }}"
+              aria-label="Previous">
+               <i class="bi bi-chevron-left"></i>
+            </a>
+          </li>
+          {% else %}
+          <li class="page-item disabled">
+            <span class="page-link" aria-hidden="true"> <i class="bi bi-chevron-left"></i></span>
+          </li>
+          {% endif %}
 
-        {% if page_obj.has_next %}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ page_obj.next_page_number }}
-            {% if selected_status %}&status={{ selected_status }}{% endif %}
-            {% if selected_lead_source %}&lead_source={{ selected_lead_source }}{% endif %}
-            {% if selected_assigned_to %}&assigned_to={{ selected_assigned_to }}{% endif %}
-            &per_page={{ per_page }}">
-            »
-          </a>
-        </li>
-        {% endif %}
-      </ul>
+          {% for num in page_obj.paginator.page_range %}
+          {% if num <= 10 or num == page_obj.paginator.num_pages %} {% if num == page_obj.number %} <li
+            class="page-item active" aria-current="page">
+            <span class="page-link">{{ num }}</span>
+            </li>
+            {% else %}
+            <li class="page-item">
+              <a class="page-link"
+                href="?page={{ num }}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_lead_source %}&lead_source={{ selected_lead_source }}{% endif %}{% if selected_assigned_to %}&assigned_to={{ selected_assigned_to }}{% endif %}{% if selected_team_lead %}&team_lead={{ selected_team_lead }}{% endif %}{% if selected_product %}&product={{ selected_product }}{% endif %}&per_page={{ per_page }}">
+                {{ num }}
+              </a>
+            </li>
+            {% endif %}
+            {% elif num == 11 %}
+            <li class="page-item disabled">
+              <span class="page-link">...</span>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link"
+                href="?page={{ page_obj.next_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_lead_source %}&lead_source={{ selected_lead_source }}{% endif %}{% if selected_assigned_to %}&assigned_to={{ selected_assigned_to }}{% endif %}{% if selected_team_lead %}&team_lead={{ selected_team_lead }}{% endif %}{% if selected_product %}&product={{ selected_product }}{% endif %}&per_page={{ per_page }}"
+                aria-label="Next">
+                 <i class="bi bi-chevron-right"></i>
+              </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+              <span class="page-link" aria-hidden="true"> <i class="bi bi-chevron-right"></i></i></span>
+            </li>
+            {% endif %}
+
+        </ul>
+      </nav>
 
     </div>
 
   </div>
+</div>
 </div>
 
 <script>
@@ -363,9 +392,12 @@
   });
 
   function applyFilter() {
+
     let status = document.getElementById("statusFilter").value;
     let leadSource = document.getElementById("leadSourceFilter").value;
     let assignedTo = document.getElementById("assignedToFilter").value;
+    let teamLead = document.getElementById("teamLeadFilter").value;
+    let product = document.getElementById("productFilter").value;
     let perPage = document.getElementById("perPage").value;
 
     let url = `?per_page=${perPage}`;
@@ -373,6 +405,8 @@
     if (status) url += `&status=${status}`;
     if (leadSource) url += `&lead_source=${leadSource}`;
     if (assignedTo) url += `&assigned_to=${assignedTo}`;
+    if (teamLead) url += `&team_lead=${teamLead}`;
+    if (product) url += `&product=${product}`;
 
     window.location.href = url;
   }
@@ -452,5 +486,4 @@
   }
 
 </script>
-
 {% endblock %}

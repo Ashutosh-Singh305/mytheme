@@ -1,0 +1,29 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container" style="display: flex; justify-content: center; align-items: center; min-height: 70vh;">
+    <div class="card shadow" style="width: 40rem;">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Select Model for Report</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" class="form">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="model">Select Table:</label>
+                    <select name="model" id="model" class="form-control" required>
+                        <option value="" disabled selected>-- Choose Model --</option>
+                        {% for model, verbose in model_choices %}
+                            <option value="{{ model }}">{{ verbose }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="text-center mt-4">
+                    <button type="submit" class="btn btn-success">Next</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

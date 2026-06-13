@@ -1,6 +1,7 @@
 import json
 from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseForbidden, HttpResponseNotFound
+from numpy import prod
 from crm.admin import LeadAdmin
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required,permission_required
@@ -13,60 +14,26 @@ import pandas as pd
 import os
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
-from django.db.models import Q
+from django.db.models import Q, Value
+# for dashboard
+from crm.ip_utils import get_client_ip
 from crm.models import *
 from django.db.models import Count, Sum, Avg,Case, When, F
 from django.contrib.auth.views import LoginView
-from django.db.models.functions import TruncMonth
+from django.db.models.functions import Concat, TruncMonth
 from django.utils.dateformat import DateFormat
 from django.urls import reverse_lazy
 from django.http import JsonResponse
 from crm.utils import *
 from django.db import transaction
 from django.views.decorators.http import require_POST
+from django.template.loader import render_to_string
 from django.http import JsonResponse
 from django.contrib.auth.forms import AdminPasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.models import Group, Permission
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView
 from django.contrib.auth.mixins import PermissionRequiredMixin
-
-
-class RoleListView(PermissionRequiredMixin, ListView):
-    model = Role
-    template_name = 'crm/role/role_list.html'
-    context_object_name = 'roles'
-    # Requires permission to view roles
-    permission_required = 'crm.view_role'
-    raise_exception = True
-
-class RoleCreateView(PermissionRequiredMixin, CreateView):
-    model = Role
-    fields = ['name', 'code', 'is_active']
-    template_name = 'crm/role/role_form.html'
-    success_url = reverse_lazy('role-list')
-    
-    # Requires permission to add roles
-    permission_required = 'crm.add_role'
-    raise_exception = True
-
-class RoleUpdateView(PermissionRequiredMixin, UpdateView):
-    model = Role
-    fields = ['name', 'code', 'is_active']
-    template_name = 'crm/role/role_form.html'
-    success_url = reverse_lazy('role-list')
-    
-    # Requires permission to change roles
-    permission_required = 'crm.change_role'
-    raise_exception = True
-class RoleDeleteView(PermissionRequiredMixin, DeleteView):
-    model = Role
-    template_name = 'crm/role/role_confirm_delete.html'
-    success_url = reverse_lazy('role-list')
-    
-    # Requires permission to delete roles
-    permission_required = 'crm.delete_role'
-    raise_exception = True
 
 
 def group_list(request):
@@ -370,7 +337,6 @@ def user_list(request):
 
     users = User.objects.select_related(
         'userprofile',
-        'userprofile__role',
         'userprofile__manager',
         'userprofile__branch'
     )
@@ -388,7 +354,7 @@ def user_list(request):
 
     if role:
         users = users.filter(
-            userprofile__role_id=role
+            userprofile__role=role
         )
 
     if branch:
@@ -397,16 +363,44 @@ def user_list(request):
         )
 
     if search:
-        users = users.filter(
+
+        role_keys = [
+            key for key, label in ROLE_CHOICES
+            if search.lower() in label.lower()
+        ]
+
+        users = users.annotate(
+            full_name=Concat('first_name', Value(' '), 'last_name'),
+
+            manager_full_name=Concat(
+                'userprofile__manager__first_name',
+                Value(' '),
+                'userprofile__manager__last_name'
+            )
+        )
+
+        search_query = (
+
+            # Manager search FIRST
+            Q(manager_full_name__icontains=search) |
+            Q(userprofile__manager__username__icontains=search) |
+
+            # User search
             Q(username__icontains=search) |
             Q(email__icontains=search) |
             Q(first_name__icontains=search) |
             Q(last_name__icontains=search) |
+            Q(full_name__icontains=search) |
+
+            # Other fields
             Q(userprofile__emp_code__icontains=search) |
-            Q(userprofile__branch__name__icontains=search) |
-            Q(userprofile__role__name__icontains=search) |
-            Q(userprofile__role__code__icontains=search)
+            Q(userprofile__branch__name__icontains=search)
         )
+
+        if role_keys:
+            search_query |= Q(userprofile__role__in=role_keys)
+
+        users = users.filter(search_query).distinct()
 
     sort = request.GET.get('sort', 'id')
     direction = request.GET.get('dir', 'desc')
@@ -418,7 +412,7 @@ def user_list(request):
         'is_active',
         'date_joined',
         'userprofile__branch__name',
-        'userprofile__role__name',
+        'userprofile__role',
     ]
 
     if sort not in allowed_sort_fields:
@@ -445,7 +439,7 @@ def user_list(request):
         'current_role': role,
         'current_branch': branch,
         'branches': Branch.objects.all(),
-        'roles': Role.objects.filter(is_active=True),
+        'roles': ROLE_CHOICES,
         'is_paginated': page_obj.has_other_pages(),
     }
 
@@ -629,6 +623,81 @@ class CustomLoginView(LoginView):
         return self.get_redirect_url() or reverse_lazy('my_profile')
 
 
+@login_required
+@permission_required('app.view_userprofile', raise_exception=True)
+def userprofile_list(request):
+    if not request.user.is_superuser:
+        return render(request, "403.html")
+
+    profiles = UserProfile.objects.select_related(
+        'user', 'manager', 'branch'
+    ).all()
+
+    # FILTER
+    role = request.GET.get('role')
+    if role:
+        profiles = profiles.filter(role=role)
+
+    # SEARCH
+    search = request.GET.get('search')
+
+    if search:
+        from django.db.models import Q
+
+        role_keys = [
+            key for key, label in ROLE_CHOICES
+            if search.lower() in label.lower()
+        ]
+
+        profiles = profiles.filter(
+            Q(user__username__icontains=search) |
+            Q(user__first_name__icontains=search) |
+            Q(user__last_name__icontains=search) |
+            Q(emp_code__icontains=search) |
+            Q(branch__name__icontains=search)|
+            Q(role__in=role_keys)  
+        )
+
+    # SORT
+    sort = request.GET.get('sort', 'user__date_joined')
+    direction = request.GET.get('dir', 'desc')
+
+    allowed = [
+        'id',
+        'emp_code',
+        'role',
+        'branch',
+        'user__username',
+        'user__is_active',
+    ]
+
+    if sort not in allowed:
+        sort = 'user__date_joined'
+
+    ordering = f"-{sort}" if direction == "desc" else sort
+    profiles = profiles.order_by(ordering)
+
+    # PAGINATION
+    paginator = Paginator(profiles, 10)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    # AJAX
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        html = render_to_string(
+            'crm/userprofile/userprofile_table_partial.html',
+            {'page_obj': page_obj},
+            request=request
+        )
+        return JsonResponse({'html': html})
+
+    return render(request, 'crm/userprofile/userprofile_list.html', {
+        'page_obj': page_obj,
+        'current_sort': sort,
+        'current_dir': direction,
+        'current_role': role,
+        'ROLE_CHOICES': ROLE_CHOICES,
+    })
+
 #Function to get accessible fields for the logged-in user
 def get_accessible_fields(user, model_name):
     user_profile = UserProfile.objects.get(user=user)
@@ -697,7 +766,12 @@ def tse_dashboard(request):
         'business_manager',
         'business_head',
         'bank',
-        'lender_name'
+        'lender_name',
+        'product',
+        'product__product_category'
+    ).filter(
+        Q(product__product_category__name__iexact="Loan") |
+        Q(product__isnull=True)
     )
 
     # SEARCH / SORT INPUT
@@ -724,8 +798,8 @@ def tse_dashboard(request):
     else:
         leads_qs = leads_qs.filter(
             status__in=[
-                'new', 'not_interested', 'waiting_for_docs', 'OTP','Future Lead',
-                'Ringing', 'Switched_Off', 'call_back', 'follow_up','invalid_number','loan_needed'
+                'new', 'not_interested', 'waiting_for_docs', 'OTP', 'not_eligible','Future Lead','loan_needed',
+                'Ringing', 'Switched_Off', 'call_back', 'follow_up','reject','invalid_number'
             ]
         )
 
@@ -749,11 +823,9 @@ def tse_dashboard(request):
 
     applications = base_qs.filter(
         status__in=[
-            'waiting_for_docs',
-            'OTP',
-            'Approved',
-            'Scorecard Approved',
-            'loan_needed',
+            'ofb', 'OTP', 'Scorecard Approved', 'underwriting',
+            'approved', 'approved_hold', 'reject',
+            'reject_relook', 'UW Hold', 'Declined', 'disbursed'
         ]
     ).count()
 
@@ -794,8 +866,138 @@ def tse_dashboard(request):
         # Choices
         "LEAD_STATUS_CHOICES": LEAD_STATUS_CHOICES,
         "lead_type_choices": LEAD_TYPE_CHOICES,
+        "lender_name_choices": Bank.objects.all(),
+        "product_name_choices": Product.objects.filter(id__in=[1, 2, 4, 5]).only('id', 'name'),
+        "team_leaders": get_lead_allowed_user_queryset(request.user, "team_lead"),
+        "tele_executive": get_lead_allowed_user_queryset(request.user, "tele_sales_executive")   
+    })
+
+@login_required
+def card_tse_dashboard(request):
+    if not request.user.has_perm("crm.can_access_crm_dashboard"):
+        raise PermissionDenied("You do not have permission to access Dashboard.")
+    user = request.user
+    today = timezone.localdate()
+
+    # BASE QUERYSET (NO FILTERS)
+    base_qs = get_visible_queryset(Lead, user).select_related(
+        'tele_sales_executive',
+        'team_lead',
+        'sm',
+        'business_manager',
+        'business_head',
+        'bank',
+        'lender_name',
+        'product',
+        'product__product_category'
+    ).filter(
+        Q(product__product_category__name__iexact="Card")|
+        Q(status="card_needed")
+    )
+
+    # SEARCH / SORT INPUT
+    search = request.GET.get("search", "").strip()
+    sort = request.GET.get("sort", "").strip()
+    status_filter = request.GET.get("status")
+    lead_source_filter = request.GET.get("lead_source")
+
+    # FILTERED QUERYSET (FOR UI)
+    leads_qs = base_qs
+
+    if search:
+        leads_qs = leads_qs.filter(
+            Q(name__icontains=search) |
+            Q(mobile_number__icontains=search) |
+            Q(company_name__icontains=search) |
+            Q(application_no=search) 
+        )
+
+    if lead_source_filter:
+        leads_qs = leads_qs.filter(lead_source=lead_source_filter)
+
+    if status_filter:
+        leads_qs = leads_qs.filter(status=status_filter)
+    else:
+        leads_qs = leads_qs.filter(
+            status__in=[
+                'new', 'not_interested', 'waiting_for_docs','Future Lead','card_needed',
+                'Ringing','vkyc_done', 'follow_up','vkyc_pending','biometric','card_out','Declined'
+            ]
+        )
+
+    if sort:
+        leads_qs = leads_qs.order_by(sort)
+    else:
+        leads_qs = leads_qs.order_by('-modified_at')
+
+    # KPI (ALWAYS FROM BASE_QS)
+    interested_leads = base_qs.filter(status='interested').count()
+
+    # disbursed_amount = base_qs.filter(
+    #     status='disbursed'
+    # ).aggregate(total=Sum('net_disbursed'))['total'] or 0
+
+    hot_leads = base_qs.filter(
+        Q(cibil_score__gte=740),
+        Q(monthly_salary__gte=40000)
+    ).count()
+
+    applications = base_qs.filter(
+        status__in=[
+            'waiting_for_docs',
+            'OTP',
+            'Approved',
+            'Scorecard Approved',
+            'loan_needed',
+        ]
+    ).count()
+    
+    card_out = base_qs.filter(
+        status__in=[
+            'card_out'
+        ]
+    ).count()
+
+    # FOLLOWUPS / CALLS (USER BASED)
+    followup_qs = get_visible_queryset(LeadFollowUp, user)
+    
+
+    calls_today = base_qs.filter(
+        modified_at__date=today  
+    ).count()
+
+    followups_today = followup_qs.filter(
+        follow_up_date__date=today
+    ).count()
+
+    # PAGINATION
+    paginator = Paginator(leads_qs, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+
+    return render(request, 'crm/dashboard/card_tse_dashboard.html', {
+        "leads": page_obj,
+        "page_obj": page_obj,
+
+        # KPI
+        "calls_today": calls_today,
+        "followups_today": followups_today,
+        "hot_leads": hot_leads,
+        "interested_leads": interested_leads,
+        "applications": applications,
+        "card_out": card_out,
+
+        # Filters
+        "selected_status": status_filter,
+        "selected_lead_source": lead_source_filter,
+
+        # Choices
+        "LEAD_STATUS_CHOICES": LEAD_STATUS_CHOICES,
+        "lead_type_choices": LEAD_TYPE_CHOICES,
         "employment_type_choices": EMPLOYMENT_TYPE_CHOICES,
         "lender_name_choices": Bank.objects.all(),
+        "product_name_choices": Product.objects.filter(id__in=[1, 2, 4, 5]).only('id', 'name'),
         "team_leaders": get_lead_allowed_user_queryset(request.user, "team_lead"),
         "tele_executive": get_lead_allowed_user_queryset(request.user, "tele_sales_executive")
         
@@ -832,6 +1034,7 @@ def get_lead_detail(request, lead_id):
         "existing_loan_details": lead.existing_loan_details or "",
         "employment_type": lead.employment_type or "",
         "existing_cc_details": lead.existing_cc_details or "",
+        "application_no": lead.application_no or "",
         
        
 
@@ -848,25 +1051,18 @@ def update_lead_full(request):
     if not request.user.has_perm("crm.change_lead"):
         return HttpResponseForbidden("<h3>You do not have permission to Edit Lead.</h3>")
     
-    lead_id = request.POST.get("lead_id")
-
-    if not lead_id or lead_id == "undefined":
-        return JsonResponse({
-            "status": "error",
-            "message": "Invalid lead selected."
-        }, status=400)
-
-    lead = get_object_or_404(Lead, id=lead_id)
-    
     if request.method == "POST":
         lead = get_object_or_404(
             Lead,
             id=request.POST.get("lead_id")
-        ) 
-        print("UPDATE LEAD - Fetched Lead:", lead)  # 👈 DEBUG
+        )
     
         # ACCESS CHECK (IMPORTANT)
-        if lead not in get_visible_queryset(Lead, request.user):
+        if not get_visible_queryset(
+            Lead,
+            request.user
+        ).filter(id=lead.id).exists():
+
             return JsonResponse({
                 "status": "error",
                 "message": "Access denied. Please refresh the page."
@@ -878,12 +1074,23 @@ def update_lead_full(request):
             
         location = request.POST.get("location")
         company_name = request.POST.get("company")
+        pan = request.POST.get("pan")
         salary = request.POST.get("salary") or None
         status = request.POST.get("status")
         note = request.POST.get("note")
         follow_up_date = request.POST.get("follow_date")
+        dob = request.POST.get("dob") or None
+        lender_id = request.POST.get("lender_id") 
+        if lender_id not in [None, ""]:
+            lead.lender_name_id = lender_id 
+        loan_required = request.POST.get("loan_required") or None
+        existing_loan_details = request.POST.get("existing_loan_details") 
         employement_type = request.POST.get("employment_type")
         existing_cc_details = request.POST.get("existing_cc_details")
+        application_no = request.POST.get("application_no")
+        
+        if application_no not in [None, ""]:
+            lead.application_no = application_no
         
         if employement_type not in [None, ""]:
             lead.employment_type = employement_type
@@ -904,12 +1111,41 @@ def update_lead_full(request):
         if company_name not in [None, ""]:
             lead.company_name = company_name
        
+        if pan not in [None, ""]:
+            lead.pan = pan
+            
         if salary not in [None, ""]:
             lead.monthly_salary = salary
             
         if status not in [None, ""]: 
             lead.status = status
 
+            # Card Needed → Credit Cards
+            if status == "card_needed":
+                card_product = Product.objects.filter(
+                    name__iexact="Credit Cards"
+                ).first()
+
+                if card_product:
+                    lead.product = card_product
+
+            # Loan Needed → Personal Loan
+            elif status == "loan_needed":
+                loan_product = Product.objects.filter(
+                    name__iexact="Personal Loan"
+                ).first()
+
+                if loan_product:
+                    lead.product = loan_product
+            
+        if dob not in [None, ""]:
+            lead.dob = dob
+            
+        if loan_required not in [None, ""]:
+            lead.require_loan_amount = loan_required
+            
+        if existing_loan_details not in [None, ""]:
+            lead.existing_loan_details = existing_loan_details
             
         lead.modified_by = request.user
         lead.save()
@@ -946,6 +1182,10 @@ def create_lead_api(request):
 
             follow_up_date_raw = request.POST.get('follow_up_date')
             follow_up_date = None
+            
+            pan = request.POST.get('pan')
+            if pan in [None, "null", "undefined"]:
+                pan = ""
 
             if follow_up_date_raw:
                 follow_up_date = parse_datetime(follow_up_date_raw)
@@ -964,13 +1204,23 @@ def create_lead_api(request):
                 name=request.POST.get('name'),
                 location=request.POST.get('location'),
                 company_name=request.POST.get('company_name'),
+                pan=pan,
                 monthly_salary=request.POST.get('monthly_salary') or None,
+                dob=request.POST.get('dob') or None,
+
+                lender_name=Bank.objects.get(id=request.POST.get('lender_name')) if request.POST.get('lender_name') else None,
+                product=Product.objects.get(id=request.POST.get('product_name')) if request.POST.get('product_name') else None,
+                require_loan_amount=request.POST.get('require_loan_amount') or None,
+                existing_loan_details=request.POST.get('existing_loan_details') or '',
+
                 status=request.POST.get('status'),
                 lead_source=request.POST.get('lead_source'),
                 follow_up_date=follow_up_date,
                 mobile_number=request.POST.get('mobile_number'),
+
                 team_lead=User.objects.get(id=request.POST.get('team_lead')) if request.POST.get('team_lead') else None,
                 tele_sales_executive=User.objects.get(id=request.POST.get('tse')) if request.POST.get('tse') else None,
+
                 description=request.POST.get('description'),
                 created_by=request.user,
                 assigned_to=request.user
@@ -1065,6 +1315,11 @@ def hr_dashboard(request):
     training_pending = base_qs.filter(
         training_status='Not Started'
     ).count()
+    
+    active_candidates_count = base_qs.filter(
+        # recruiter=request.user, 
+        employment_status='Active'
+    ).count()
 
     
     paginator = Paginator(candidates_qs, 10)
@@ -1087,6 +1342,7 @@ def hr_dashboard(request):
         # Filters
         "selected_status": status_filter,
         "selected_applied_for": applied_for_filter,
+        "active_candidates_count": active_candidates_count,
         
 
         # Choices
@@ -1096,7 +1352,7 @@ def hr_dashboard(request):
         "source_choices": CandidateOnboarding._meta.get_field('source').choices,
         "employment_status_choices": CandidateOnboarding._meta.get_field('employment_status').choices,
         "candidate_status_choices": CandidateOnboarding._meta.get_field('candidate_status').choices,
-        "recruiters":get_allowed_user_queryset(request.user)
+        "recruiters":get_lead_allowed_user_queryset(request.user, 'recruiter')
     })
     
 @login_required
@@ -1139,13 +1395,14 @@ def get_candidate_detail(request, candidate_id):
 def update_candidate(request):
     if request.method == "POST":
 
-        candidate = get_object_or_404(
+        candidate = get_visible_queryset(
             CandidateOnboarding,
+            request.user
+        ).filter(
             id=request.POST.get("candidate_id")
-        )
-
-        # Permission check
-        if candidate not in get_visible_queryset(CandidateOnboarding, request.user):
+        ).first()
+        
+        if not candidate:
             return JsonResponse({
                 "status": "error",
                 "message": "Access denied. Please refresh the page."
@@ -1259,15 +1516,22 @@ def create_candidate(request):
     applied_for = get_value("applied_for")
     phone = get_value("phone")
     recruiter_id = request.POST.get("recruiter")
+    source=get_value("source")
 
     if not full_name:
         return JsonResponse({"status": "error", "message": "Full name is required"}, status=400)
+    
+    if not applied_for:
+        return JsonResponse({"status": "error", "message": "Applied for is required"}, status=400)
 
     if not phone:
         return JsonResponse({"status": "error", "message": "Mobile number is required"}, status=400)
 
     if not phone.isdigit() or len(phone) != 10:
         return JsonResponse({"status": "error", "message": "Mobile number must be 10 digits"}, status=400)
+
+    if not source:
+        return JsonResponse({"status": "error", "message": "Source is required"}, status=400)
 
     # VALIDATE RECRUITER
     recruiter = None
@@ -1298,7 +1562,7 @@ def create_candidate(request):
         employment_status=get_value("employment_status"),
         candidate_status=get_value("candidate_status") or "New",
         candidate_area=get_value("candidate_area"),
-        source=get_value("source"),
+        source=source,
 
         calling_date=parse_date("calling_date"),
         # date_of_birth=parse_date("dob"),
@@ -1428,95 +1692,54 @@ def test_smartflo(request):
         })
 
 
-
-
-# @login_required
-# @csrf_exempt
-# def test_smartflo(request):
-
-#     mobile = request.POST.get("mobile")
-
-#     if not mobile:
-#         return JsonResponse({
-#             "status": "error",
-#             "message": "Mobile number missing"
-#         })
-
-#     url = "https://api-smartflo.tatateleservices.com/v1/click_to_call"
-
-#     payload = {
-#         "async": 1,
-#         "agent_number": "0607621620002",
-#         "destination_number": mobile,
-#         "caller_id": "918069879661"
-#     }
-
-#     headers = {
-#         "accept": "application/json",
-
-#         # REMOVE EXTRA SPACE BEFORE TOKEN
-#         "Authorization": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2Nsb3VkcGhvbmUudGF0YXRlbGVzZXJ2aWNlcy5jb20vYXBpL3YxL2F1dGgvbG9naW4iLCJpYXQiOjE3NzgwNjUxMzksImV4cCI6MTc3ODA2ODczOSwibmJmIjoxNzc4MDY1MTM5LCJqdGkiOiJNT2tBTWZydDFVaWdmT2RIIiwic3ViIjoiNzYyMTYyIiwiY2xpZW50X2lkIjo3NjIxNjIsImNyIjpmYWxzZX0.UkZWEDAi7SSBuNy263dlyxUJfsfNFIMbKWRw5YRd7O0",
-
-#         "content-type": "application/json"
-#     }
-
-#     try:
-
-#         response = requests.post(
-#             url,
-#             json=payload,
-#             headers=headers,
-#             timeout=30
-#         )
-
-#         return JsonResponse({
-#             "status": "success",
-#             "data": response.json()
-#         })
-
-#     except Exception as e:
-
-#         return JsonResponse({
-#             "status": "error",
-#             "message": str(e)
-#         })
-
 ######## Lead Bulk Assignment ##########
 @login_required
 @permission_required('crm.can_access_bulk_assign', raise_exception=True)
 def bulk_assign_leads(request):
-
     leads = get_visible_queryset(Lead, request.user)
-
+    
     role_map = {
-        'TL': ['TL', 'SM', 'BM', 'BH'],
-        'BM': ['BM', 'BH'],
-        'BH': ['BH'],
-        'TSE': ['TSE']
+        # 'sm': ['SM','Business Manager','BH'],
+        'team_lead': ['TL','Business Manager','SM','BH'],
+        'business_manager': ['Business Manager','BH'],
+        'business_head': ['BH'],
+        'tele_sales_executive': ['TSE'],
     }
 
     lead_source_filter = request.GET.get("lead_source", "").strip()
     assigned_to = request.GET.get("assigned_to", "").strip()
     status = request.GET.get("status", "").strip()
+    product = request.GET.get("product", "").strip()
+    team_lead = request.GET.get("team_lead", "").strip()
 
     sort = request.GET.get("sort", "created_date")
-    direction = request.GET.get("dir", "desc")
+    dir = request.GET.get("dir", "desc")
+    
 
-    sort_mapping = {
-        "assigned_to": "assigned_to__username",
-        "tele_sales_executive": "tele_sales_executive__username",
-        "team_lead": "team_lead__username",
-        "business_head": "business_head__username",
-        "business_manager": "business_manager__username",
-    }
+    #  SORTING
+    sort_field = sort
 
-    sort_field = sort_mapping.get(sort, sort)
+    if sort == "assigned_to":
+        sort_field = "assigned_to__username"
+    
+    if sort == "tele_sales_executive":
+        sort_field = "tele_sales_executive__username"
+        
+    if sort == "team_lead":
+        sort_field = "team_lead__username"
 
-    if direction == "desc":
-        sort_field = f"-{sort_field}"
+    if sort == "business_head":
+        sort_field = "business_head__username"
+
+    if sort == "business_manager":
+        sort_field = "business_manager__username"
+
+    if dir == "desc":
+        sort_field = "-" + sort_field
 
     leads = leads.order_by(sort_field)
-
+    
+    # FILTERS (SAFE)
     if lead_source_filter and lead_source_filter != "None":
         leads = leads.filter(lead_source=lead_source_filter)
 
@@ -1525,12 +1748,25 @@ def bulk_assign_leads(request):
 
     if assigned_to and assigned_to != "None":
         try:
-            leads = leads.filter(
-                assigned_to_id=int(assigned_to)
-            )
+            assigned_to_int = int(assigned_to)
+            leads = leads.filter(assigned_to_id=assigned_to_int)
+        except ValueError:
+            pass  # ignore invalid input
+        
+    if team_lead and team_lead != "None":
+        try:
+            team_lead_int = int(team_lead)
+            leads = leads.filter(team_lead_id=team_lead_int)
+        except ValueError:
+            pass  # ignore invalid input
+
+    if product and product != "None":
+        try:
+            product_int = int(product)
+            leads = leads.filter(product_id=product_int)
         except ValueError:
             pass
-
+    #  PAGINATION
     try:
         per_page = int(request.GET.get("per_page", 50))
     except ValueError:
@@ -1540,21 +1776,13 @@ def bulk_assign_leads(request):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
 
+    # USERS LIST
     login_user = request.user
     profile = getattr(login_user, "userprofile", None)
 
-    base_users = User.objects.filter(
-        is_active=True
-    ).select_related(
-        'userprofile',
-        'userprofile__role',
-        'userprofile__branch'
-    )
-
-    if login_user.is_superuser or (
-        profile and profile.role.code == "ADMIN"
-    ):
-        users = base_users.order_by('username')
+    if login_user.is_superuser or (profile and profile.role == "Admin"):
+        users = User.objects.filter(is_active=True)\
+            .select_related('userprofile').order_by('username')
 
     elif not profile or not profile.branch:
         users = User.objects.filter(
@@ -1563,47 +1791,42 @@ def bulk_assign_leads(request):
         ).select_related('userprofile')
 
     else:
-        users = base_users.filter(
-            userprofile__branch=profile.branch
-        ).order_by('username')
-
-    team_leads = users.filter(
-        userprofile__role__code__in=role_map['TL']
-    )
-
-    business_heads = users.filter(
-        userprofile__role__code__in=role_map['BH']
-    )
-
-    business_managers = users.filter(
-        userprofile__role__code__in=role_map['BM']
-    )
-
-    tse_users = users.filter(
-        userprofile__role__code__in=role_map['TSE']
-    )
-
-    return render(request,"crm/leads/bulk_assign.html",{
-            "page_obj": page_obj,
-            "users": users,
-            "status_choices": Lead._meta.get_field('status').choices,
-            "lead_source_choices": Lead._meta.get_field('lead_source').choices,
-            "per_page": per_page,
-            "selected_status": status,
-            "selected_lead_source": lead_source_filter,
-            "selected_assigned_to": assigned_to,
-            "team_leads": team_leads,
-            "business_heads": business_heads,
-            "business_managers": business_managers,
-            "tse_users": tse_users,
-            "sort": sort,
-            "dir": direction,
-        }
-    )
+        users = User.objects.filter(
+            userprofile__branch=profile.branch,
+            is_active=True
+        ).select_related('userprofile').order_by('username')
     
+    team_leads = users.filter(userprofile__role__in=role_map['team_lead'])
+    business_heads = users.filter(userprofile__role__in=role_map['business_head'])
+    business_managers = users.filter(userprofile__role__in=role_map['business_manager'])
+    tse_users = users.filter(userprofile__role__in=role_map['tele_sales_executive'])
+
+    return render(request, "crm/leads/bulk_assign.html", {
+        "page_obj": page_obj,
+        "users": users,
+        "status_choices": Lead._meta.get_field('status').choices,
+        "lead_source_choices": Lead._meta.get_field('lead_source').choices,
+        "per_page": per_page,
+
+        "selected_status": status,
+        "selected_lead_source": lead_source_filter,
+        "selected_assigned_to": assigned_to,
+        "selected_team_lead": team_lead,
+        "team_leads": team_leads,
+        "business_heads": business_heads,
+        "business_managers": business_managers,
+        "tse_users": tse_users,
+
+        "sort": sort,
+        "dir": dir,
+        "products" : Product.objects.filter(id__in=[1, 2, 4, 5]).only('id', 'name'),
+        "selected_product": product,
+    })
+
 @login_required
 @require_POST
 def assign_leads(request):
+
     lead_ids = request.POST.getlist("lead_ids[]")
     assigned_to = request.POST.get("assigned_to")
     tele_sales_executive = request.POST.get("tele_sales_executive")
@@ -1612,63 +1835,64 @@ def assign_leads(request):
     business_manager = request.POST.get("business_manager")
 
     if not lead_ids:
-        return JsonResponse(
-            {"error": "No leads selected"},
-            status=400
-        )
+        return JsonResponse({"error": "No leads selected"}, status=400)
 
-    leads = get_visible_queryset(Lead,request.user).filter(id__in=lead_ids)
+    #  SECURITY
+    leads = get_visible_queryset(Lead, request.user).filter(id__in=lead_ids)
+
     update_data = {}
 
+    #  ASSIGNED TO (WITH OLD LOGIC)
     if assigned_to:
-
-        user = get_object_or_404( User.objects.select_related("userprofile", "userprofile__role" ),id=assigned_to)
+        user = get_object_or_404(
+            User.objects.select_related("userprofile"),
+            id=assigned_to
+        )
 
         update_data["assigned_to"] = user
 
-        user_profile = getattr(user,"userprofile",None)
+        # PRESERVE OLD BEHAVIOR
+        user_profile = getattr(user, "userprofile", None)
+        if user_profile and user_profile.role == "TSE":
+            update_data["tele_sales_executive"] = user
 
-        if ( user_profile and user_profile.role and user_profile.role.code == "TSE"):
-            update_data[
-                "tele_sales_executive"
-            ] = user
-
+    # TELE SALES EXECUTIVE (MANUAL OVERRIDE)
     if tele_sales_executive:
-        tse = get_object_or_404(User.objects.select_related("userprofile"),id=tele_sales_executive)
-        update_data[
-            "tele_sales_executive"
-        ] = tse
+        tse = get_object_or_404(
+            User.objects.select_related("userprofile"),
+            id=tele_sales_executive
+        )
+        update_data["tele_sales_executive"] = tse
 
+    # TEAM LEAD
     if team_lead:
-        tl = get_object_or_404(User.objects.select_related("userprofile"),id=team_lead)
-        update_data[
-            "team_lead"
-        ] = tl
+        tl = get_object_or_404(
+            User.objects.select_related("userprofile"),
+            id=team_lead
+        )
+        update_data["team_lead"] = tl
 
-
+    # BUSINESS HEAD
     if business_head:
-        bh = get_object_or_404(User.objects.select_related("userprofile"),
+        bh = get_object_or_404(
+            User.objects.select_related("userprofile"),
             id=business_head
         )
-        update_data[
-            "business_head"
-        ] = bh
+        update_data["business_head"] = bh
 
     # BUSINESS MANAGER
     if business_manager:
-        bm = get_object_or_404(User.objects.select_related("userprofile"),
+        bm = get_object_or_404(
+            User.objects.select_related("userprofile"),
             id=business_manager
         )
-        update_data[
-            "business_manager"
-        ] = bm
+        update_data["business_manager"] = bm
 
+    # NOTHING TO UPDATE
     if not update_data:
-        return JsonResponse(
-            {"error": "No fields to update"},
-            status=400
-        )
+        return JsonResponse({"error": "No fields to update"}, status=400)
 
+    # BULK UPDATE
     with transaction.atomic():
         updated_count = leads.update(**update_data)
 
@@ -1676,7 +1900,7 @@ def assign_leads(request):
         "success": True,
         "updated": updated_count
     })
-    
+
 # Detail View
 @login_required
 def lead_detail(request, pk):
@@ -1724,138 +1948,53 @@ def lead_detail(request, pk):
 
 @staff_member_required
 def field_access_control_view(request):
-
     models = apps.get_models()
-
     model_choices = [
         (m.__name__, f"{m._meta.app_label}.{m.__name__}")
-        for m in models
-        if m._meta.app_label == 'crm'
+        for m in models if m._meta.app_label == 'crm'
     ]
 
     selected_model = request.GET.get('model') or request.POST.get('model')
-
     selected_role = request.GET.get('role') or request.POST.get('role')
 
     model_fields = []
-
     existing_access = {}
-
-    # FK roles
-    roles = Role.objects.filter(is_active=True).order_by("name")
+    roles = ROLE_CHOICES  # âœ… use roles from choices.py
 
     if selected_model:
-
-        from django.contrib import admin
-
         model = apps.get_model('crm', selected_model)
+        model_fields = [f.name for f in model._meta.fields]
 
-        admin_class = admin.site._registry.get(model)
-
-        if admin_class:
-
-            fieldsets = admin_class.get_fieldsets(request)
-
-            for _, options in fieldsets:
-
-                fields = options.get('fields', [])
-
-                for field in fields:
-
-                    # grouped fields
-                    if isinstance(field, (list, tuple)):
-                        model_fields.extend(field)
-
-                    else:
-                        model_fields.append(field)
-
-            # remove duplicates
-            model_fields = list(dict.fromkeys(model_fields))
-
-        else:
-
-            # fallback
-            model_fields = [
-                f.name for f in model._meta.fields
-            ]
-
-        # EXISTING ACCESS
         if selected_role:
-
-            access_controls = FieldAccessControl.objects.filter(
-                model_name=selected_model,
-                role_id=selected_role
-            )
-
+            access_controls = FieldAccessControl.objects.filter(model_name=selected_model, role=selected_role)
             existing_access = {
-                control.field_name: (
-                    control.can_view,
-                    control.can_edit
-                )
+                control.field_name: (control.can_view, control.can_edit)
                 for control in access_controls
             }
 
-    # SAVE
     if request.method == 'POST':
-
-        role_obj = Role.objects.filter(
-            id=selected_role
-        ).first()
-
-        if not role_obj:
-
-            messages.error(request, "Invalid role selected.")
-
-            return redirect(request.path)
-
         for field in model_fields:
-
-            can_view = request.POST.get(
-                f'view__{field}'
-            ) == 'on'
-
-            can_edit = request.POST.get(
-                f'edit__{field}'
-            ) == 'on'
+            can_view = request.POST.get(f'view__{field}') == 'on'
+            can_edit = request.POST.get(f'edit__{field}') == 'on'
 
             FieldAccessControl.objects.update_or_create(
-
                 model_name=selected_model,
-
-                role=role_obj,
-
+                role=selected_role,
                 field_name=field,
-
-                defaults={
-                    'can_view': can_view,
-                    'can_edit': can_edit
-                }
+                defaults={'can_view': can_view, 'can_edit': can_edit}
             )
 
-        messages.success(
-            request,
-            f"Access controls updated for {selected_model} ({role_obj.name})"
-        )
+        messages.success(request, f"Access controls updated for {selected_model} ({selected_role})")
+        return redirect(f"{request.path}?model={selected_model}&role={selected_role}")
 
-        return redirect(
-            f"{request.path}?model={selected_model}&role={selected_role}"
-        )
-
-    return render(
-        request,
-        'admin/field_access_control.html',
-        {
-            'model_choices': model_choices,
-            'model_fields': model_fields,
-
-            'selected_model': selected_model,
-            'selected_role': selected_role,
-
-            'roles': roles,
-
-            'existing_access': existing_access,
-        }
-    )
+    return render(request, 'admin/field_access_control.html', {
+        'model_choices': model_choices,
+        'model_fields': model_fields,
+        'selected_model': selected_model,
+        'selected_role': selected_role,
+        'roles': roles,
+        'existing_access': existing_access,
+    })
 ############### Report ################33
 def run_report(report):
     model = apps.get_model(*report.model_name.split("."))

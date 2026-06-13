@@ -1,0 +1,113 @@
+{% extends "crm/base.html" %}
+
+{% block title %}{{ model_name }} History{% endblock %}
+
+{% block body %}
+
+<div class="card">
+    <div class="p-2">
+
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+            <div>
+                <h4 class="mb-0">{{ obj }}</h4>
+                <small class="text-muted">
+                    {{ model_name }} · History
+                </small>
+            </div>
+
+            <a href="javascript:history.back()" class="btn btn-outline-secondary btn-sm">
+                Back
+            </a>
+        </div>
+
+        <!-- History Table -->
+        <div class="table-responsive">
+            <table class="table mb-0">
+
+                <thead class="table-primary">
+                    <tr>
+                        <th style="width:180px;">Object</th>
+                        <th style="width:190px;">Date/time</th>
+                        <th style="width:120px;">Comment</th>
+                        <th style="width:150px;">Changed by</th>
+                        <th style="width:160px;">Change reason</th>
+                        <th>Changes</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for h in history_entries %}
+                    <tr>
+
+                        <!-- Object -->
+                        <td>
+                            <a href="{% url 'crm_object_detail' model_name obj.pk %}"
+                                class="text-primary font-weight-bold">
+                                {{ h.object }}
+                            </a>
+                        </td>
+
+                        <!-- Date / Time -->
+                        <td>
+                            {{ h.date|date:"d M Y, g:i a" }}
+                        </td>
+
+                        <!-- Comment -->
+                        <td>
+                            {% if h.type == "+" %}
+                            Created
+                            {% elif h.type == "~" %}
+                            Changed
+                            {% else %}
+                            Deleted
+                            {% endif %}
+                        </td>
+
+                        <!-- Changed by -->
+                        <td>
+                            {% if h.user %}
+                            <a href="#" class="text-primary">
+                                {{ h.user.username }}
+                            </a>
+                            {% else %}
+                            System
+                            {% endif %}
+                        </td>
+
+                        <!-- Change reason -->
+                        <td>
+                            {{ h.reason|default:"" }}
+                        </td>
+
+                        <!-- Changes -->
+                        <td>
+                            {% if h.changes %}
+                            <ul class="mb-0 pl-3">
+                                {% for c in h.changes %}
+                                <li>
+                                    <strong>{{ c.field }}</strong>:
+                                    <span class="text-muted">{{ c.old }}</span>
+                                    →
+                                    <span>{{ c.new }}</span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            {% else %}
+                            <span class="text-muted">—</span>
+                            {% endif %}
+                        </td>
+
+
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

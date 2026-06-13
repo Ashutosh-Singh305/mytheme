@@ -267,9 +267,13 @@ def build_condition(filter_obj):
     today = now().date()
     # NULL OPERATORS (works for FK also)
     if op == "is_null":
+        if field_type in ("CharField", "TextField"):
+            return Q(**{f"{field}__isnull": True}) | Q(**{field: ""})
         return Q(**{f"{field}__isnull": True})
 
     if op == "is_not_null":
+        if field_type in ("CharField", "TextField"):
+            return Q(**{f"{field}__isnull": False}) & ~Q(**{field: ""})
         return Q(**{f"{field}__isnull": False})
 
    
@@ -1268,7 +1272,136 @@ def export_queryset_to_excel(
 
         writer.writerow(cleaned_row)
 
-    return response 
+    return response
+
+# def export_queryset_to_excel(request, queryset, permission_codename, field_names):
+
+#     if not request.user.has_perm(permission_codename):
+#         raise PermissionDenied("You do not have permission to export data.")
+
+#     model = queryset.model
+
+#     fields = [get_field_cached(model, name) for name in field_names]
+
+#     headers = [field.verbose_name.title() for field in fields]
+
+#     wb = Workbook(write_only=True)
+
+#     ws = wb.create_sheet(
+#         title=model._meta.verbose_name_plural.title()
+#     )
+
+#     ws.append(headers)
+
+#   
+#     # BUILD FK MAPS
+#   
+#     fk_maps = {}
+
+#     for field in fields:
+
+#         if field.is_relation and field.many_to_one:
+
+#             related_model = field.related_model
+
+#             fk_maps[field.name] = dict(
+#                 related_model.objects.values_list(
+#                     "id",
+#                     "name" if hasattr(related_model, "name")
+#                     else "username"
+#                     if hasattr(related_model, "username")
+#                     else "id"
+#                 )
+#             )
+
+#   
+#     # CHOICE MAPS
+#   
+#     choice_maps = {}
+
+#     for field in fields:
+
+#         if field.choices:
+#             choice_maps[field.name] = dict(field.choices)
+
+#   
+#     # FAST EXPORT
+#   
+#     export_field_names = [f.name for f in fields]
+
+#     queryset = queryset.order_by("id")
+
+#     for row_data in queryset.values(
+#         *export_field_names
+#     ).iterator(chunk_size=5000):
+
+#         cleaned_row = []
+
+#         for field in fields:
+
+#             value = row_data.get(field.name)
+
+#             # -------------------------
+#             # FK LABEL
+#             # -------------------------
+#             if field.name in fk_maps:
+
+#                 value = fk_maps[field.name].get(value, value)
+
+#             # -------------------------
+#             # CHOICE LABEL
+#             # -------------------------
+#             elif field.name in choice_maps:
+
+#                 value = choice_maps[field.name].get(value, value)
+
+#             # -------------------------
+#             # DATETIME
+#             # -------------------------
+#             elif isinstance(value, datetime.datetime):
+
+#                 if is_aware(value):
+#                     value = value.astimezone(None).replace(tzinfo=None)
+
+#                 value = value.strftime("%d-%m-%Y %H:%M:%S")
+
+#             # -------------------------
+#             # DATE
+#             # -------------------------
+#             elif isinstance(value, datetime.date):
+
+#                 value = value.strftime("%d-%m-%Y")
+
+#             # -------------------------
+#             # CLEANUP
+#             # -------------------------
+#             value = clean_excel_value(value)
+
+#             cleaned_row.append(value)
+
+#         ws.append(cleaned_row)
+
+#     buffer = BytesIO()
+
+#     wb.save(buffer)
+
+#     buffer.seek(0)
+
+#     filename = (
+#         f"{model.__name__.lower()}_export_"
+#         f"{datetime.datetime.now().strftime('%d-%m-%Y_%H-%M-%S')}.xlsx"
+#     )
+
+#     response = HttpResponse(
+#         buffer,
+#         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+#     )
+
+#     response["Content-Disposition"] = (
+#         f'attachment; filename="{filename}"'
+#     )
+
+#     return response
 
 from django.views.decorators.http import require_GET
 # TO check name uniqueness

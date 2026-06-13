@@ -1,7 +1,7 @@
 {% extends 'crm/base.html' %}
 {% load static %}
 
-{% block title %}Update User | Django Admin{% endblock %}
+{% block title %}Update User{% endblock %}
 
 {% block css %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -17,38 +17,27 @@
       <div class="col-12">
 
         <div class="card card-primary card-outline-tabs shadow-sm bg-white mb-2">
-          <div class="card-header p-0 border-bottom-0 bg-white">
+          <div class="card-body">
+          <div class="p-1 border-bottom-0 bg-white">
             <ul class="nav nav-tabs" id="jazzmin-tabs" role="tablist">
               <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="general-tab-btn" data-bs-toggle="tab" data-bs-target="#general"
                   type="button" role="tab">
                   General
                 </button>
-              </li>
+              </td>
               <li class="nav-item" role="presentation">
                 <button class="nav-link" id="personal-tab-btn" data-bs-toggle="tab" data-bs-target="#personal"
                   type="button" role="tab">
                   Personal info
                 </button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" id="profile-tab-btn" data-bs-toggle="tab" data-bs-target="#profile"
-                  type="button" role="tab">
-                  Profile Details
-                </button>
-              </li>
+              </td>
               <li class="nav-item" role="presentation">
                 <button class="nav-link" id="permissions-tab-btn" data-bs-toggle="tab" data-bs-target="#permissions"
                   type="button" role="tab">
                   Permissions
                 </button>
-              </li>
-              <li class="nav-item" role="presentation">
-                <button class="nav-link" id="dates-tab-btn" data-bs-toggle="tab" data-bs-target="#dates" type="button"
-                  role="tab">
-                  Important dates
-                </button>
-              </li>
+              </td>
             </ul>
           </div>
 
@@ -109,11 +98,7 @@
                   </div>
                   {% endif %}
                   {% endfor %}
-                </div>
-              </div>
 
-              <div class="tab-pane fade" id="profile" role="tabpanel">
-                <div class="row pt-2">
                   {% for fm in profile_form %}
                   <div class="col-md-6">
                     <div class="admin-form-row">
@@ -125,127 +110,7 @@
                     </div>
                   </div>
                   {% endfor %}
-                </div>
-              </div>
 
-              <div class="tab-pane fade" id="permissions" role="tabpanel">
-                <div class="pt-2">
-                  <div class="row">
-                    {% for fm in user_form %}
-                    {% if fm.name == 'is_active' or fm.name == 'is_staff' or fm.name == 'is_superuser' %}
-                    <div class="col-md-6">
-                      <div class="admin-form-row">
-                        <div class="admin-label-col">{{ fm.label }}</div>
-                        <div class="admin-field-col">
-                          <div class="form-check">{{ fm }}</div>
-                          {% if fm.help_text %}<span class="admin-help-text">{{ fm.help_text|safe }}</span>{% endif %}
-                          {% if fm.errors %}<span class="text-danger small d-block">{{ fm.errors|striptags }}</span>{% endif %}
-                        </div>
-                      </div>
-                    </div>
-                    {% endif %}
-                    {% endfor %}
-                  </div>
-
-                  <hr class="text-muted opacity-25 my-3">
-
-                  <div class="admin-form-row flex-column">
-                    <div class="d-flex w-100 mb-2">
-                      <div style="width: 15%; font-size: 0.85rem; color: #333333; font-weight: bold;">Groups</div>
-                      <div style="width: 85%;">
-                        <div class="selector" id="groups_selector">
-                          <div class="selector-available">
-                            <h2 class="bg-info">Available groups</h2>
-                            <div class="selector-filter"><input type="text" placeholder="Filter" class="filter-input">
-                            </div>
-                            <select multiple size="6" class="available-box">
-                              {% for group in all_groups %}
-                              {% if group.id not in user_group_ids %}
-                              <option value="{{ group.id }}">{{ group.name }}</option>
-                              {% endif %}
-                              {% endfor %}
-                            </select>
-                            <a href="#" class="selector-chooseall">Choose all <i class="fas fa-arrow-right-long ms-1"
-                                style="font-size:0.7rem"></i></a>
-                          </div>
-                          <div class="selector-controls">
-                            <button type="button" class="move-right bg-primary"><i class="fas fa-angle-right"></i></button>
-                            <button type="button" class="move-left bg-danger"><i class="fas fa-angle-left"></i></button>
-                          </div>
-                          <div class="selector-chosen">
-                            <h2 class="chosen-header bg-primary">Chosen groups</h2>
-                            <div class="selector-filter"><input type="text" placeholder="Filter" class="filter-input">
-                            </div>
-                            <select multiple size="6" name="groups" id="id_groups" class="chosen-box">
-                              {% for group in all_groups %}
-                              {% if group.id in user_group_ids %}
-                              <option value="{{ group.id }}">{{ group.name }}</option>
-                              {% endif %}
-                              {% endfor %}
-                            </select>
-                            <a href="#" class="selector-clearall"><i class="fas fa-arrow-left-long me-1"
-                                style="font-size:0.7rem"></i> Remove all</a>
-                          </div>
-                        </div>
-                        <span class="admin-help-text mt-2"><i class="fas fa-plus text-success me-1"></i> The groups this
-                          user belongs to.</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="admin-form-row flex-column border-0">
-                    <div class="d-flex w-100">
-                      <div style="width: 15%; font-size: 0.85rem; color: #333333; font-weight: bold;">User permissions
-                      </div>
-                      <div style="width: 85%;">
-                        <div class="selector" id="permissions_selector">
-                          <div class="selector-available">
-                            <h2 class="bg-info">Available user permissions</h2>
-                            <div class="selector-filter"><input type="text" placeholder="Filter" class="filter-input">
-                            </div>
-                            <select multiple size="10" class="available-box">
-                              {% for perm in all_permissions %}
-                              {% if perm.id not in user_perm_ids %}
-                              <option value="{{ perm.id }}">
-                                {{ perm.content_type.app_label|capfirst }} | {{ perm.content_type.model }} | {{ perm.name }}
-                              </option>
-                              {% endif %}
-                              {% endfor %}
-                            </select>
-                            <a href="#" class="selector-chooseall">Choose all <i class="fas fa-arrow-right-long ms-1"
-                                style="font-size:0.7rem"></i></a>
-                          </div>
-                          <div class="selector-controls">
-                            <button type="button" class="move-right bg-primary"><i class="fas fa-angle-right"></i></button>
-                            <button type="button" class="move-left bg-danger"><i class="fas fa-angle-left"></i></button>
-                          </div>
-                          <div class="selector-chosen">
-                            <h2 class="chosen-header bg-primary">Chosen user permissions</h2>
-                            <div class="selector-filter"><input type="text" placeholder="Filter" class="filter-input">
-                            </div>
-                            <select multiple size="10" name="user_permissions" id="id_user_permissions"
-                              class="chosen-box">
-                              {% for perm in all_permissions %}
-                              {% if perm.id in user_perm_ids %}
-                              <option value="{{ perm.id }}">
-                                {{ perm.content_type.app_label|capfirst }} | {{ perm.content_type.model }} | {{ perm.name }}
-                              </option>
-                              {% endif %}
-                              {% endfor %}
-                            </select>
-                            <a href="#" class="selector-clearall"><i class="fas fa-arrow-left-long me-1"
-                                style="font-size:0.7rem"></i> Remove all</a>
-                          </div>
-                        </div>
-                        <span class="admin-help-text mt-2">Specific permissions for this user.</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="tab-pane fade" id="dates" role="tabpanel">
-                <div class="row pt-2">
                   {% for fm in user_form %}
                   {% if fm.name == 'last_login' or fm.name == 'date_joined' %}
                   <div class="col-md-6">
@@ -262,18 +127,183 @@
                 </div>
               </div>
 
+              <div class="tab-pane fade" id="permissions" role="tabpanel">
+                <div class="pt-2">
+                    
+                  <div class="row">
+                    {% for fm in user_form %}
+                    {% if fm.name == 'is_active' or fm.name == 'is_staff' or fm.name == 'is_superuser' %}
+                    <div class="col-md-4 col-sm-12">
+                        <div class="admin-form-row">
+                          <div class="admin-label-col">{{ fm.label }}</div>
+                          <div class="admin-field-col">
+                              <div class="form-check">{{ fm }}</div>
+                              {% if fm.help_text %}<span class="admin-help-text">{{ fm.help_text|safe }}</span>{% endif %}
+                              {% if fm.errors %}<span class="text-danger small d-block">{{ fm.errors|striptags }}</span>{% endif %}
+                          </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                  </div>
+
+                  <hr class="text-muted opacity-25 my-3">
+
+                  <div class="admin-form-row flex-column border-0 p-0 mb-4">
+                    <div class="d-flex w-100 align-items-center mb-3">
+                        <div style="width: 15%; font-size: 0.85rem; color: #1a1a2e; font-weight: bold;">Groups</div>
+                        <div style="width: 85%;" class="disclaimer-footer m-0">
+                          <i class="fas fa-plus text-success me-1"></i> The groups this user belongs to.
+                        </div>
+                    </div>
+
+                    <div class="selector-wrapper-matrix" id="groups_selector">
+                        
+                        <div class="modern-selector-card selector-available">
+                          <div class="card-header">
+                              <div class="header-left"><i class="fas fa-users me-2"></i><span>Available groups</span></div>
+                              <span class="count-badge" id="available-counter">0</span>
+                          </div>
+                          <div class="selector-filter-wrapper">
+                              <i class="fas fa-search filter-icon"></i>
+                              <input type="text" placeholder="Filter groups..." class="filter-input">
+                          </div>
+                          <div class="select-list-container">
+                              <select multiple class="available-box custom-modern-select">
+                                {% for group in all_groups %}
+                                {% if group.id not in user_group_ids %}
+                                <option value="{{ group.id }}">{{ group.name }}</option>
+                                {% endif %}
+                                {% endfor %}
+                              </select>
+                          </div>
+                          <a href="#" class="selector-chooseall">Choose all <i class="fas fa-arrow-right ms-1"></i></a>
+                        </div>
+
+                        <div class="selector-controls-column">
+                          <button type="button" class="move-right modern-control-btn btn-move-right btn-outline-primary" title="Move selected right">
+                              <i class="fas fa-chevron-right"></i>
+                          </button>
+                          <button type="button" class="move-left modern-control-btn btn-move-left btn-outline-danger" title="Move selected left">
+                              <i class="fas fa-chevron-left"></i>
+                          </button>
+                        </div>
+
+                        <div class="modern-selector-card selector-chosen">
+                          <div class="card-header ch-violet-pink">
+                              <div class="header-left"><i class="fas fa-check-circle me-2"></i><span>Chosen groups</span></div>
+                              <span class="count-badge" id="chosen-counter">0</span>
+                          </div>
+                          <div class="selector-filter-wrapper">
+                              <i class="fas fa-search filter-icon"></i>
+                              <input type="text" placeholder="Filter groups..." class="filter-input">
+                          </div>
+                          <div class="select-list-container position-relative">
+                              <select multiple name="groups" id="id_groups" class="chosen-box custom-modern-select">
+                                {% for group in all_groups %}
+                                {% if group.id in user_group_ids %}
+                                <option value="{{ group.id }}">{{ group.name }}</option>
+                                {% endif %}
+                                {% endfor %}
+                              </select>
+                              <div class="empty-placeholder-view d-none">
+                                <div class="empty-illustration"><i class="fas fa-users-slash"></i></div>
+                                <h5>No groups assigned</h5>
+                                <p>Move operational user groups over to this column list to apply group roles.</p>
+                              </div>
+                          </div>
+                          <a href="#" class="selector-clearall"><i class="fas fa-arrow-left me-1"></i> Remove all</a>
+                        </div>
+
+                    </div>
+                  </div>
+
+                  <div class="admin-form-row flex-column border-0 p-0 mb-2">
+                    <div class="d-flex w-100 align-items-center mb-3">
+                        <div style="width: 15%; font-size: 0.85rem; color: #1a1a2e; font-weight: bold;">User permissions</div>
+                        <div style="width: 85%;" class="disclaimer-footer m-0">
+                          <i class="fas fa-shield-alt text-primary me-1"></i> Specific explicit node permissions assigned directly to this user account profile.
+                        </div>
+                    </div>
+
+                    <div class="selector-wrapper-matrix" id="permissions_selector">
+                        
+                        <div class="modern-selector-card selector-available">
+                          <div class="card-header">
+                              <div class="header-left"><i class="fas fa-layer-group me-2"></i><span>Available user permissions</span></div>
+                              <span class="count-badge" id="available-counter">0</span>
+                          </div>
+                          <div class="selector-filter-wrapper">
+                              <i class="fas fa-search filter-icon"></i>
+                              <input type="text" placeholder="Filter permissions..." class="filter-input">
+                          </div>
+                          <div class="select-list-container">
+                              <select multiple class="available-box custom-modern-select">
+                                {% for perm in all_permissions %}
+                                {% if perm.id not in user_perm_ids %}
+                                <option value="{{ perm.id }}">
+                                    {{ perm.content_type.app_label|capfirst }} | {{ perm.content_type.model }} | {{ perm.name }}
+                                </option>
+                                {% endif %}
+                                {% endfor %}
+                              </select>
+                          </div>
+                          <a href="#" class="selector-chooseall">Choose all <i class="fas fa-arrow-right ms-1"></i></a>
+                        </div>
+
+                        <div class="selector-controls-column">
+                          <button type="button" class="move-right modern-control-btn btn-move-right btn-outline-primary" title="Move selected right">
+                              <i class="fas fa-chevron-right"></i>
+                          </button>
+                          <button type="button" class="move-left modern-control-btn btn-move-left btn-outline-danger" title="Move selected left">
+                              <i class="fas fa-chevron-left"></i>
+                          </button>
+                        </div>
+
+                        <div class="modern-selector-card selector-chosen">
+                          <div class="card-header ch-violet-pink">
+                              <div class="header-left"><i class="fas fa-check-circle me-2"></i><span>Chosen user permissions</span></div>
+                              <span class="count-badge" id="chosen-counter">0</span>
+                          </div>
+                          <div class="selector-filter-wrapper">
+                              <i class="fas fa-search filter-icon"></i>
+                              <input type="text" placeholder="Filter permissions..." class="filter-input">
+                          </div>
+                          <div class="select-list-container position-relative">
+                              <select multiple name="user_permissions" id="id_user_permissions" class="chosen-box custom-modern-select">
+                                {% for perm in all_permissions %}
+                                {% if perm.id in user_perm_ids %}
+                                <option value="{{ perm.id }}">
+                                    {{ perm.content_type.app_label|capfirst }} | {{ perm.content_type.model }} | {{ perm.name }}
+                                </option>
+                                {% endif %}
+                                {% endfor %}
+                              </select>
+                              <div class="empty-placeholder-view d-none">
+                                <div class="empty-illustration"><i class="fas fa-box-open"></i></div>
+                                <h5>No explicit permissions assigned</h5>
+                                <p>Select specific target access nodes from the left list viewport column to attach them directly.</p>
+                              </div>
+                          </div>
+                          <a href="#" class="selector-clearall"><i class="fas fa-arrow-left me-1"></i> Remove all</a>
+                        </div>
+
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+              <div class="d-flex justify-content-end align-items-center mt-3">
+                <a href="{% url 'user-list' %}" class="btn btn-sm border btn-secondary me-2">Cancel</a>
+                <button type="submit" class="btn btn-primary btn-sm px-4 fw-medium"><i class="fa fa-save me-1"></i>
+                  Save</button>
+              </div>
             </div>
           </div>
         </div>
-
-        <div class="card card-body bg-light border-0 shadow-sm p-3 mb-5">
-          <div class="d-flex justify-content-end align-items-center">
-            <a href="{% url 'user-list' %}" class="btn btn-default btn-sm border text-secondary px-3 me-2"
-              style="background: #fff;">Cancel</a>
-            <button type="submit" class="btn btn-success btn-sm px-4 fw-medium"><i class="fa fa-save me-1"></i>
-              Save</button>
-          </div>
         </div>
+
+        
 
       </div>
     </div>

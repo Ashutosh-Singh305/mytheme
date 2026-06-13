@@ -100,48 +100,53 @@ class LeadAdmin(SimpleHistoryAdmin,BaseAuditAdmin):
 
     fieldsets = (
         ('Personal Details', {
-            'classes': ('wide',),
+            'classes': ('wide'),
             'fields': (
-                'name',
-                'mobile_number',
-                'dob',
-                'gender',
-                'pan',
-                'present_address',
-                'location',
-                'pincode',
-                'father_name',
-                'mother_name',
-                'email',
-                'adhar_number',
+                'name','father_name', 'gender', 'marital_status', 'dob',
+                'mobile_number', 'alternate_number', 'email', 'pan','cibil_score', 'adhar_number',
+                'present_address', 'permanent_address', 'residence_type', 'location','state','pincode',
+                'mother_name','spouse_name','qualification','number_of_dependents','reference_details_friend',
+                'reference_details_relative','nominee_details'
             )
         }),
-
-        ('Employment Details', {
+        ('Occupational Details', {
             'classes': ('wide',),
             'fields': (
-                'employment_type',          # salaried / self employed
-                'company_name',             # company / business name
-                'monthly_salary',           # monthly income
-                'office_address',
-                'office_email',
+                'company_name', 'office_address', 'landline_number', 'office_email',
+                'company_type', 'company_listing', 'employment_type', 'designation',
+                'doj', 'current_exp', 'total_exp', 'monthly_salary','mode_of_salary','industry_profession',
+                'uan_no','department','work_type'
             )
         }),
-
-        ('Card Details', {
+        ('Banking Details', {
             'classes': ('wide',),
             'fields': (
-                'existing_cc_details',      # existing card name + limit
-                'lender_name',
-                'lead_source',
-                'status',
-                'description',
+                'bank', 'account_number', 'ifsc_code','branch_name'
+            )
+        }),
+        ('Loan Details', {
+            'classes': ('wide',),
+            'fields': (
+                'loan_type','require_loan_amount', 'existing_loan_emi', 'tenure',
+                'existing_loan_details', 'existing_cc_details',
+                'lender_name', 'process','lead_source',
+            )
+        }),
+        ('Backend Details', {
+            'classes': ('wide',),
+            'fields': (
+                'product','channel_name', 'dol', 'login_amount',  'application_no',
+                'approved_amount', 'gross_disbursed', 'net_disbursed',
+                'final_remarks', 'rate_of_interest', 'processing_fee', 'insurance',
+                'flexi_fee', 'emi_date', 'emi_amount', 'subvention',
+                'cashback', 'cpp', 'dod',
+                'status','follow_up_date','description','dos',
             )
         }),
         ('Assignment & Meta', {
             'classes': ('wide',),
             'fields': (
-                'team_lead',
+                'sm', 'team_lead', 'business_head', 'business_manager',
                 'tele_sales_executive', 
             )
         }),
@@ -165,51 +170,25 @@ class LeadAdmin(SimpleHistoryAdmin,BaseAuditAdmin):
         return FormWithUser
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-
-        # Lead field -> allowed role codes
+        # Map Lead FK fields -> allowed UserProfile.role codes
         role_map = {
-            'sm': ['SM', 'BM', 'BH'],
-            'team_lead': ['TL', 'SM', 'BM', 'BH'],
-            'business_manager': ['BM', 'BH'],
-            'business_head': ['BH'],
+            'sm': ['SM','Business Manager','BH'],   # Sales Manager
+            'team_lead': ['TL','Business Manager','SM','BH'],  # Team Leader
+            'business_manager': ['Business Manager','BH'],  # note: code equals label in your choices
+            'business_head': ['BH'],   # Business Head
         }
 
         if db_field.name in role_map:
-
-            allowed_roles = role_map.get(
-                db_field.name,
-                []
-            )
-
+            allowed_roles = role_map[db_field.name]
             kwargs['queryset'] = (
-
                 User.objects
-
-                .filter(
-                    is_active=True,
-                    userprofile__isnull=False,
-                    userprofile__role__code__in=allowed_roles
-                )
-
-                .select_related(
-                    'userprofile',
-                    'userprofile__role',
-                    'userprofile__branch'
-                )
-
-                .distinct()
-
-                .order_by(
-                    'first_name',
-                    'last_name'
-                )
+                    .filter(userprofile__role__in=allowed_roles)
+                    .select_related('userprofile')
+                    .order_by('username')
             )
+            return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-        return super().formfield_for_foreignkey(
-            db_field,
-            request,
-            **kwargs
-        )
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     # ✅ Provide a "View Follow-ups" URL filtered to this lead
     def change_view(self, request, object_id, form_url='', extra_context=None):
@@ -511,7 +490,6 @@ class BranchAdmin(BaseAuditAdmin):
 @admin.register(IPRange)
 class IPRangeAdmin(admin.ModelAdmin):
     list_display = ("start_ip", "end_ip", "is_active")
-admin.site.register(Role)
 # admin.site.register(ListView)
 # admin.site.register(ListViewField)
 # admin.site.register(ListViewFilter)

@@ -16,12 +16,14 @@
       <div class="card shadow-sm form-card">
 
          <!-- Header -->
-         <div class="card-header bg-primary text-white">
+         
+         <div class="card-header">
             <h5 class="mb-0 d-flex align-items-center">
                <i class="fas fa-network-wired me-2"></i>
                Add IP Range
             </h5>
          </div>
+         
 
          <!-- Body -->
          <div class="card-body">
@@ -101,13 +103,13 @@
                {% endif %}
 
                <!-- Buttons -->
-               <div class="d-flex justify-content-between align-items-center mt-4 pt-2 border-top">
+               <div class="text-end p-2 border-top">
 
-                  <a href="{% url 'ip-list' %}" class="btn btn-outline-secondary btn-sm">
+                  <a href="{% url 'ip-list' %}" class="btn btn-secondary btn-sm">
                      Cancel
                   </a>
 
-                  <button type="submit" class="btn btn-primary btn-sm px-4">
+                  <button type="submit" class="btn btn-primary btn-sm">
                      Save
                   </button>
 

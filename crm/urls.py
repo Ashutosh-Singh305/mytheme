@@ -2,15 +2,10 @@ from django.urls import path
 from crm import listview_views
 from crm import generic_crud
 from . import views,admin_views
-from .views import RoleListView, RoleCreateView, RoleUpdateView, RoleDeleteView
+
 urlpatterns = [
     # To auto fetch branch when IFSC code is saved in bank details form
     path("api/get-branch/", admin_views.get_branch_name, name="get_branch_name"),
-    
-    path('roles/', RoleListView.as_view(), name='role-list'),
-    path('roles/create/', RoleCreateView.as_view(), name='role-create'),
-    path('roles/<int:pk>/update/', RoleUpdateView.as_view(), name='role-update'),
-    path('roles/<int:pk>/delete/', RoleDeleteView.as_view(), name='role-delete'),
     
     path('groups/', views.group_list, name='group-list'),
     path('groups/create/', views.group_create, name='group-create'),
@@ -33,11 +28,15 @@ urlpatterns = [
     path('users/<int:pk>/password/', views.user_password_change, name='user-password-change'),
     # path('my-profile',views.myProfile, name="my_profile"),
     
+    # UserProfile
+    path('users-profile/list/view/', views.userprofile_list, name='user_profile_list'),
+    
     # Dashboard URLs
     path('', views.tse_dashboard, name='tse_dashboard'),
     path('dashboard/', views.tse_dashboard, name='lead_dashboard'),
     
     path('tse-dashboard/', views.tse_dashboard, name='tse_dashboard'),
+    path('card-tse-dashboard/', views.card_tse_dashboard, name='card_tse_dashboard'),
     path('api/create-lead/', views.create_lead_api, name='create_lead_api'),
     path('api/test-smartflo/', views.test_smartflo, name='test_smartflo'),
     path('hr-dashboard/', views.hr_dashboard, name='hr_dashboard'),

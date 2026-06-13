@@ -50,7 +50,7 @@ def get_subordinate_users(user):
 def get_visible_queryset(model, user, owner_field="assigned_to"):
     profile = UserProfile.objects.filter(user=user).first()
 
-    if profile and profile.role.code == "ADMIN":
+    if profile and profile.role == "Admin":
         return model.objects.all()
     
     
@@ -64,7 +64,7 @@ def get_visible_queryset(model, user, owner_field="assigned_to"):
 # def get_allowed_user_queryset(user):
 #     profile = UserProfile.objects.filter(user=user).first()
 
-#     if profile and profile.role.code == "ADMIN":
+#     if profile and profile.role == "Admin":
 #         return User.objects.all()
 
 #     subordinates = get_subordinate_users(user)
@@ -80,7 +80,7 @@ def get_allowed_user_queryset(user):
     profile = getattr(user, "userprofile", None)
 
     # Admin → all active users
-    if profile and profile.role.code == "ADMIN":
+    if profile and profile.role == "Admin":
         return User.objects.filter(is_active=True)
 
     # If no profile OR no branch → only self
@@ -94,68 +94,39 @@ def get_allowed_user_queryset(user):
     )
 
 
-ROLE_HIERARCHY = {
-    'SM': ['SM', 'BM', 'BH'],
-    'TL': ['TL', 'SM', 'BM', 'BH'],
-    'BM': ['BM', 'BH'],
-    'BH': ['BH'],
-}
-
 def get_lead_allowed_user_queryset(user, field_name=None):
     profile = getattr(user, "userprofile", None)
 
-    # SAFETY
-    if not profile:
-        return User.objects.filter(id=user.id)
+    role_map = {
+        'sm': ['SM', 'Business Manager', 'BH'],
+        'team_lead': ['TL', 'Business Manager', 'SM', 'BH'],
+        'business_manager': ['Business Manager', 'BH'],
+        'business_head': ['BH'],
+        'recruiter': ['Hr Executive']
+    }
 
-    current_role = getattr(profile.role, "code", None)
-
-    # Base queryset
+    # Base queryset (active users only)
     qs = User.objects.filter(
         is_active=True,
         userprofile__isnull=False
-    ).select_related(
-        'userprofile',
-        'userprofile__role',
-        'userprofile__branch'
-    )
+    ).select_related('userprofile')
 
-    # FIELD-WISE ROLE FILTERING
-    field_role_map = {
-        'sm': ROLE_HIERARCHY.get('SM', []),
-        'team_lead': ROLE_HIERARCHY.get('TL', []),
-        'business_manager': ROLE_HIERARCHY.get('BM', []),
-        'business_head': ROLE_HIERARCHY.get('BH', []),
-    }
+    # Apply role_map (ALWAYS)
+    if field_name in role_map:
+        qs = qs.filter(userprofile__role__in=role_map[field_name])
 
-    if field_name in field_role_map:
+    # ADMIN → all active users (NO branch filter)
+    if profile and profile.role == "Admin":
+        return qs.order_by('first_name', 'last_name')
 
-        qs = qs.filter(
-            userprofile__role__code__in=field_role_map[field_name]
-        )
-
-    # ADMIN ACCESS
-    if current_role == "ADMIN":
-
-        return qs.order_by(
-            'first_name',
-            'last_name'
-        )
-
-    # NO BRANCH
-    if not profile.branch:
-
+    #  No profile OR no branch → only self
+    if not profile or not profile.branch:
         return User.objects.filter(id=user.id)
 
-    # SAME BRANCH USERS
-    qs = qs.filter(
-        userprofile__branch=profile.branch
-    )
+    #  Others → same branch only
+    qs = qs.filter(userprofile__branch=profile.branch)
 
-    return qs.order_by(
-        'first_name',
-        'last_name'
-    )
+    return qs.order_by('first_name', 'last_name')
 
     
 

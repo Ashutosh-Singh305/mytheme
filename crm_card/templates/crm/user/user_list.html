@@ -1,0 +1,290 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+{% block title %} User List {% endblock %}
+{% block css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/list.css' %}">
+<style>
+    /* Profile Circle Avatar Colors */
+    .avatar-circle {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 12px;
+        margin-right: 10px;
+    }
+
+    /* Dynamic color iterations for matching your design screenshot mockup */
+    .avatar-0 {
+        background-color: #e0e7ff;
+        color: #4f46e5;
+    }
+
+    .avatar-1 {
+        background-color: #fef3c7;
+        color: #d97706;
+    }
+
+    .avatar-2 {
+        background-color: #d1fae5;
+        color: #065f46;
+    }
+
+    .avatar-3 {
+        background-color: #fce7f3;
+        color: #be185d;
+    }
+
+    /* Clean Sort Links */
+    .sort {
+        text-decoration: none !important;
+        color: inherit !important;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+</style>
+{% endblock css %}
+
+{% block body %}
+
+<div class="card mb-1 p-1 border-0 shadow-sm bg-transparent">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="p-1 bg-white rounded-3 shadow-sm text-primary">
+                <i class="fa fa-users fa-lg"></i>
+            </div>
+            <div>
+                <h4 class="mb-0 fw-bold text-dark">Users</h4>
+                <small class="text-muted">Manage system users and roles</small>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'user-create' %}" class="btn btn-primary btn-sm px-3 d-flex align-items-center gap-2">
+                <i class="bi bi-plus-lg"></i> Add User
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card list-card p-3 shadow-sm border-0">
+
+    <div class="row align-items-center mb-3 g-2">
+        <div class="col-md-3">
+            <div class="input-group">
+                <span class="input-group-text bg-light border-0"><i class="fa fa-search text-muted"></i></span>
+                <input type="text" class="form-control form-control-sm border-0 bg-light" id="myInput"
+                    placeholder="Search users...">
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <select name="status" id="statusFilter" class="form-select form-select-sm">
+                <option value="">All Users</option>
+                <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <select name="role" id="roleFilter" class="form-select form-select-sm">
+                <option value="">All Roles</option>
+                {% for role in roles %}
+                <option value="{{ role.id }}" {% if current_role == role.id %}selected{% endif %}>{{ role.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-3">
+            <select name="branch" id="branchFilter" class="form-select form-select-sm">
+                <option value="">All Branches</option>
+                {% for branch in branches %}
+                <option value="{{ branch.id }}" {% if current_branch == branch.id|stringformat:"s" %} selected {% endif %}>{{ branch.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <div id="tableContainer" class="position-relative">
+        <div class="loader-overlay" id="loader" style="display: none;">
+            <i class="fa fa-spinner fa-spin fa-2x text-primary"></i>
+        </div>
+
+        <div id="tableContent">
+            <div class="table-responsive">
+                <table class="table custom-table align-middle mb-0 table-sm">
+                    <thead class="table-primary">
+                        <tr>
+                            <th class="">
+                                <a href="#" class="sort" data-field="id">
+                                    ID <i class="fa fa-sort ms-1 opacity-50 sort-icon"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a href="#" class="sort" data-field="first_name">
+                                    Name <i class="fa fa-sort ms-1 opacity-50 sort-icon"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a href="#" class="sort" data-field="username">
+                                    Username <i class="fa fa-sort ms-1 opacity-50 sort-icon"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a href="#" class="sort" data-field="userprofile__role__name">
+                                    Role <i class="fa fa-sort ms-1 opacity-50 sort-icon"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a href="#" class="sort" data-field="userprofile__branch__name">
+                                    Branch <i class="fa fa-sort ms-1 opacity-50 sort-icon"></i>
+                                </a>
+                            </th>
+                            <th>
+                                <a href="#" class="sort" data-field="is_active">
+                                    Status <i class="fa fa-sort ms-1 opacity-50 sort-icon"></i>
+                                </a>
+                            </th>
+                            <th class="text-center pe-3">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for user in page_obj %}
+                        <tr>
+                            <td class="">
+                                <span class="badge bg-light border fw-bold px-2 py-1"
+                                    style="min-width: 24px;">
+                                    {{ user.id }}
+                                </span>
+                            </td>
+
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-circle avatar-{% cycle '0' '1' '2' '3' %}">
+                                        {{ user.first_name|slice:":1" }}{% if user.last_name %}{{ user.last_name|slice:":1" }}{% endif %}
+                                    </div>
+                                    <a href="/crm/users/{{ user.pk }}/details"
+                                        class="text-dark fw-semibold text-decoration-none">
+                                        {{ user.first_name }} {{ user.last_name }}
+                                    </a>
+                                </div>
+                            </td>
+
+                            <td class="text-secondary">{{ user.username }}</td>
+
+                            <td>
+                                {% if user.userprofile %}
+                                {% if user.userprofile.role.name == 'Admin' %}
+                                <span class="badge bg-primary rounded-pill px-2 py-1"><i
+                                        class="bi bi-shield-check me-1"></i> Admin</span>
+                                {% elif user.userprofile.role.name == 'Team Lead' %}
+                                <span class="badge bg-warning rounded-pill px-2 py-1"><i
+                                        class="bi bi-person-badge me-1"></i> Team Lead</span>
+                                {% else %}
+                                <span class="badge bg-info rounded-pill px-2 py-1"><i class="bi bi-briefcase me-1"></i>
+                                    {{ user.userprofile.role }}</span>
+                                {% endif %}
+                                {% else %}
+                                <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-secondary">
+                                {{ user.userprofile.branch|default:"-" }}
+                            </td>
+
+                            <td>
+                                {% if user.is_active %}
+                                <span class="badge bg-success rounded-pill px-2 py-1">
+                                    <span class="d-inline-block rounded-circle bg-success me-1"
+                                        style="width: 6px; height: 6px; background-color: #22c55e !important;"></span>
+                                    Active
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger rounded-pill px-2 py-1">
+                                    <span class="d-inline-block rounded-circle bg-danger me-1"
+                                        style="width: 6px; height: 6px; background-color: #ef4444 !important;"></span>
+                                    Inactive
+                                </span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-center pe-3">
+                                <div class="d-flex gap-1 justify-content-center">
+                                    <a href="/crm/users/{{ user.pk }}/edit" class="btn btn-outline-primary btn-sm p-1"
+                                        style="width: 28px; height: 28px;">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                    <a href="/crm/users/{{ user.pk }}/delete" class="btn btn-outline-danger btn-sm p-1"
+                                        style="width: 28px; height: 28px;">
+                                        <i class="fa fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">No users found</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center p-3 border-top gap-2">
+                <div class="small text-muted">
+                    Showing <strong>{{ page_obj.start_index }}</strong> to <strong>{{ page_obj.end_index }}</strong> of
+                    <strong>{{ page_obj.paginator.count }}</strong> entries.
+                </div>
+
+                <ul class="pagination pagination-sm mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a href="#" class="page-link" data-page="1">&laquo;</a>
+                    </li>
+                    <li class="page-item">
+                        <a href="#" class="page-link" data-page="{{ page_obj.previous_page_number }}">Prev</a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
+                        <a href="#" class="page-link" data-page="{{ num }}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a href="#" class="page-link" data-page="{{ page_obj.next_page_number }}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a href="#" class="page-link" data-page="{{ page_obj.paginator.num_pages }}">&raquo;</a>
+                        </li>
+                        {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock body %}
+
+{% block Script %}
+<script src="{% static 'js/list.js' %}"></script>
+<script>
+    new AjaxListView({
+        currentSort: "{{ current_sort|default:'id' }}",
+        currentDir: "{{ current_dir|default:'desc' }}"
+    });
+</script>
+{% endblock Script %}

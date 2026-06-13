@@ -1,0 +1,513 @@
+{% extends 'crm/base.html' %}
+{% load attr %}
+
+{% block title %} {{ model_name }} Details {% endblock %}
+
+{% block css %}
+<style>
+    /* TABLE */
+    .detail-table {
+        border: 1px solid #dee2e6;
+    }
+
+    .detail-table td {
+        vertical-align: middle;
+    }
+
+    /* LABEL */
+    .label-cell {
+        width: 18%;
+        font-weight: 600;
+        opacity: 80%;
+        background: #fafafa;
+        white-space: nowrap;
+        font-size: medium;
+    }
+
+    /* VALUE */
+    .value-cell {
+        width: 32%;
+        color: #333;
+        word-break: break-word;
+    }
+
+    /* MOBILE */
+    @media (max-width:768px) {
+
+        .detail-table td {
+            display: inline-block;
+            vertical-align: top;
+            border: 0;
+            padding: 6px 8px;
+        }
+
+        /* label */
+        .label-cell {
+            width: 40% !important;
+            background: transparent;
+            white-space: normal;
+            font-weight: 600;
+            opacity: 80%;
+        }
+
+        /* value */
+        .value-cell {
+            width: 60% !important;
+            text-align: right;
+            word-break: break-word;
+        }
+
+        .detail-table tr {
+            display: flex;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #eee;
+        }
+    }
+</style>
+{% endblock %}
+
+
+{% block body %}
+<div class="card shadow-sm">
+    <div class="p-1 mb-1">
+        <div class="d-flex justify-content-between align-items-center mb-1">
+            <h4 class="text-primary mb-0 d-none d-md-flex">{{ obj }}</h4>
+
+            <!-- ================= DESKTOP ACTIONS ================= -->
+            <div class="btn-group flex-wrap gap-1" role="group">
+                <!--New     -->
+                <a href="{% url 'crm_object_create' model_name %}" class="btn btn-outline-primary btn-sm">
+                    New
+                </a>
+
+                <!-- Edit -->
+                <a href="{% url 'crm_object_edit' model_name obj.pk %}" class="btn btn-outline-primary btn-sm">
+                    Edit
+                </a>
+
+                {% if model_name == "Lead" %}
+                <!-- Follow-Ups -->
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle"
+                        data-bs-toggle="dropdown">
+                        Follow-Ups
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <button class="dropdown-item" type="button" data-bs-toggle="modal"
+                                data-bs-target="#followupNewModal">
+                                New
+                            </button>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'leadfollowup_list' %}?lead={{ obj.id }}">
+                                All Follow-Ups
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                {% endif %}
+
+                <!-- Documents -->
+                <div class="btn-group" role="group">
+                    {% if model_name == "Lead" %}
+                    <button type="button" class="btn btn-outline-primary btn-sm dropdown-toggle"
+                        data-bs-toggle="dropdown">
+                        Documents
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <button class="dropdown-item" type="button" data-bs-toggle="modal"
+                                data-bs-target="#documentCreateModal">
+                                New
+                            </button>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="{% url 'document_list' %}?lead={{ obj.id }}">
+                                All Documents
+                            </a>
+                        </li>
+                    </ul>
+                    {% endif %}
+                    {% if has_history %}
+                    <!-- History -->
+                    <a href="{% url 'crm_object_history' model_name obj.pk %}" class="btn btn-outline-primary btn-sm">
+                        History
+                    </a>
+                    {% endif %}
+                </div>
+
+                <!-- Delete -->
+                <a href="{% url 'crm_object_delete' model_name obj.pk %}" class="btn btn-outline-danger btn-sm"
+                    onclick="return confirm('Are you sure you want to delete this record?');">
+                    Delete
+                </a>
+            </div>
+        </div>
+        <h3 class="text-primary mb-0 d-block d-md-none">
+            {{ obj }}
+        </h3>
+        <!-- TAB HEADER -->
+        <div class="border-bottom mb-1">
+
+            <ul class="nav nav-tabs" id="detailTabs" role="tablist">
+
+                {% for section in fieldsets %}
+                <li class="nav-item" role="presentation">
+
+                    <button class="nav-link  {% if forloop.first %}active{% endif %}" data-bs-toggle="tab"
+                        data-bs-target="#{{ section.id }}" type="button">
+
+                        {{ section.title }}
+
+                    </button>
+
+                </li>
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+        <!-- TAB CONTENT -->
+        <div class="tab-content mt-1">
+
+            {% for section in fieldsets %}
+            <div class="tab-pane fade {% if forloop.first %}show active{% endif %}" id="{{ section.id }}">
+
+                <div class="table-responsive">
+
+                    <table class="table table-sm detail-table align-middle mb-0">
+
+                        <tbody>
+
+                            {% for field in section.fields %}
+
+                            {% if forloop.first or forloop.counter0|divisibleby:2 %}
+                            <tr>
+                                {% endif %}
+
+                                <!-- LABEL -->
+                                <td class="label-cell">
+                                    {{ field.label }}
+                                </td>
+
+                                <!-- VALUE -->
+                                <td class="value-cell">
+
+                                    {% if field.render == "image" and field.value %}
+
+                                    <img src="{{ field.value }}" class="img-thumbnail" style="max-width:120px;">
+
+                                    {% elif field.render == "file" and field.value %}
+
+                                    <a href="{{ field.value }}" target="_blank">
+
+                                        Download file
+
+                                    </a>
+
+                                    {% else %}
+
+                                    {{ field.value|default_if_none:""|safe }}
+
+                                    {% endif %}
+
+                                </td>
+
+                                {% if forloop.counter|divisibleby:2 %}
+                            </tr>
+                            {% endif %}
+
+                            {% endfor %}
+
+                            {% if section.fields|length|divisibleby:2 == False %}
+                            <td class="label-cell"></td>
+                            <td class="value-cell"></td>
+                            </tr>
+                            {% endif %}
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+            {% endfor %}
+
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="p-1 text-end">
+            <a href="{% url 'crm_object_edit' model_name obj.pk %}" class="btn btn-outline-primary btn-sm">Edit</a>
+            <a href="{% url 'crm_object_delete' model_name obj.pk %}" class="btn btn-outline-danger btn-sm">Delete</a>
+            <a href="javascript:void(0)"  onclick="history.back()" class="btn btn-outline-secondary btn-sm">Back</a>
+        </div>
+
+    </div>
+</div>
+
+<!-- Create Follow-Up Modal -->
+<div class="modal fade" id="followupNewModal" tabindex="-1" aria-labelledby="followupNewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content shadow-sm border-0">
+
+            <!-- Header -->
+            <div class="modal-header bg-light border-bottom">
+                <div>
+                    <h5 class="modal-title mb-0" id="followupNewModalLabel">
+                        New Lead Follow-Up
+                    </h5>
+                    <small class="text-muted">Log an interaction or reminder</small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                </button>
+            </div>
+
+            <!-- Form -->
+            <form id="followupCreateForm" class="px-3 py-1">
+                {% csrf_token %}
+
+                <!-- Lead (Read-only) -->
+                <div class="mb-3">
+                    <label class="form-label text-muted mb-1">Lead</label>
+                    <input type="text" class="form-control form-control-sm bg-light" value="{{ obj.name }}" disabled>
+                    <input type="hidden" name="lead" value="{{ obj.id }}">
+                </div>
+
+                <!-- Row: User + Date -->
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label mb-1">User</label>
+                        <select name="user" class="form-control form-control-sm select2-single" required>
+                            {% for u in users %}
+                            <option value="{{ u.id }}" {% if u.id == request.user.id %}selected{% endif %}>
+                                {{ u.get_full_name|default:u.username }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label mb-1">Follow-up Date</label>
+                        <input type="datetime-local" name="follow_up_date" class="form-control form-control-sm">
+                    </div>
+                </div>
+
+                <!-- Status -->
+                <div class="mb-3">
+                    <label class="form-label mb-1">Status</label>
+                    <select name="status" class="form-control form-control-sm select2-single">
+                        {% for key, label in LEAD_STATUS_CHOICES %}
+                        <option value="{{ key }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Note -->
+                <div class="mb-3">
+                    <label class="form-label mb-1">
+                        Note <span class="text-danger">*</span>
+                    </label>
+                    <textarea name="note" class="form-control form-control-sm" rows="3"
+                        placeholder="Add follow-up notes..." required></textarea>
+                </div>
+
+                <!-- Errors -->
+                <div id="followupFormErrors" class="alert alert-danger d-none py-2 mb-2"></div>
+
+                <!-- Footer -->
+                <div class="modal-footer px-0 pb-0 pt-2 border-top-0">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        Submit
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<!-- ================= CREATE DOCUMENT MODAL ================= -->
+<div class="modal fade" id="documentCreateModal" tabindex="-1" aria-labelledby="documentCreateModalLabel"
+    aria-hidden="true">
+
+    <div class="modal-dialog modal-md modal-dialog-centered">
+
+        <div class="modal-content border-0 shadow-sm">
+
+            <!-- HEADER -->
+            <div class="modal-header bg-light border-bottom py-2">
+
+                <div>
+                    <h5 class="modal-title mb-0" id="documentCreateModalLabel">
+
+                        Add Document
+                    </h5>
+
+                    <small class="text-muted">
+                        Upload a file related to this lead
+                    </small>
+                </div>
+
+                <!-- Bootstrap 5 Close -->
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                </button>
+
+            </div>
+
+            <!-- FORM -->
+            <form id="documentCreateForm" enctype="multipart/form-data">
+
+                {% csrf_token %}
+
+                <div class="modal-body py-3">
+
+                    <!-- LEAD -->
+                    <div class="mb-3">
+
+                        <label class="form-label text-muted small mb-1">
+                            Lead
+                        </label>
+
+                        <input type="text" class="form-control form-control-sm bg-light" value="{{ obj.name }}"
+                            disabled>
+
+                        <input type="hidden" name="lead" value="{{ obj.id }}">
+
+                    </div>
+
+                    <!-- DOCUMENT TYPE -->
+                    <div class="mb-3">
+
+                        <label class="form-label mb-1">
+                            Document Type
+                            <span class="text-danger">*</span>
+                        </label>
+
+                        <input type="text" name="document_type" class="form-control form-control-sm"
+                            placeholder="e.g. PAN Card, Proposal, Agreement" required>
+
+                    </div>
+
+                    <!-- FILE -->
+                    <div class="mb-2">
+
+                        <label class="form-label mb-1">
+                            File
+                            <span class="text-danger">*</span>
+                        </label>
+
+                        <input type="file" name="file" class="form-control form-control-sm" required>
+
+                        <small class="text-muted">
+                            Allowed formats: PDF, JPG, PNG
+                        </small>
+
+                    </div>
+
+                    <!-- ERRORS -->
+                    <div id="documentCreateErrors" class="alert alert-danger d-none py-2 mt-3 mb-0">
+                    </div>
+
+                </div>
+
+                <!-- FOOTER -->
+                <div class="modal-footer border-top bg-light py-2">
+
+                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
+
+                        Cancel
+                    </button>
+
+                    <button type="submit" class="btn btn-primary btn-sm">
+
+                        Upload
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}
+
+{% block Script %}
+<!-- Create Followup -->
+<script>
+    $('#followupCreateForm').on('submit', function (e) {
+        e.preventDefault();
+
+        const $form = $(this);
+        const $errors = $('#followupFormErrors');
+
+        $.ajax({
+            url: "{% url 'leadfollowup_create' %}",
+            method: "POST",
+            data: $form.serialize(),
+
+            success: function (response) {
+                // Hide modal
+                $('#followupNewModal').modal('hide');
+
+                // Reset form
+                $form[0].reset();
+                $errors.addClass('d-none').html('');
+
+                // Optional: refresh timeline or list
+                // location.reload();
+            },
+
+            error: function (xhr) {
+                let html = '<ul class="mb-0">';
+
+                $.each(xhr.responseJSON.errors, function (field, msgs) {
+                    html += `<li>${msgs[0]}</li>`;
+                });
+
+                html += '</ul>';
+
+                $errors.removeClass('d-none').html(html);
+            }
+        });
+    });
+</script>
+
+<!-- CREATE Document-->
+<script>
+    $('#documentCreateForm').on('submit', function (e) {
+        e.preventDefault();
+
+        let formData = new FormData(this);
+
+        $.ajax({
+            url: "{% url 'document_create' %}",
+            method: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+
+            success: function () {
+                location.reload();
+            },
+
+            error: function (xhr) {
+                let html = '<ul>';
+                $.each(xhr.responseJSON.errors, function (_, msgs) {
+                    html += `<li>${msgs[0]}</li>`;
+                });
+                html += '</ul>';
+                $('#documentCreateErrors').removeClass('d-none').html(html);
+            }
+        });
+    });
+</script>
+{% endblock %}

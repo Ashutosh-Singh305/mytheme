@@ -1,0 +1,86 @@
+{% extends "crm/base" %}
+{% block title %}Product Category Details{% endblock %}
+
+{% block body %}
+<div class="card">
+    <div class="p-2 mb-4">
+        <h3 class="mb-3 p-2 text-primary">{{ category.name|default_if_none:"" }} Details</h3>
+
+        <!-- Basic Information -->
+        <div class="profile-section">
+            <h5>Basic Information</h5>
+            <div class="profile-item">
+                <span class="profile-label">Name</span>
+                <span class="profile-value">{{ category.name|default_if_none:"" }}</span>
+            </div>
+            <div class="profile-item">
+                <span class="profile-label">Description</span>
+                <span class="profile-value">{{ category.description|default_if_none:"" }}</span>
+            </div>
+            <div class="profile-item">
+                <span class="profile-label">Active</span>
+                <span class="profile-value">
+                    {% if category.is_active %}
+                    <span class="badge bg-success">Active</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inactive</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Media Section -->
+        <div class="profile-section">
+            <h5>Category Images</h5>
+            <div class="profile-item">
+                <span class="profile-label">Icon</span>
+                <span class="profile-value">
+                    {% if category.icon %}
+                    <img src="{{ category.icon.url }}" width="40" height="40" class="border rounded" alt="Icon" />
+                    {% else %}
+                    <span>No icon uploaded</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="profile-item">
+                <span class="profile-label">Image</span>
+                <span class="profile-value">
+                    {% if category.image %}
+                    <img src="{{ category.image.url }}" width="120" class="border rounded" alt="Image" />
+                    {% else %}
+                    <span>No image uploaded</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <!-- Audit Trail (if using AuditModel fields) -->
+        <div class="profile-section">
+            <h5>Audit Trail</h5>
+            <div class="profile-item">
+                <span class="profile-label">Created By</span>
+                <span class="profile-value">{{ category.created_by|default_if_none:"" }}</span>
+            </div>
+            <div class="profile-item">
+                <span class="profile-label">Created At</span>
+                <span class="profile-value">{{ category.created_date|date:"d-m-Y H:i" }}</span>
+            </div>
+            <div class="profile-item">
+                <span class="profile-label">Modified By</span>
+                <span class="profile-value">{{ category.modified_by|default_if_none:"" }}</span>
+            </div>
+            <div class="profile-item">
+                <span class="profile-label">Modified At</span>
+                <span class="profile-value">{{ category.modified_date|date:"d-m-Y H:i" }}</span>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-4">
+            <a href="{% url 'category_update' category.pk %}" class="btn btn-primary btn-sm">Edit</a>
+            <a href="{% url 'category_delete' category.pk %}" class="btn btn-danger btn-sm">Delete</a>
+            <a href="{% url 'category_list' %}" class="btn btn-secondary btn-sm">Back</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

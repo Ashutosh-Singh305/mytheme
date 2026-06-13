@@ -110,6 +110,7 @@ WSGI_APPLICATION = 'mytheme.wsgi.application'
 
 #########Jzz setting theme #######
 
+#########Jzz setting theme #######
 JAZZMIN_SETTINGS = {
 
     "site_title": "APIS CRM Admin",
@@ -147,21 +148,17 @@ JAZZMIN_SETTINGS = {
     "show_sidebar": True,
     "navigation_expanded": True,
     "hide_apps": [],  # Hide actual reports app if it exists
-    "hide_models": [
-        "crm.userprofile",
-        "reports.report",
-        "crm.loanproduct",
-        "crm.loanapplication",
-        "crm.contact",
-    ],
+    "hide_models": ["crm.userprofile,reports.report"], #"reports.report"
 
     "order_with_respect_to": [
         "auth", 
         "crm.IPRange",
         "crm.branch", #Added branch to top for easy access by Ashutosh
         "crm.bank",
+        "crm.loanproduct",
         "crm.lead",
         "crm.leadfollowup",
+        "crm.loanapplication",
         "crm.document",
         "crm.bankfeedback",
         # "reports",
@@ -186,23 +183,23 @@ JAZZMIN_SETTINGS = {
         ],
 
         "crm": [
-                # {
-                #     "name": "Upload Leads (CSV/XLSX)",
-                #     "url": "crm_lead_upload",
-                #     "icon": "fas fa-file-upload",
-                #     "permissions": ["crm.add_lead"],
-                # },
-                # {
-                #     "name": "Report Builder",
-                #     "url": "select_report_model",  # Django URL name
-                #     "icon": "fas fa-chart-line",
-                # },
-                # {
-                #     "name": "User Tracking Report",
-                #     "url": "/reports/user-activity/",
-                #     "icon": "fas fa-user-clock",
-                #     "permissions": ["auth.view_user"],
-                # },
+                {
+                    "name": "Upload Leads (CSV/XLSX)",
+                    "url": "crm_lead_upload",
+                    "icon": "fas fa-file-upload",
+                    "permissions": ["crm.add_lead"],
+                },
+                {
+                    "name": "Report Builder",
+                    "url": "select_report_model",  # Django URL name
+                    "icon": "fas fa-chart-line",
+                },
+                {
+                    "name": "User Tracking Report",
+                    "url": "/reports/user-activity/",
+                    "icon": "fas fa-user-clock",
+                    "permissions": ["auth.view_user"],
+                },
                 {
                     "name": "Data Upload",
                     "url": "crm-data-upload",
@@ -210,18 +207,18 @@ JAZZMIN_SETTINGS = {
                 },   
             ], 
         
-            # "reports": [
-            #     {
-            #         "name": "MTD Report",
-            #         "url": "reports:mtd_reports",  # Django URL name
-            #         "icon": "fas fa-chart-bar",
-            #     },
-            #     {
-            #         "name": "MTD WIP Report",
-            #         "url": "reports:mtd_wip_report",  # Django URL name
-            #         "icon": "fas fa-tasks",
-            #     },
-            # ],
+            "reports": [
+                {
+                    "name": "MTD Report",
+                    "url": "reports:mtd_reports",  # Django URL name
+                    "icon": "fas fa-chart-bar",
+                },
+                {
+                    "name": "MTD WIP Report",
+                    "url": "reports:mtd_wip_report",  # Django URL name
+                    "icon": "fas fa-tasks",
+                },
+            ],
     }   
 }
 JAZZMIN_UI_TWEAKS = {
@@ -262,12 +259,11 @@ DATABASES = {
     }
 }
 """
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'cardexperts',
-        'USER': 'cardexperts_user',
+        'NAME': 'apis_crm',
+        'USER': 'crm_user',
         'PASSWORD': 'test@1234',
         'HOST': 'localhost',
         'PORT': '5432',

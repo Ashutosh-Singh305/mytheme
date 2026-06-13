@@ -7,13 +7,13 @@ from django.db import models
 
 class BasicReportForm(forms.Form):
     name = forms.CharField(
-        widget=forms.TextInput(attrs={"class": "form-control"}),
+        widget=forms.TextInput(attrs={"class": "form-control form-control-sm"}),
         required=True
     )
-
+    
     model = forms.ChoiceField(
         choices=[],
-        widget=forms.Select(attrs={"class": "form-control select2"})
+        widget=forms.Select(attrs={"class": "form-select form-select-sm select2"})
     )
     description = forms.CharField(
         required=False,
@@ -26,7 +26,7 @@ class BasicReportForm(forms.Form):
             ("summary", "Summary"),
             ("matrix", "Matrix"),
         ],
-        widget=forms.Select(attrs={"class": "form-control"})
+        widget=forms.Select(attrs={"class": "form-select form-select-sm"})
     )
 
     def __init__(self, *a, **kw):
@@ -47,7 +47,7 @@ class BasicReportForm(forms.Form):
 class SelectObjectForm(forms.Form):
     model = forms.ChoiceField(
         choices=[],
-        widget=forms.Select(attrs={"class": "form-control select2"})
+        widget=forms.Select(attrs={"class": "form-select-sm select2"})
     )
 
     def __init__(self, *a, **kw):
@@ -71,7 +71,7 @@ class SelectObjectForm(forms.Form):
 
 class SelectTypeForm(forms.Form):
     view = forms.ChoiceField(
-        widget=forms.Select(attrs={"class": "form-control"}),
+        widget=forms.Select(attrs={"class": "form-select form-select-sm"}),
         choices=[
             ("tabular", "Tabular"),
             ("summary", "Summary (Grouped)"),
@@ -136,13 +136,13 @@ class GroupMeasureForm(forms.Form):
         ],
         required=True,
         label="Measure Function",
-        widget=forms.Select(attrs={"class": "form-control"}),
+        widget=forms.Select(attrs={"class": "form-select form-select-sm"}),
     )
 
     field = forms.ChoiceField(
         choices=[], required=False,
         label="Field (optional for Count)",
-        widget=forms.Select(attrs={"class": "form-control"}),
+        widget=forms.Select(attrs={"class": "form-select form-select-sm"}),
     )
 
     def __init__(self, model_label, *a, **kw):
@@ -200,7 +200,7 @@ class ReportEditForm(forms.ModelForm):
         model = Report
         fields = ["name", "limit", "is_active"]
         widgets = {
-            "name": forms.TextInput(attrs={"class": "form-control", "placeholder": "Report name"}),
+            "name": forms.TextInput(attrs={"class": "form-control form-control-sm", "placeholder": "Report name"}),
             "limit": forms.NumberInput(attrs={"class": "form-control", "min": 1}),
             "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }

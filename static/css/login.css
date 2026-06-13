@@ -1,0 +1,256 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: #f3f4fa;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    padding: 20px;
+}
+
+.container {
+    display: flex;
+    width: 100%;
+    max-width: 1000px;
+    min-height: 400px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+    border-radius: 20px;
+    overflow: hidden;
+    background: #fff;
+}
+
+/* Left panel (login) */
+.left-panel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 75px;
+    background-color: #ffffff;
+}
+
+.login-box {
+    width: 100%;
+    max-width: 380px;
+}
+
+.login-box h2 {
+    font-size: 32px;
+    font-weight: 600;
+    color: #1a1c36;
+    margin-bottom: 8px;
+}
+
+.login-box .subtitle {
+    font-size: 15px;
+    color: #797b89;
+    margin-bottom: 35px;
+    font-weight: 400;
+}
+
+.form-group {
+    position: relative;
+    margin-bottom: 22px;
+    display: flex;
+    align-items: center;
+}
+
+.form-group i.input-icon {
+    position: absolute;
+    left: 20px;
+    color: #633be2;
+    font-size: 18px;
+}
+
+.form-group input {
+    width: 100%;
+    border: none;
+    padding: 18px 20px 18px 55px;
+    outline: none;
+    font-size: 15px;
+    background: #f6f5fa;
+    border-radius: 14px;
+    color: #1a1c36;
+    font-family: 'Poppins', sans-serif;
+    transition: background 0.2s ease;
+}
+
+.form-group input::placeholder {
+    color: #a0a2b1;
+}
+
+.form-group input:focus {
+    background: #f0eef9;
+}
+
+/* Specifically for styling password masking dots tightly like the image */
+.form-group input[type="password"] {
+    font-family: 'Arial', sans-serif;
+    letter-spacing: 3px;
+    font-size: 16px;
+}
+
+.password-wrapper .toggle-password {
+    position: absolute;
+    right: 20px;
+    cursor: pointer;
+    color: #797b89;
+    font-size: 18px;
+    transition: color 0.2s ease;
+}
+
+.password-wrapper .toggle-password:hover {
+    color: #633be2;
+}
+
+.remember-forgot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 25px;
+    margin-bottom: 35px;
+    font-size: 14px;
+}
+
+.remember-checkbox {
+    display: flex;
+    align-items: center;
+    color: #4a4c5a;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.remember-checkbox input {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1.5px solid #d0d2de;
+    accent-color: #633be2;
+    cursor: pointer;
+}
+
+.forgot-password a {
+    color: #5527e1;
+    text-decoration: none;
+    font-weight: 500;
+    transition: opacity 0.2s ease;
+}
+
+.forgot-password a:hover {
+    opacity: 0.8;
+}
+
+.login-btn {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(90deg, #6c2de9, #2b7af0);
+    border: none;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    border-radius: 30px;
+    box-shadow: 0 10px 20px rgba(108, 45, 233, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.login-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 12px 24px rgba(108, 45, 233, 0.3);
+}
+
+/* Right panel (decorative canvas matching image_cb6b84.jpg) */
+.right-panel {
+    flex: 1;
+    background: linear-gradient(135deg, #4483f7 0%, #5752e6 45%, #a847e4 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Large upper right ambient circle */
+.right-panel::before {
+    content: '';
+    position: absolute;
+    width: 320px;
+    height: 320px;
+    top: -40px;
+    right: -40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.02));
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+/* Large bottom left ambient circle */
+.right-panel::after {
+    content: '';
+    position: absolute;
+    width: 280px;
+    height: 280px;
+    bottom: -60px;
+    left: -40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01));
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+/* Django specific styling for error wrappers if thrown */
+.alert-danger {
+    margin-top: 20px;
+    padding: 12px;
+    background-color: #ffeef0;
+    border-left: 4px solid #f84b63;
+    color: #ea2b46;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.text-danger {
+    font-size: 12px;
+    color: #f84b63;
+    display: block;
+    margin-top: 4px;
+    padding-left: 5px;
+}
+
+/* Responsive Breakpoint Layout */
+@media (max-width: 840px) {
+    .container {
+        flex-direction: column;
+        max-width: 480px;
+        min-height: auto;
+    }
+
+    .right-panel {
+        height: 180px;
+        order: 1;
+    }
+
+    .left-panel {
+        padding: 40px 30px;
+        order: 2;
+    }
+
+    .right-panel::before {
+        width: 180px;
+        height: 180px;
+        top: -20px;
+        right: -20px;
+    }
+
+    .right-panel::after {
+        width: 160px;
+        height: 160px;
+        bottom: -40px;
+        left: -20px;
+    }
+}

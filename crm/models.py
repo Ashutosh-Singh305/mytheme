@@ -1,5 +1,6 @@
 import ipaddress
 import re
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import RegexValidator
@@ -14,15 +15,15 @@ from django.db.models import Q
 
 # ---------- Abstract Base Model ----------
 class AuditModel(models.Model):
-    assigned_to = models.ForeignKey(User,verbose_name="Assigned To", null=True, blank=True, on_delete=models.CASCADE, related_name="%(class)s_assigned")
-    created_by = models.ForeignKey(User, verbose_name="Created By", null=True, on_delete=models.SET_NULL, related_name="%(class)s_created_by")
+    assigned_to = models.ForeignKey(User,verbose_name="Assigned To", null=True, blank=True, on_delete=models.SET_NULL, related_name="%(class)s_assigned")
+    created_by = models.ForeignKey(User, verbose_name="Created By", null=True, on_delete=models.CASCADE, related_name="%(class)s_created_by")
     created_date = models.DateTimeField(("Created Date"),auto_now_add=True)
-    modified_by = models.ForeignKey(User, verbose_name="Modified By",null=True, on_delete=models.SET_NULL, related_name="%(class)s_modified_by")
+    modified_by = models.ForeignKey(User, verbose_name="Modified By",null=True, on_delete=models.CASCADE, related_name="%(class)s_modified_by")
     modified_at = models.DateTimeField(("Modified At"),auto_now=True)
     class Meta:
         abstract = True
 
-class IPRange(models.Model):
+class IPRange(AuditModel):
     start_ip = models.GenericIPAddressField(
         verbose_name="Start IP Address"
     )
@@ -99,27 +100,12 @@ class Branch(AuditModel):
     def __str__(self):
         return f"{self.name} - {self.get_state_display()}" or "Unnamed Branch"
 
-class Role(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    code = models.CharField(max_length=50, unique=True)
-    is_active = models.BooleanField(default=True)
-
-    class Meta:
-        ordering = ["name"]
-
-    def __str__(self):
-        return self.name
+      
 
 class UserProfile(AuditModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     emp_code = models.CharField(("Employee Code"),max_length=20, unique=True, null=True, blank=True)
-    role =models.ForeignKey(
-        Role,
-        null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name="users"
-    )
+    role = models.CharField(max_length=50, choices=ROLE_CHOICES,null=True ,blank=True)
     manager = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='subordinates')
     branch = models.ForeignKey(Branch, null=True, blank=True, on_delete=models.SET_NULL,related_name="branch_user")
     def __str__(self):
@@ -129,17 +115,12 @@ class UserProfile(AuditModel):
 
 # Define Field Access Control Model
 class FieldAccessControl(AuditModel):
-    role = models.ForeignKey(
-        Role,
-        null=True,
-        blank=True,
-        on_delete=models.CASCADE,
-        related_name="field_permissions"
-    )
+    role = models.CharField(max_length=50, choices=ROLE_CHOICES,null=True ,blank=True)
     model_name = models.CharField(max_length=50,null=True, blank=True)
     field_name = models.CharField(max_length=50)
     can_view = models.BooleanField(default=True)
     can_edit = models.BooleanField(default=True)
+    can_search = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.role} - {self.model_name}.{self.field_name}"
@@ -180,9 +161,42 @@ class LoanProduct(AuditModel):
     def __str__(self):
         return f"{self.name} - {self.bank.name}"
 
+class ProductCategory(AuditModel):
+    name = models.CharField(max_length=100, unique=True, null=True, blank=True)  # e.g., Loan, Card, Insurance
+    description = models.TextField(null=True, blank=True)  
+    icon = models.ImageField(upload_to='apsite/category_icons/', null=True, blank=True)
+    image = models.ImageField(upload_to='apsite/category_images/', null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        verbose_name = "Product Category"
+        verbose_name_plural = "Product Categories"
+
+    def __str__(self):
+        return self.name or "Unnamed Category"
+
+class Product(AuditModel):
+    product_category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, related_name='products', null=True, blank=True)
+    name = models.CharField(max_length=100, null=True, blank=True)  # e.g., Personal Loan
+    description = models.TextField(null=True, blank=True)  
+    features = HTMLField(null=True, blank=True)  # Rich text listing benefits/features
+    eligibility_criteria = HTMLField(null=True, blank=True)  # Rich text for eligibility conditions
+    product_image = models.ImageField(upload_to='apsite/product_images/', null=True, blank=True)
+    product_icon = models.ImageField(upload_to='apsite/product_icons/', null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    is_index = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Product"
+        verbose_name_plural = "Products"
+
+    def __str__(self):
+        return self.name or " "
+    
+
 class Lead(AuditModel):
 #### Personal Details ####
-    name = models.CharField(max_length=122,verbose_name="Applicant Name",blank=True,default=" ")
+    name = models.CharField(max_length=122,verbose_name="Applicant Name",blank=False)
     father_name = models.CharField(max_length=122, verbose_name="Father's Name",blank=True)
     gender = models.CharField(max_length=5,choices=GENDER_CHOICES,null=True ,blank=True)
     marital_status = models.CharField(max_length=20,choices=MARITAL_STATUS_CHOICES,verbose_name="Marital Status",blank=True)
@@ -237,6 +251,9 @@ class Lead(AuditModel):
     description = models.TextField(blank=True)
     date = models.DateTimeField(auto_now_add=True,blank=True)
     dos = models.DateField(default=datetime.date.today,null=True,blank=True)
+    sm = models.ForeignKey(settings.AUTH_USER_MODEL,on_delete = models.CASCADE,verbose_name="Sales Manager", related_name="sm_leads",null=True,blank=True)
+    team_lead = models.ForeignKey(settings.AUTH_USER_MODEL,verbose_name="Team Leader",
+                                  on_delete = models.CASCADE, related_name="team_leads",null=True,blank=True)
 #### Loan Detail ####
     require_loan_amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
     existing_loan_emi = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -256,6 +273,7 @@ class Lead(AuditModel):
     backend_executive_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name="Backend Executive", related_name="backend_exec_leads", null=True, blank=True)
 
 #### Backend Details ####
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, blank=True, null=True,verbose_name="Product")
     channel_name = models.CharField(("Channel Name"), max_length=20,choices=CHANNEL_CHOICES,blank=True)
     dol = models.DateField(("Date of Login"), null=True, blank=True)
     login_amount = models.DecimalField(("Login Amount"),max_digits=12, decimal_places=2, null=True, blank=True)
@@ -279,8 +297,9 @@ class Lead(AuditModel):
     branch_name = models.CharField(("Branch Name"),max_length=100, blank=True)
 
 
-    lead_source = models.CharField(("Lead Source"),max_length=50, choices=LEAD_TYPE_CHOICES, blank=True, null=True)
-    status = models.CharField(("Status"),max_length=50, choices=LEAD_STATUS_CHOICES, default='new')
+######## Audit Field ###########
+    lead_source = models.CharField(("Lead Source"),max_length=50, choices=LEAD_TYPE_CHOICES, blank=False, null=True)
+    status = models.CharField(("Status"),max_length=50, choices=LEAD_STATUS_CHOICES)
     description = models.TextField(blank=True)
     history = HistoricalRecords()
     
@@ -319,8 +338,8 @@ class Lead(AuditModel):
         
         # ---- STATUS-BASED REQUIRED FIELDS For Bank Porcessing ----
         status_required_fields = [
-            'ofb', 'underwriting','disbursed',
-            'reject_relook', 'approved_hold', 'UW Hold', #'approved', 'Declined',
+            'ofb', 'underwriting','disbursed', 'Declined',
+            'approved', 'reject_relook', 'approved_hold', 'UW Hold'
         ]       
         if self.status and self.status in status_required_fields:
             # define required field list and corresponding user-friendly names
@@ -347,11 +366,11 @@ class Lead(AuditModel):
                     errors[field] = f"{label} is required when status is {readable_status}."
 
         # ---- STATUS-BASED: Approved Amount required ----
-        # if self.status in ['approved', 'approved_hold']:
-        #     if not self.approved_amount:
-        #         errors['approved_amount'] = (
-        #             f"Approved Amount is required when status is {self.get_status_display()}."
-        #         )
+        if self.status in ['approved', 'approved_hold']:
+            if not self.approved_amount:
+                errors['approved_amount'] = (
+                    f"Approved Amount is required when status is {self.get_status_display()}."
+                )
 
         # ---- STATUS-BASED: Disbursed requires disbursement details ----
         if self.status == 'disbursed':
@@ -411,11 +430,10 @@ class Lead(AuditModel):
             ("view_lead_history", "Can view lead history"),
         ]
         
-        
 
            
     def __str__(self):
-        return self.name if self.name else "Unnamed Lead"
+        return self.name
 
 class LeadFollowUp(AuditModel):
     lead = models.ForeignKey(Lead, on_delete=models.CASCADE,null=True,blank=True)
@@ -439,9 +457,9 @@ class Document(AuditModel):
     
 class LoanApplication(AuditModel):
     lead = models.OneToOneField(Lead, on_delete=models.CASCADE)
-    product = models.ForeignKey(LoanProduct, on_delete=models.CASCADE,null=True, blank=True)
-    loan_amount = models.DecimalField(max_digits=12, decimal_places=2,null=True, blank=True)
-    tenure = models.IntegerField(help_text="In months",null=True, blank=True)
+    product = models.ForeignKey(LoanProduct, on_delete=models.CASCADE)
+    loan_amount = models.DecimalField(max_digits=12, decimal_places=2)
+    tenure = models.IntegerField(help_text="In months")
     interest_rate = models.DecimalField(max_digits=5, decimal_places=2)
     emi = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     status = models.CharField(max_length=50, choices=LEAD_STATUS_CHOICES, default='Submitted to Bank')
@@ -560,38 +578,6 @@ class GlobalPermissions(models.Model):
         ]
 
 # Product related tables  by Ashutosh
-class ProductCategory(AuditModel):
-    name = models.CharField(max_length=100, unique=True, null=True, blank=True)  # e.g., Loan, Card, Insurance
-    description = models.TextField(null=True, blank=True)  
-    icon = models.ImageField(upload_to='apsite/category_icons/', null=True, blank=True)
-    image = models.ImageField(upload_to='apsite/category_images/', null=True, blank=True)
-    is_active = models.BooleanField(default=True)
-
-    class Meta:
-        verbose_name = "Product Category"
-        verbose_name_plural = "Product Categories"
-
-    def __str__(self):
-        return self.name
-
-class Product(AuditModel):
-    product_category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, related_name='products', null=True, blank=True)
-    name = models.CharField(max_length=100, null=True, blank=True)  # e.g., Personal Loan
-    description = models.TextField(null=True, blank=True)  
-    features = HTMLField(null=True, blank=True)  # Rich text listing benefits/features
-    eligibility_criteria = HTMLField(null=True, blank=True)  # Rich text for eligibility conditions
-    product_image = models.ImageField(upload_to='apsite/product_images/', null=True, blank=True)
-    product_icon = models.ImageField(upload_to='apsite/product_icons/', null=True, blank=True)
-    is_active = models.BooleanField(default=True)
-    is_index = models.BooleanField(default=False)
-
-    class Meta:
-        verbose_name = "Product"
-        verbose_name_plural = "Products"
-
-    def __str__(self):
-        return f"{self.name}" or "Unnamed Product"
-    
 class Contact(AuditModel):
     name = models.CharField(max_length=122, null=True, blank=True)
     email = models.EmailField(null=True, blank=True)

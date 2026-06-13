@@ -1,225 +1,215 @@
 {% extends "reports/base.html" %}
-{% block title %}New Report — Add filters{% endblock %}
+{% load static %}
+
+{% block title %}New Report — Filters{% endblock %}
 
 {% block css %}
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/list.css' %}">
 
 <style>
-    table#filter-table th,
-    table#filter-table td {
-        white-space: nowrap;
+    /* Styling alignment overrides to ensure crisp presentation inside condensed tabular rows */
+    .filter-table td {
+        vertical-align: middle;
     }
-
-    .col-num {
-        width: 10px;
-    }
-
-    .col-value {
-        min-width: 200px;
-    }
-
-    .col-drag,
-    .col-delete {
-        width: 10px;
-    }
-
-    @media (max-width: 576px) {
-        .col-num {
-            width: 10px;
-        }
-
-        .col-field {
-            min-width: 120px;
-        }
-
-        .col-operator {
-            min-width: 120px;
-        }
-
-        .col-value {
-            min-width: 180px;
-        }
-
-        .col-drag,
-        .col-delete {
-            width: 50px;
-        }
-    }
-
-    /* small visual nicety for Select2 inside table */
-    .select2-container {
-        width: 100% !important;
+    .row-number {
+        font-weight: 600;
+        color: #6c757d;
+        width: 45px;
+        text-align: center;
+        font-size: 0.85rem;
     }
 </style>
-
 {% endblock css %}
 
 {% block body %}
-<h3 class="mb-4">Filters</h3>
-
-<nav class="mb-4">
-    <ol class="breadcrumb bg-white px-3 py-2 border rounded">
-        {% for label, url in breadcrumbs %}
-        {% if url %}
-        <li class="breadcrumb-item"><a href="{{ url }}">{{ label }}</a></li>
-        {% else %}
-        <li class="breadcrumb-item active">{{ label }}</li>
-        {% endif %}
-        {% endfor %}
-    </ol>
-</nav>
-{% if request.path == "/reports/new/" and request.GET.step == "filters" %}
-<div class="alert alert-warning py-2 px-3 mb-3" id="reset-warning-msg">
-    ⚠️ Please reset the form once before adding filters to ensure a clean start.
-</div>
-{% endif %}
-<div class="card shadow-sm mb-4">
-    <div class="card-header bg-primary text-white py-2">
-        <strong>STEP 4 — Filters</strong>
-    </div>
-
-    <div class="card-body">
-
-        {% if form.errors %}
-        <div class="alert alert-danger">
-            <ul class="mb-0">
-                {% for field, errors in form.errors.items %}
-                {% for error in errors %}
-                <li>{{ error }}</li>
-                {% endfor %}
-                {% endfor %}
-            </ul>
-        </div>
-        {% endif %}
-
-        <form id="filterForm" method="POST">
-            {% csrf_token %}
-
-            <div class="table-responsive">
-                <table class="table table-bordered table-sm" id="filter-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Field</th>
-                            <th>Operator</th>
-                            <th>Value</th>
-                            <th>Delete</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="filter-box">
-
-                        {% for f in filters %}
-                        <tr class="filter-row">
-                            <td class="row-number"></td>
-
-                            <td>
-                                <select name="field[]" class="form-control select2-field">
-                                    <option value="">--Select--</option>
-                                    {% for v,l in form.field.field.choices %}
-                                    <option value="{{ v }}" {% if v == f.field %}selected{% endif %}>{{ l }}</option>
-                                    {% endfor %}
-                                </select>
-                            </td>
-
-                            <td>
-                                <select name="condition[]" class="form-control select2-operator">
-                                    {% for v,l in form.condition.field.choices %}
-                                    <option value="{{ v }}" {% if v == f.op %}selected{% endif %}>{{ l }}</option>
-                                    {% endfor %}
-                                </select>
-                            </td>
-
-                            <td class="value-cell" data-value="{{ f.value }}">
-                                <input type="hidden" name="value[]" class="value-input">
-                            </td>
-
-                            <td>
-                                <button type="button" class="btn btn-danger btn-sm remove-row">×</button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-
-                        {% if not filters %}
-                        <tr class="filter-row">
-                            <td class="row-number"></td>
-
-                            <td>
-                                <select name="field[]" class="form-control select2-field">
-                                    {% for v,l in form.field.field.choices %}
-                                    <option value="{{ v }}">{{ l }}</option>
-                                    {% endfor %}
-                                </select>
-                            </td>
-
-                            <td>
-                                <select name="condition[]" class="form-control select2-operator">
-                                    {% for v,l in form.condition.field.choices %}
-                                    <option value="{{ v }}">{{ l }}</option>
-                                    {% endfor %}
-                                </select>
-                            </td>
-
-                            <td class="value-cell" data-value="">
-                                <input type="hidden" name="value[]" class="value-input">
-                            </td>
-
-                            <td>
-                                <button type="button" class="btn btn-danger btn-sm remove-row">×</button>
-                            </td>
-                        </tr>
-                        {% endif %}
-
-                    </tbody>
-                </table>
-            </div>
-
-            <button type="button" class="btn btn-sm btn-outline-primary mt-2" id="add-row">
-                + Add Filter
-            </button>
-
-            <div class="form-group row mt-3">
-
-                <!-- Filter Logic -->
-                <div class="col-md-6">
-                    <label>Filter Logic</label>
-                    <input type="text"
-                        name="filter_logic"
-                        class="form-control"
-                        value="{{ filter_logic|default:'' }}"
-                        placeholder="(1 OR 2) AND NOT 3">
-
-                    <small class="text-muted">
-                        Example: (1 OR 2) AND NOT 3
-                    </small>
-                </div>
-
-                <!-- Limit -->
-                <div class="col-md-6">
-                    <label>Limit</label>
-                    <input type="number"
-                        name="limit"
-                        class="form-control"
-                        value="{{ limit|default:5000 }}"
-                        min="1">
-                </div>
-
-            </div>
-            
-
-            <div class="mt-3 text-end">
-                
-                {% if request.path == "/reports/new/" %}
-                    <a href="?step=filters&reset=1" class="btn btn-danger btn-sm">Reset</a>
+<div class="content mt-1">
+    <!-- Breadcrumb Navigation Component -->
+    <nav aria-label="breadcrumb" class="mb-2">
+        <ol class="breadcrumb bg-white px-2 py-1 border rounded shadow-sm small m-0">
+            {% for label, url in breadcrumbs %}
+                {% if url %}
+                    <li class="breadcrumb-item"><a href="{{ url }}" class="text-decoration-none text-primary fw-medium">{{ label }}</a></li>
+                {% else %}
+                    <li class="breadcrumb-item active text-muted" aria-current="page">{{ label }}</li>
                 {% endif %}
-                <button type="submit" class="btn btn-success btn-sm float-right">Continue → Save</button>
+            {% endfor %}
+        </ol>
+    </nav>
+
+    <!-- Clean Start Warning Prompt notification alert block -->
+    {% if request.path == "/reports/new/" and request.GET.step == "filters" %}
+    <div class="alert alert-warning py-1.5 px-2 mb-2 shadow-sm small d-flex align-items-center gap-2" id="reset-warning-msg" role="alert">
+        <i class="fas fa-exclamation-triangle text-warning"></i>
+        <span>Please reset the form once before adding filters to ensure a clean start.</span>
+    </div>
+    {% endif %}
+
+    <!-- Main Configuration Panel Card -->
+    <div class="card shadow-sm mb-2">
+        <div class="card-header rounded-top-4">
+            <h5 class="card-title m-0 fs-6 fw-bold">
+                <i class="fas fa-filter text-primary me-2"></i>Filters Configuration
+            </h5>
+        </div>
+
+        <div class="card-body p-2">
+
+            <!-- Validation Errors Handling Block Banner Loop -->
+            {% if form.errors %}
+            <div class="alert alert-danger py-1.5 px-2 mb-2 small" role="alert">
+                <div class="fw-bold mb-1"><i class="fas fa-times-circle me-1"></i> Please rectify the following data issues:</div>
+                <ul class="mb-0 ps-3">
+                    {% for field, errors in form.errors.items %}
+                        {% for error in errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    {% endfor %}
+                </ul>
             </div>
-        </form>
+            {% endif %}
+
+            <form id="filterForm" method="POST" novalidate>
+                {% csrf_token %}
+
+                <!-- Tabular Interactive Filters Matrix Panel -->
+                <div class="table-responsive border rounded-4 bg-white">
+                    <table class="table table-sm custom-table align-middle mb-0 filter-table" id="filter-table">
+                        <thead class="table-primary">
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th style="width: 35%;">Field</th>
+                                <th style="width: 25%;">Operator</th>
+                                <th style="width: 35%;" >Value</th>
+                                <th class="text-center" style="width: 5px;">Actions</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="filter-box">
+                            {% for f in filters %}
+                            <tr class="filter-row">
+                                <td class="row-number"></td>
+                                <td>
+                                    <select name="field[]" class="form-select form-select-sm select2-field shadow-none">
+                                        {% for v, l in form.field.field.choices %}
+                                        <option value="{{ v }}" {% if v == f.field %}selected{% endif %}>{{ l }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="condition[]" class="form-select form-select-sm select2-operator shadow-none">
+                                        {% for v, l in form.condition.field.choices %}
+                                        <option value="{{ v }}" {% if v == f.op %}selected{% endif %}>{{ l }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td class="value-cell" data-value="{{ f.value }}">
+                                    <input type="hidden" name="value[]" class="value-input">
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-outline-danger btn-sm p-1 border-0 remove-row" title="Remove Filter Step">
+                                        <i class="fas fa-trash-alt px-1"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+
+                            {% if not filters %}
+                            <tr class="filter-row">
+                                <td class="row-number"></td>
+                                <td>
+                                    <select name="field[]" class="form-select form-select-sm select2-field shadow-none">
+                                        
+                                        {% for v, l in form.field.field.choices %}
+                                        <option value="{{ v }}">{{ l }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td>
+                                    <select name="condition[]" class="form-select form-select-sm select2-operator shadow-none">
+                                        {% for v, l in form.condition.field.choices %}
+                                        <option value="{{ v }}">{{ l }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td class="value-cell" data-value="">
+                                    <input type="hidden" name="value[]" class="value-input">
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-outline-danger btn-sm p-1 border-0 remove-row" title="Remove Filter Step">
+                                        <i class="fas fa-trash-alt px-1"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Add Row Control Interactivity -->
+                <button type="button" class="btn btn-sm btn-outline-primary mt-2 fw-medium px-2 py-1" id="add-row">
+                    <i class="fas fa-plus me-1 small"></i>Add Filter
+                </button>
+
+                <!-- Configuration Properties: Filter Logic Rules & Row Aggregation Constraints -->
+                <div class="row g-2 mt-2 pt-2 border-top">
+                    <!-- Logical Directives Inputs Group Column -->
+                    <div class="col-md-6">
+                        <div class="admin-form-row border-0 p-0">
+                            <label class="form-label mb-1 small">Filter Logic</label>
+                            <div class="admin-field-col">
+                                <input type="text" 
+                                       name="filter_logic" 
+                                       class="form-control form-control-sm shadow-none" 
+                                       value="{{ filter_logic|default:'' }}" 
+                                       placeholder="e.g., (1 OR 2) AND NOT 3">
+                                <div class="form-text text-muted small mt-1 mb-0" style="font-size: 0.725rem;">
+                                    <i class="fas fa-info-circle me-1 text-primary"></i>Define logic rules with column indices. Example: <code>(1 OR 2) AND NOT 3</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Row Range Extraction Limit Scope Constraint Inputs Group Column -->
+                    <div class="col-md-6">
+                        <div class="admin-form-row border-0 p-0">
+                            <label class="form-label mb-1 small">Limit</label>
+                            <div class="admin-field-col">
+                                <input type="number" 
+                                       name="limit" 
+                                       class="form-control form-control-sm shadow-none" 
+                                       value="{{ limit|default:5000 }}" 
+                                       min="1">
+                                <div class="form-text text-muted small mt-1 mb-0" style="font-size: 0.725rem;">
+                                    Maximum quantity thresholds processed per dataset array pull block execution.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Layout Navigation Interactive Operations Control Footer Sticky Bar -->
+                <div class="p-2 mt-2 border-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            {% if request.path == "/reports/new/" %}
+                            <a href="?step=filters&reset=1" class="btn btn-outline-danger btn-sm px-3 fw-medium">
+                                <i class="fas fa-undo me-1 small"></i>Reset Matrix
+                            </a>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-success btn-sm px-4 fw-medium shadow-none">
+                            Continue &amp; Save <i class="fas fa-arrow-right ms-1 small"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
     </div>
 </div>
-
 {% endblock body %}
 
 {% block Script %}
@@ -569,8 +559,10 @@ $(document).ready(function () {
 
         <td class="value-cell" data-value=""></td>
 
-        <td>
-            <button type="button" class="btn btn-danger btn-sm remove-row">×</button>
+        <td class="text-center">
+            <button type="button" class="btn btn-outline-danger btn-sm p-1 border-0 remove-row" title="Remove Filter Step">
+                <i class="fas fa-trash-alt px-1"></i>
+            </button>
         </td>
     </tr>`;
 

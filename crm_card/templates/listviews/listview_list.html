@@ -1,0 +1,64 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+
+{% block title %}List Views{% endblock %}
+
+{% block body %}
+
+<div class="card">
+  <div class="card-body">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="card-title">List Views</h4>
+    </div>
+
+    <!-- Table -->
+    <div class="table-responsive border rounded p-1">
+      <table class="table">
+        <thead>
+          <tr class="table-primary">
+            <th>#</th>
+            <th>Name</th>
+            <th>Object</th>
+            <th style="width: 160px;">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {% for v in views %}
+          <tr>
+            <td>{{ v.id }}</td>
+            <td>{{ v.name|default_if_none:" " }}</td>
+            <td class="text-capitalize">{{ v.object_name|default_if_none:" " }}</td>
+            <td>
+              <a class="btn btn-sm btn-outline-success" href="{% url 'listview_results' v.pk %}">
+                View
+              </a>
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'listview_edit' v.pk %}">
+                Edit
+              </a>
+              <form method="post" action="{% url 'listview_delete' v.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete this list view?');">
+                  Delete
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" class="text-center text-muted">No list views created yet.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
+      </table>
+    </div>
+    <div class="text-end">
+      <a class="btn btn-secondary btn-sm mt-3" href="{% url 'lead_list' %}">Back</a>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

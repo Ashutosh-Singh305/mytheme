@@ -1,0 +1,62 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block content %}
+<div class="container" style="max-width: 720px;">
+    <div class="card shadow mt-5">
+        <div class="card-header bg-info text-white">
+            <h4 class="mb-0">Add Filters for Your Report</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST">
+                {% csrf_token %}
+                
+                <div class="form-group mb-3">
+                    <label for="{{ form.field.id_for_label }}"><strong>{{ form.field.label }}</strong></label>
+                    <select name="{{ form.field.name }}" class="form-control" id="{{ form.field.id_for_label }}">
+                        <option value="">-- Select Field --</option>
+                        {% for val, label in form.field.field.choices %}
+                            <option value="{{ val }}" {% if form.field.value == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="{{ form.condition.id_for_label }}"><strong>{{ form.condition.label }}</strong></label>
+                    <select name="{{ form.condition.name }}" class="form-control" id="{{ form.condition.id_for_label }}">
+                        {% for val, label in form.condition.field.choices %}
+                            <option value="{{ val }}" {% if form.condition.value == val %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label for="{{ form.value.id_for_label }}"><strong>{{ form.value.label }}</strong></label>
+                    <input type="text" name="{{ form.value.name }}" class="form-control" id="{{ form.value.id_for_label }}" value="{{ form.value.value|default:'' }}">
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'select_report_fields' %}" class="btn btn-secondary">← Back</a>
+                    <a href="{% url 'select_report_filters' %}?reset=1" class="btn btn-warning">Reset</a>
+                    <div>
+                        <button type="submit" name="add_another" value="1" class="btn btn-outline-primary">Add Another Filter</button>
+                        <button type="submit" class="btn btn-success">Generate Report</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        {% if filters %}
+        <div class="card-footer bg-light">
+            <h5>Current Filters</h5>
+            <ul class="list-group">
+                {% for f in filters %}
+                    <li class="list-group-item">
+                        <strong>{{ f.field|capfirst }}</strong> {{ f.condition }} <em>{{ f.value }}</em>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

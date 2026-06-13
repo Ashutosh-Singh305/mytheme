@@ -1,47 +1,60 @@
 {% extends "reports/base.html" %}
+{% load static %}
 {% block title %}All Reports{% endblock %}
+{% block css %}
+  <link rel="stylesheet" href="{% static 'css/list.css' %}">
+{% endblock %}
 {% block body %}
-<div class="card">
-  <div class="card-body p-2">
-    <div class="d-flex justify-content-between align-items-center mb-1">
-      <h4 class="card-title">Reports</h4>
-      {% if perms.reports.add_report %}
-      <a class="btn btn-primary btn-sm" href="{% url 'reports:new' %}">New Report</a>
-      {% endif %}
-
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h4 class="page-title mb-0">Reports</h4>
     </div>
-    <div class="table-responsive border rounded">
-      <table class="table table-sm">
+    <div>
+        {% if perms.reports.add_report %}
+      <a class="btn btn-primary btn-sm align-self-start align-self-sm-auto" href="{% url 'reports:new' %}">
+        <i class="bi bi-plus-lg me-1"></i>New Report
+      </a>
+      {% endif %}
+    </div>
+</div>
+<div class="card border-0 shadow-sm rounded-3">
+  <div class="card-body">
+    <div class="table-responsive border rounded-3 backend-table-container">
+      <table class="table table-sm align-middle mb-0 custom-table">
         <thead>
           <tr class="table-primary">
-            <th class="font-weight-bold">Name</th>
-            <th class="font-weight-bold">Type</th>
-            <th class="font-weight-bold">Owner</th>
-            <th class="font-weight-bold">Modified at</th>
-            <th class="text-center font-weight-bold">Actions</th>
+            <th class="fw-bold py-2">Name</th>
+            <th class="fw-bold py-2">Type</th>
+            <th class="fw-bold py-2">Owner</th>
+            <th class="fw-bold py-2">Modified at</th>
+            <th class="text-md-center fw-bold py-2" style="min-width: 140px;">Actions</th>
           </tr>
         </thead>
         <tbody>
           {% for r in object_list %}
           <tr>
-            <td><a class="nav-link text-primary" href="{% url 'reports:detail' r.slug %}">{{ r.name }}</a></td>
-            <td>{{ r.get_view_type_display }}</td>
+            <td>
+              <a class="fw-semibold text-primary text-decoration-none" href="{% url 'reports:detail' r.slug %}">
+                {{ r.name }}
+              </a>
+            </td>
+            <td><span class="text-secondary">{{ r.get_view_type_display }}</span></td>
             <td>{{ r.owner }}</td>
-            <td>{{ r.modified_at }}</td>
-            <td class="text-center">
-              <!-- <a class="btn btn-sm btn-outline-primary" href="{% url 'reports:detail' r.slug %}">View</a> -->
-              {% if perms.reports.change_report %}
-              <a class="btn btn-sm btn-outline-primary" href="{% url 'reports:edit' r.slug %}">Edit</a>
-              {% endif %}
-              <a class="btn btn-sm btn-outline-success" href="{% url 'reports:run' r.slug %}">Run</a>
-              {% if perms.reports.delete_report %}
-              <!-- <a class="btn btn-sm btn-outline-danger" href="{% url 'reports:delete' r.slug %}">Delete</a> -->
-              {% endif %}
+            <td class="text-nowrap">{{ r.modified_at }}</td>
+            <td>
+              <div class="d-flex justify-content-start justify-content-md-center gap-1">
+                {% if perms.reports.change_report %}
+                <a class="btn btn-sm btn-outline-primary py-1 px-2" href="{% url 'reports:edit' r.slug %}">Edit</a>
+                {% endif %}
+                <a class="btn btn-sm btn-outline-success py-1 px-2" href="{% url 'reports:run' r.slug %}">Run</a>
+              </div>
             </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="5">No reports yet.</td>
+            <td colspan="5" class="text-center text-muted py-4">
+              <i class="bi bi-folder-x fs-3 d-block mb-1"></i> No reports yet.
+            </td>
           </tr>
           {% endfor %}
         </tbody>
@@ -49,43 +62,43 @@
     </div>
 
     {% if is_paginated %}
-    <div class="d-flex justify-content-between align-items-center mt-3">
-      <div>
-        Showing {{ page_obj.start_index }}–{{ page_obj.end_index }} of {{ page_obj.paginator.count }} reports
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mt-3">
+      <div class="small text-muted text-center text-md-start">
+        Showing <strong>{{ page_obj.start_index }}</strong>–<strong>{{ page_obj.end_index }}</strong> of <strong>{{ page_obj.paginator.count }}</strong> reports
       </div>
-      <nav>
-        <ul class="pagination mb-0">
+      <nav aria-label="Reports navigation">
+        <ul class="pagination pagination-sm mb-0 flex-wrap justify-content-center">
           {% if page_obj.has_previous %}
           <li class="page-item">
-            <a class="page-link" href="?page=1">&laquo; First</a>
+            <a class="page-link" href="?page=1" aria-label="First">&laquo;</a>
           </li>
           <li class="page-item">
             <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
           </li>
           {% else %}
-          <li class="page-item disabled"><span class="page-link">&laquo; First</span></li>
+          <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
           <li class="page-item disabled"><span class="page-link">Previous</span></li>
           {% endif %}
 
           {% for num in page_obj.paginator.page_range %}
-          {% if page_obj.number == num %}
-          <li class="page-item active"><span class="page-link">{{ num }}</span></li>
-          {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item"><a
-              class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+            {% if page_obj.number == num %}
+            <li class="page-item active" aria-current="page"><span class="page-link">{{ num }}</span></li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
             {% endif %}
-            {% endfor %}
+          {% endfor %}
 
-            {% if page_obj.has_next %}
-            <li class="page-item">
-              <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
-            </li>
-            <li class="page-item">
-              <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
-            </li>
-            {% else %}
-            <li class="page-item disabled"><span class="page-link">Next</span></li>
-            <li class="page-item disabled"><span class="page-link">Last &raquo;</span></li>
-            {% endif %}
+          {% if page_obj.has_next %}
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+          </li>
+          <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last"> &raquo;</a>
+          </li>
+          {% else %}
+          <li class="page-item disabled"><span class="page-link">Next</span></li>
+          <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+          {% endif %}
         </ul>
       </nav>
     </div>

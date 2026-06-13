@@ -11,7 +11,7 @@
 
 {% block body %}
 <div class="card shadow-sm border-0">
-    <div class="card-body p-2">
+    <div class="card-body">
 
         <!-- HEADER -->
         <div class="mb-0">
@@ -44,7 +44,7 @@
                     </a>
 
                     <a href="{% url 'reports:edit' report.slug %}"
-                       class="btn btn-warning btn-sm">
+                       class="btn btn-primary btn-sm">
                         Edit
                     </a>
 
@@ -234,6 +234,7 @@
             </div>
 
         </div>
+       
 
         <!-- TABLES -->
         {% if payload.view == "tabular" %}
@@ -256,7 +257,7 @@
                data-show-footer="true"
                data-side-pagination="server"
                data-response-handler="responseHandler"
-               class="table-sm">
+               class="table-sm  rounded-4 overflow-hidden">
         </table>
         {% endif %}
 
@@ -275,7 +276,7 @@
                data-page-list="[10,25,50,100,'all']"
                data-side-pagination="server"
                data-response-handler="summaryResponseHandler"
-               class="table-sm">
+               class="table-sm  rounded-4 overflow-hidden">
         </table>
         {% endif %}
 
@@ -292,10 +293,10 @@
                data-side-pagination="server"
                data-page-list="[10,25,50,100,'all']"
                data-response-handler="matrixResponseHandler"
-               class="table-sm">
+               class="table-sm rounded-4 overflow-hidden">
         </table>
         {% endif %}
-
+        
     </div>
 </div>
 {% endblock %}

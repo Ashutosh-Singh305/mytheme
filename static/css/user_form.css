@@ -1,8 +1,17 @@
 
-/* Balanced Two Column Row Matrix */
+:root {
+    /* Global Transitions & Radii */
+    --radius-card: 14px;
+    --radius-element: 12px;
+    --transition-fast: all 0.2s ease;
+}
+
+/* ==========================================================================
+   STANDARD TWO-COLUMN FORM MATRIX
+   ========================================================================== */
 .admin-form-row {
     border-bottom: 1px solid #f8f9fa;
-    padding: 12px 0;
+    padding: 5px 0;
     display: flex;
     align-items: flex-start;
     width: 100%;
@@ -11,110 +20,308 @@
 .admin-label-col {
     width: 30%;
     font-size: 0.85rem;
-    color: #333333;
+    color: var(--clr-text-main);
     font-weight: bold;
-    padding-top: 4px;
-    padding-right: 10px;
+   
 }
 
 .admin-field-col {
     width: 70%;
 }
 
-/* Help Text styling below inputs */
 .admin-help-text {
     display: block;
     font-size: 0.72rem;
-    color: #999999;
+    color: var(--clr-text-help);
     margin-top: 4px;
 }
 
-/* Toggle Password Styling Adjustments */
 .input-group-text {
     cursor: pointer;
     background-color: #f4f6f9;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--clr-border-dark);
 }
 
-/* --- DJANGO DUAL SELECT BOXES --- */
-.selector {
+/* ==========================================================================
+   PERMISSIONS SUITE: MANAGEMENT HEADER BANNER
+   ========================================================================== */
+.permissions-banner {
+    background: #fcfbfe;
+    border: 1px solid #f0edf7;
+    border-radius: var(--radius-element);
+    /* padding: 16px 24px; */
+}
+
+.banner-icon-wrapper {
+    background: #eedffd;
+    color: #6a1b9a;
+    width: 42px;
+    height: 42px;
     display: flex;
     align-items: center;
-    width: 100%;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 1.2rem;
 }
 
-.selector-available,
-.selector-chosen {
+.banner-title {
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #1a1a2e;
+}
+
+.banner-subtitle {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.banner-status-badge {
+    background: #f1ecfc;
+    color: #6f42c1;
+    font-size: 0.78rem;
+    font-weight: 600;
+    /* padding: 6px 14px; */
+    border-radius: 20px;
+}
+
+/* ==========================================================================
+   PERMISSIONS SUITE: DUAL SELECT MATRIX LAYOUT
+   ========================================================================== */
+.selector-wrapper-matrix {
+    display: flex;
+    width: 100%;
+    align-items: stretch;
+}
+
+.modern-selector-card {
     flex: 1;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background: #fff;
+    background: var(--clr-main-bg);
+    border: 1px solid var(--clr-border-light);
+    border-radius: var(--radius-card);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
-.selector h2 {
-    background: #f4f6f9;
-    color: #666;
-    font-size: 0.8rem;
-    font-weight: bold;
-    padding: 8px 12px;
-    margin: 0;
-    border-bottom: 1px solid #ddd;
-    text-align: center;
-}
-
-.selector h2.chosen-header {
-    background: #007bff;
-    color: #fff;
-}
-
-.selector-filter {
-    padding: 5px;
-    background: #fff;
-    border-bottom: 1px solid #eee;
+/* Card Gradient Headers */
+.card-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.92rem;
 }
 
-.selector-filter input {
-    width: 100%;
-    padding: 4px 8px;
-    font-size: 0.8rem;
-    border: 1px solid #ccc;
-    border-radius: 3px;
+.count-badge {
+    background: rgba(0, 0, 0, 0.15);
+    padding: 2px 12px;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 700;
 }
 
-.selector select {
+/* Internal Filter Inputs */
+.selector-filter-wrapper {
+    position: relative;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f4f6f9;
+}
+
+.selector-filter-wrapper .filter-icon {
+    position: absolute;
+    left: 28px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a0aec0;
+    font-size: 0.85rem;
+}
+
+.selector-filter-wrapper .filter-input {
     width: 100%;
-    border: none;
-    font-size: 0.9rem;
-    padding: 5px;
+    padding: 6px 10px 6px 32px;
+    font-size: 0.88rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
     outline: none;
+    transition: var(--transition-fast);
+    background-color: #fafbfc;
 }
 
-.selector-chooseall,
+.selector-filter-wrapper .filter-input:focus {
+    border-color: #a3b8cc;
+    background-color: var(--clr-main-bg);
+}
+
+/* Custom Standard Multiple Option Lists Containers */
+.select-list-container {
+    height: 340px;
+    position: relative;
+}
+
+.custom-modern-select {
+    width: 100% !important;
+    height: 100% !important;
+    border: none !important;
+    /* padding: 8px 0 !important; */
+    outline: none !important;
+    overflow-y: auto;
+}
+
+/* Custom Native Select List Item Refinements */
+.custom-modern-select option {
+    padding: 5px 10px !important;
+    font-size: 0.9rem;
+    color: #4a5568;
+    border-bottom: 1px solid #f7fafc;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.custom-modern-select option:hover {
+    background-color: #f7fafc !important;
+}
+
+.custom-modern-select option:checked {
+    background: linear-gradient(135deg, #6a4ef8 0%, #e0e7ff 100%) !important;
+    color: #f1f1ff !important;
+}
+
+/* Scrollbar System Styling */
+.custom-modern-select::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-modern-select::-webkit-scrollbar-track {
+    background: #f7fafc;
+}
+
+.custom-modern-select::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}
+
+/* Interactive Footer Trigger Links */
+.selector-chooseall, 
 .selector-clearall {
     display: block;
     text-align: center;
-    font-size: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
     padding: 6px;
-    background: #f8f9fa;
-    border-top: 1px solid #eee;
-    color: #007bff;
-    text-decoration: none;
+    text-decoration: none !important;
+    transition: background 0.2s;
 }
 
-.selector-controls {
-    padding: 0 10px;
+.selector-chooseall {
+    background: #f7f5fc;
+    color: #5525cd;
+    border-top: 1px solid #eedffd;
+}
+.selector-chooseall:hover { background: #eeeaf9; }
+
+.selector-clearall {
+    background: #fff0f5;
+    color: #d63384;
+    border-top: 1px solid #ffd6e8;
+}
+.selector-clearall:hover { background: #ffe4ee; }
+
+/* ==========================================================================
+   PERMISSIONS SUITE: INTER-CARD CONTROL NAVIGATION BUTTONS
+   ========================================================================== */
+.selector-controls-column {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    padding: 0 5px;
 }
 
-.selector-controls button {
-    background: #f4f6f9;
-    border: 1px solid #ccc;
-    border-radius: 3px;
-    padding: 2px 6px;
+.modern-control-btn {
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-element);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: bold;
     cursor: pointer;
-    color: #666;
+    transition: var(--transition-fast);
+    outline: none !important;
+}
+
+
+.btn-move-right:hover {
+    background-color: #e8e2ff;
+    transform: scale(1.05);
+}
+.btn-move-right:active {
+    transform: scale(0.98);
+}
+
+.btn-move-left {
+    background-color: var(--clr-btn-left-bg);
+    border: 1px solid var(--clr-btn-left-border);
+    color: var(--clr-btn-left-text);
+}
+.btn-move-left:hover {
+    background-color: #ffe4e6;
+    transform: scale(1.05);
+}
+.btn-move-left:active {
+    transform: scale(0.98);
+}
+
+/* ==========================================================================
+   PERMISSIONS SUITE: NO DATA PLACEHOLDER & DESCRIPTIVE FOOTER
+   ========================================================================== */
+.empty-placeholder-view {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--clr-main-bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    text-align: center;
+    z-index: 5;
+    pointer-events: none;
+}
+
+.empty-illustration {
+    background: #eedffd;
+    color: #743bee;
+    width: 65px;
+    height: 55px;
+    font-size: 1.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-element);
+    margin-bottom: 16px;
+    opacity: 0.8;
+}
+
+.empty-placeholder-view h5 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 6px;
+}
+
+.empty-placeholder-view p {
+    font-size: 0.8rem;
+    color: var(--clr-text-muted);
+    max-width: 200px;
+    margin: 0;
+}
+
+.disclaimer-footer {
+    font-size: 0.76rem;
+    color: var(--clr-text-muted);
 }

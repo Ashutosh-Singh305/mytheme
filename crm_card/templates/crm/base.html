@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Company name | {% block title %} {% endblock title %}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <!-- Include Google Fonts for Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+    {% block css %} {% endblock css %}
+
+</head>
+
+<body class="layout-horizontal">
+    <script>
+        (function () {
+            const currentLayout = localStorage.getItem('user-menu-layout') || 'horizontal';
+            if (currentLayout === 'vertical') {
+                document.body.className = 'layout-vertical';
+            } else {
+                document.body.className = 'layout-horizontal';
+            }
+        })();
+    </script>
+
+    <div class="sky-main-header">
+        <div class="container-fluid d-flex align-items-center justify-content-between px-3 h-100">
+
+            <div class="d-flex align-items-center gap-4">
+                <a class="sky-brand text-decoration-none" href="/">
+                    <img src="{% static 'img/logo.jpg' %}" onerror="this.src='/static/img/logo.webp'" alt="Logo">
+                    <span>CardExperts</span>
+                </a>
+
+                <div class="sky-search-box d-none d-md-flex">
+                    <i class="bi bi-search"></i>
+                    <input type="text" id="globalSearchHorizontal" class="sync-search-value" placeholder="Search now">
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                <div class="dropdown">
+                    <button class="btn position-relative border-0 bg-transparent p-1 notif-bell-shared" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-bell fs-5 text-white"></i>
+                        <span
+                            class="position-absolute mt-1 top-0 start-70 translate-middle badge rounded-pill bg-danger count notif-count d-none">
+                            0
+                        </span>
+                    </button>
+
+                    <div class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 pb-0 notif-dropdown-shared"
+                        style="min-width: 280px;">
+                        <div
+                            class="dropdown-header py-2 d-flex justify-content-between align-items-center border-bottom mb-1">
+                            <strong class="text-dark">Notifications</strong>
+                            <a href="#" class="text-primary text-decoration-none small mark-all-read-shared">Mark all as
+                                read</a>
+                        </div>
+
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            <div class="notif-items">
+                                <p class="text-center text-muted py-3 mb-0 small">No notifications</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="sky-profile-trigger border-0 bg-transparent p-0" data-bs-toggle="dropdown">
+                        <img src="/static/img/profilePic.jfif" class="rounded-circle" width="40" height="40"
+                            alt="Profile">
+                        <div class="ms-2 text-start d-none d-md-block">
+                            <div class="fw-semibold small text-white">
+                                {{request.user.first_name}} {{request.user.last_name}}
+                            </div>
+                            <div class="small text-white">
+                                {{request.user.userprofile.role}}
+                            </div>
+                        </div>
+                        <i class="bi bi-chevron-down text-white ms-1 opacity-75 small"></i>
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3" style="min-width: 180px;">
+                        <li>
+                            <hr class="dropdown-divider my-1">
+                        </li>
+                        <li><a class="dropdown-item py-2" href="{% url 'my_profile' %}"><i
+                                    class="bi bi-person me-2"></i>My Profile</a></li>
+                        <li>
+                            <hr class="dropdown-divider my-1">
+                        </li>
+                        <li>
+                            <form method="post" action="{% url 'logout' %}" class="d-inline w-100">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item text-danger py-2 w-100"><i
+                                        class="bi bi-box-arrow-right me-2"></i>Sign Out</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg sky-sub-navbar py-0 shadow-sm">
+        <div class="container-fluid">
+            <button class="navbar-toggler my-2 ms-auto" type="button" data-bs-toggle="collapse"
+                data-bs-target="#skyNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="skyNavbar">
+                <ul class="navbar-nav w-100">
+                    {% if request.user.is_superuser %}
+                    <li class="nav-item dropdown mega-dropdown">
+                        <a class="nav-link" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-shield-lock"></i> Admin <i class="bi bi-chevron-down ms-1 small"></i>
+                        </a>
+                        <div class="dropdown-menu mega-dropdown-menu shadow border-0">
+                            <div class="container-fluid">
+                                <div class="row">
+                                    <div class="col-12 col-md-4 mb-3 mb-md-0">
+                                        <h6 class="text-primary">User Management</h6>
+                                        <a class="dropdown-item" href="{% url 'user-list' %}">
+                                            <i class="bi bi-people me-2"></i> User Matrix
+                                        </a>
+                                        <a class="dropdown-item" href="{% url 'group-list' %}">
+                                            <i class="bi bi-people-fill me-2"></i> Group Management
+                                        </a>
+                                    </div>
+
+                                    <div class="col-12 col-md-4 mb-3 mb-md-0">
+                                        <h6 class="text-primary">Security</h6>
+                                        <a class="dropdown-item" href="{% url 'ip-list' %}">
+                                            <i class="bi bi-globe me-2"></i> Network Control
+                                        </a>
+                                    </div>
+
+                                    <div class="col-12 col-md-4">
+                                        <h6 class="text-primary">Database Management</h6>
+                                        <a class="dropdown-item" href="{% url 'field_access_control' %}">
+                                            <i class="bi bi-shield me-2"></i> Field Access Controls
+                                        </a>
+                                        <a class="dropdown-item" href="{% url 'crm-data-upload' %}">
+                                            <i class="bi bi-cloud-upload me-2"></i> Data Upload
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    {% endif %}
+
+                    {% if perms.crm.can_access_crm %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-briefcase"></i> CRM Modules <i class="bi bi-chevron-down ms-1 small"></i>
+                        </a>
+                        <ul class="dropdown-menu shadow border-0">
+                            {% if perms.crm.can_access_crm_dashboard %}
+                            <li><a class="dropdown-item" href="{% url 'tse_dashboard' %}"><i
+                                        class="bi bi-grid-fill me-2"></i>TSE Dashboard</a></li>
+                            {% endif %}
+                            {% if perms.crm.view_bank %}
+                            <li><a class="dropdown-item" href="/crm/bank/"><i class="bi bi-credit-card me-2"></i>Bank
+                                    Profiles</a></li>
+                            {% endif %}
+                            {% if perms.crm.view_lead %}
+                            <li><a class="dropdown-item" href="/crm/lead/"><i class="bi bi-person me-2"></i>Leads
+                                    Registry</a></li>
+                            {% endif %}
+                            {% if perms.crm.can_access_bulk_assign %}
+                            <li><a class="dropdown-item" href="{% url 'bulk_assign' %}"><i
+                                        class="bi bi-layers me-2"></i>Bulk Lead Assignment</a></li>
+                            {% endif %}
+                            {% if perms.crm.view_bankfeedback %}
+                            <li><a class="dropdown-item" href="/crm/bankfeedback/"><i
+                                        class="bi bi-chat-dots me-2"></i>Bank Feedbacks</a></li>
+                            {% endif %}
+                            {% if perms.crm.view_productcategory %}
+                            <li><a class="dropdown-item" href="/crm/productcategory/"><i
+                                        class="bi bi-list me-2"></i>Product Categories</a></li>
+                            {% endif %}
+                            {% if perms.crm.view_product %}
+                            <li><a class="dropdown-item" href="/crm/product/"><i class="bi bi-basket me-2"></i>Products
+                                    Catalog</a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                    {% endif %}
+
+                    {% if perms.crm.can_access_hr_module %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-person-workspace"></i> HR Modules <i
+                                class="bi bi-chevron-down ms-1 small"></i>
+                        </a>
+                        <ul class="dropdown-menu shadow border-0">
+                            {% if perms.crm.view_candidateonboarding %}
+                            <li><a class="dropdown-item" href="/crm/candidateonboarding/"><i
+                                        class="bi bi-shield-lock-fill me-2"></i>Candidate Onboarding</a></li>
+                            <li><a class="dropdown-item" href="{% url 'hr_dashboard' %}"><i
+                                        class="bi bi-graph-up me-2"></i>HR Dashboard</a></li>
+                            {% endif %}
+                        </ul>
+                    </li>
+                    {% endif %}
+                    {% if perms.reports.view_report %}
+                    <li class="nav-item dropdown mega-dropdown">
+                        <a class="nav-link" href="#" data-bs-toggle="dropdown">
+                            <i class="bi bi-pie-chart"></i> Report Modules <i class="bi bi-chevron-down ms-1 small"></i>
+                        </a>
+                        <div class="dropdown-menu mega-dropdown-menu shadow border-0">
+                            <div class="container-fluid">
+                                <div class="row">
+                                    <!-- First Column: Overview -->
+                                    <div class="col-12 col-md-4 mb-3 mb-md-0">
+                                        <h6 class="mega-menu-heading text-primary">Overview</h6>
+                                        <a class="dropdown-item" href="/reports/">
+                                            <i class="bi bi-pie-chart-fill me-2"></i> Reports
+                                        </a>
+                                    </div>
+
+                                    <!-- Second Column: Performance Tracking -->
+                                    <div class="col-12 col-md-4 mb-3 mb-md-0">
+                                        <h6 class="mega-menu-heading text-primary">Performance Tracking</h6>
+                                        <a class="dropdown-item" href="{% url 'reports:lead_status_history' %}">
+                                            <i class="bi bi-calendar2-check me-2"></i> Lead Status History
+                                        </a>
+                                        <a class="dropdown-item" href="{% url 'reports:mtd_reports' %}">
+                                            <i class="bi bi-graph-up-arrow me-2"></i> MTD Report
+                                        </a>
+                                    </div>
+
+                                    <!-- Third Column: Work-In-Progress -->
+                                    <div class="col-12 col-md-4">
+                                        <h6 class="mega-menu-heading text-primary">Work-In-Progress</h6>
+                                        <a class="dropdown-item" href="{% url 'reports:mtd_wip_report' %}">
+                                            <i class="bi bi-hourglass-split me-2"></i> MTD WIP Report
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header d-flex justify-content-between align-items-center">
+            <a href="/" class="logo-wrapper text-decoration-none">
+                <div class="logo-icon">
+                    <img src="{% static 'img/logo.jpg' %}" alt="Company Logo">
+                </div>
+                <div class="logo-text">CardExperts</div>
+            </a>
+            <button class="btn btn-sm btn-outline-light d-lg-none" id="closeSidebar">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+
+        <ul class="nav flex-column mt-0 mb-3">
+            {% if request.user.is_superuser %}
+            <li class="nav-item nav-category"><span class="nav-link fw-bold">Admin</span></li>
+            <!-- ========================================== -->
+            <!--          USER MANAGEMENT SUBMENU           -->
+            <!-- ========================================== -->
+            <li class="nav-item">
+                <a class="nav-link admin-toggle {% if request.resolver_match.url_name == 'group-list' or request.resolver_match.url_name == 'user-list' %}active{% endif %}" 
+                   data-bs-toggle="collapse" href="#userMgmtMenu" role="button" aria-expanded="false">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-people-fill"></i>
+                        <span>User Management</span>
+                    </div>
+                    <i class="bi bi-chevron-down submenu-arrow"></i>
+                </a>
+                <div class="collapse submenu" id="userMgmtMenu">
+                    <ul class="nav flex-column sub-menu">
+                        <li class="nav-item">
+                            <a href="{% url 'group-list' %}" class="nav-link {% if request.resolver_match.url_name == 'group-list' %}active{% endif %}">
+                                Group
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'user-list' %}" class="nav-link {% if request.resolver_match.url_name == 'user-list' %}active{% endif %}">
+                                User Matrix
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- ========================================== -->
+            <!--              SECURITY SUBMENU              -->
+            <!-- ========================================== -->
+            <li class="nav-item">
+                <a class="nav-link admin-toggle {% if request.resolver_match.url_name == 'ip-list' %}active{% endif %}" 
+                   data-bs-toggle="collapse" href="#securityMenu" role="button" aria-expanded="false">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-shield-lock-fill"></i>
+                        <span>Security</span>
+                    </div>
+                    <i class="bi bi-chevron-down submenu-arrow"></i>
+                </a>
+                <div class="collapse submenu" id="securityMenu">
+                    <ul class="nav flex-column sub-menu">
+                        <li class="nav-item">
+                            <a href="{% url 'ip-list' %}" class="nav-link {% if request.resolver_match.url_name == 'ip-list' %}active{% endif %}">
+                                Network Management
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+
+            <!-- ========================================== -->
+            <!--         DATABASE MANAGEMENT SUBMENU        -->
+            <!-- ========================================== -->
+            <li class="nav-item">
+                <a class="nav-link admin-toggle {% if request.resolver_match.url_name == 'field_access_control' or request.resolver_match.url_name == 'crm-data-upload' %}active{% endif %}" 
+                   data-bs-toggle="collapse" href="#dbMgmtMenu" role="button" aria-expanded="false">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-database-fill-gear"></i>
+                        <span>Database Management</span>
+                    </div>
+                    <i class="bi bi-chevron-down submenu-arrow"></i>
+                </a>
+                <div class="collapse submenu" id="dbMgmtMenu">
+                    <ul class="nav flex-column sub-menu">
+                        <li class="nav-item">
+                            <a href="{% url 'field_access_control' %}" class="nav-link {% if request.resolver_match.url_name == 'field_access_control' %}active{% endif %}">
+                                Field Access Controls
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="{% url 'crm-data-upload' %}" class="nav-link {% if request.resolver_match.url_name == 'crm-data-upload' %}active{% endif %}">
+                                Data Upload
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+            {% endif %}
+
+            {% if perms.crm.can_access_crm %}
+            <li class="nav-item nav-category"><span class="nav-link text-info fw-bold">CRM</span></li>
+            {% if perms.crm.can_access_crm_dashboard %}
+            <li class="nav-item">
+                <a href="{% url 'tse_dashboard' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'tse_dashboard' %}active{% endif %}">
+                    <i class="bi bi-grid-fill"></i> <span>Dashboard</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if perms.crm.view_bank %}
+            <li class="nav-item">
+                <a href="/crm/bank" class="nav-link {% if request.path == '/crm/bank/' %}active{% endif %}">
+                    <i class="bi bi-credit-card"></i> <span>Bank</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if perms.crm.view_lead %}
+            <li class="nav-item">
+                <a href="/crm/lead" class="nav-link {% if '/crm/lead' in request.path %}active{% endif %}">
+                    <i class="bi bi-person"></i> <span>Lead</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if perms.crm.can_access_bulk_assign %}
+            <li class="nav-item">
+                <a href="{% url 'bulk_assign' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'bulk_assign' %}active{% endif %}">
+                    <i class="bi bi-layers"></i> <span>Bulk Lead Assignment</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if perms.crm.view_bankfeedback %}
+            <li class="nav-item">
+                <a href="/crm/bankfeedback"
+                    class="nav-link {% if request.path == '/crm/bankfeedback/' %}active{% endif %}">
+                    <i class="bi bi-chat-dots"></i> <span>Bank Feedbacks</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if perms.crm.view_productcategory %}
+            <li class="nav-item">
+                <a href="/crm/productcategory"
+                    class="nav-link {% if 'productcategory' in request.path %}active{% endif %}">
+                    <i class="bi bi-list menu-icon"></i> <span>Product Categories</span>
+                </a>
+            </li>
+            {% endif %}
+            {% if perms.crm.view_product %}
+            <li class="nav-item">
+                <a href="/crm/product" class="nav-link {% if request.path == '/crm/product/' %}active{% endif %}">
+                    <i class="bi bi-basket menu-icon"></i> <span>Products</span>
+                </a>
+            </li>
+            {% endif %}
+
+            {% if perms.crm.can_access_hr_module %}
+            <li class="nav-item nav-category"><span class="nav-link text-info fw-bold">HR</span></li>
+            {% if perms.crm.view_candidateonboarding %}
+            <li class="nav-item">
+                <a href="/crm/candidateonboarding/"
+                    class="nav-link {% if 'candidateonboarding' in request.path %}active{% endif %}">
+                    <i class="bi bi-shield-lock-fill"></i> <span>Candidate Onboarding</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{% url 'hr_dashboard' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'hr_dashboard' %}active{% endif %}">
+                    <i class="bi bi-graph-up"></i> <span>Dashboard</span>
+                </a>
+            </li>
+            {% endif %}
+            {% endif %}
+            {% endif %}
+
+            {% if perms.reports.view_report %}
+            <li class="nav-item nav-category"><span class="nav-link text-info fw-bold">Reports</span></li>
+            <li class="nav-item">
+                <a href="{% url 'reports:list' %}"
+                    class="nav-link {% if request.resolver_match.url_name == 'list' %}active{% endif %}">
+                    <i class="bi bi-pie-chart-fill"></i> <span>Reports</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link reports-toggle {% if request.resolver_match.url_name == 'lead_status_history' or request.resolver_match.url_name == 'mtd_reports' or request.resolver_match.url_name == 'mtd_wip_report'  %}active{% endif %}" data-bs-toggle="collapse" href="#reportsMenu" role="button"
+                    aria-expanded="false">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-bar-chart-line-fill"></i>
+                        <span>MTD Reports</span>
+                    </div>
+                    <i class="bi bi-chevron-down submenu-arrow"></i>
+                </a>
+                <div class="collapse submenu" id="reportsMenu">
+                    <ul class="nav flex-column sub-menu">
+                        <li class="nav-item"><a class="nav-link  {% if request.resolver_match.url_name == 'lead_status_history' %}active{% endif %}" href="{% url 'reports:lead_status_history' %}">Lead
+                                Status History</a></li>
+                        <li class="nav-item"><a class="nav-link  {% if request.resolver_match.url_name == 'mtd_reports' %}active{% endif %}" href="{% url 'reports:mtd_reports' %}">MTD Report</a>
+                        </li>
+                        <li class="nav-item"><a class="nav-link  {% if request.resolver_match.url_name == 'mtd_wip_report' %}active{% endif %}" href="{% url 'reports:mtd_wip_report' %}">MTD WIP
+                                Report</a></li>
+                    </ul>
+                </div>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+
+    <div class="main-content" id="mainContent">
+        <div class="top-navbar justify-content-between">
+            <div class="d-flex align-items-center">
+                <button class="toggle-btn" id="toggleSidebar">
+                    <i class="bi bi-list"></i>
+                </button>
+                <h5 class="mb-0 ms-3">Dashboard</h5>
+            </div>
+
+            <div class="global-search-wrapper flex-grow-1 mx-lg-4 mx-2 d-none d-lg-block">
+                <form>
+                    <div class="input-group global-search">
+                        <span class="input-group-text border-0 bg-light"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" id="globalSearchVertical"
+                            class="form-control border-0 bg-light shadow-none sync-search-value"
+                            placeholder="Search anything...">
+                    </div>
+                </form>
+            </div>
+
+            <div class="d-flex align-items-center gap-1">
+                <div class="dropdown">
+                    <button class="btn position-relative border-0 bg-transparent p-1 notif-bell-shared" type="button"
+                        data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="bi bi-bell fs-5"></i>
+                        <span
+                            class="position-absolute mt-2 top-0 start-70 translate-middle badge rounded-pill bg-danger count notif-count">
+                            0
+                        </span>
+                    </button>
+
+                    <div class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 pb-0 notif-dropdown-shared"
+                        style="min-width: 280px;">
+                        <div
+                            class="dropdown-header py-2 d-flex justify-content-between align-items-center border-bottom mb-1">
+                            <strong class="text-dark">Notifications</strong>
+                            <a href="#" class="text-primary text-decoration-none small mark-all-read-shared">Mark all as
+                                read</a>
+                        </div>
+
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            <div class="notif-items">
+                                <p class="text-center text-muted py-3 mb-0 small">No notifications</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button class="btn d-flex align-items-center border-0 bg-transparent" data-bs-toggle="dropdown">
+                        <img src="/static/img/profilePic.jfif" class="rounded-circle" width="40" height="40"
+                            alt="Profile">
+                        <div class="ms-2 text-start d-none d-md-block">
+                            <div class="fw-semibold small">{{request.user.first_name}} {{request.user.last_name}}</div>
+                            <div class="text-muted small">{{request.user.userprofile.role}}</div>
+                        </div>
+                        <i class="bi bi-chevron-down ms-2 small"></i>
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                        <li><a class="dropdown-item" href="{% url 'my_profile' %}"><i class="bi bi-person me-2"></i>My
+                                Profile</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <form method="post" action="{% url 'logout' %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item text-danger"><i
+                                        class="bi bi-box-arrow-right me-2"></i>Sign Out</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-wrapper container-fluid sky-viewport mt-1 mb-5">
+            {% if messages %}
+            <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+                {% for message in messages %}
+                <div class="toast align-items-center text-white border-0 mb-2 show
+              {% if message.tags == 'success' %}bg-success
+              {% elif message.tags == 'error' or message.tags == 'danger' %}bg-danger
+              {% else %}bg-primary{% endif %}" role="alert" aria-live="assertive" aria-atomic="true">
+                    <div class="d-flex">
+                        <div class="toast-body">{{ message }}</div>
+                        <button type="button" class="btn-close btn-close-white m-auto me-2" data-bs-dismiss="toast"
+                            aria-label="Close"></button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block body %} {% endblock body %}
+        </div>
+
+    </div>
+
+    <button type="button" id="layoutSwitchFab" class="btn btn-primary layout-toggle-fab" title="Switch Menu Layout">
+        <i class="bi bi-arrow-left-right fs-4"></i>
+    </button>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="{% static 'js/base.js' %}"></script>
+    {% block Script %} {% endblock Script %}
+</body>
+
+</html>

@@ -1,75 +1,130 @@
 {% extends "reports/base.html" %}
+{% load static %}
+
 {% block title %}New Report — Select Object{% endblock %}
+
 {% block css %}
-<!-- Select2 CSS -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+    rel="stylesheet" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 {% endblock css %}
+
 {% block body %}
-<div class="card">
-    <div class="card-body">
-        <h4 class="card-title">Select Object</h4>
-        <!-- Breadcrumb -->
-        <nav aria-label="breadcrumb" class="mb-4">
-            <ol class="breadcrumb bg-white px-3 py-2 border rounded">
-                {% for label, url in breadcrumbs %}
-                {% if url %}
-                <li class="breadcrumb-item"><a href="{{ url }}">{{ label }}</a></li>
-                {% else %}
-                <li class="breadcrumb-item active" aria-current="page">{{ label }}</li>
-                {% endif %}
-                {% endfor %}
-            </ol>
-        </nav>
+<div class="content mt-1">
+    <form method="post" novalidate id="report-object-form">
+        {% csrf_token %}
 
-        <form method="post">
-            {% csrf_token %}
+        <div class="row">
+            <div class="col-12">
 
-            <!-- Row 1 -->
-            <div class="form-group row">
-                <div class="col-md-6">
-                    <label>{{ form.name.label }}</label>
-                    {{ form.name }}
-                </div>
+                <nav aria-label="breadcrumb" class="mb-2">
+                    <ol class="breadcrumb bg-white px-3 py-2 border rounded shadow-sm small m-0">
+                        {% for label, url in breadcrumbs %}
+                        {% if url %}
+                        <li class="breadcrumb-item"><a href="{{ url }}"
+                                class="text-decoration-none text-primary fw-medium">{{ label }}</a></li>
+                        {% else %}
+                        <li class="breadcrumb-item active text-muted" aria-current="page">{{ label }}</li>
+                        {% endif %}
+                        {% endfor %}
+                    </ol>
+                </nav>
 
-                <div class="col-md-6">
-                    <label>{{ form.model.label }}</label>
-                    {{ form.model }}
+                <div class="card shadow-sm mb-1">
+                    <div class="card-header rounded-top-4 border-bottom">
+                        <h5 class="card-title m-0">
+                            <i class="fas fa-cube text-primary me-2"></i>Select Object
+                        </h5>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row g-2 mb-1">
+                            <div class="col-md-6">
+                                <div class="admin-form-row border-0 p-0">
+                                    <div class="admin-label-col mb-1 fw-bold">
+                                        {{ form.name.label_tag }}
+                                    </div>
+                                    <div class="admin-field-col">
+                                        {{ form.name }}
+                                        {% if form.name.help_text %}<span
+                                            class="admin-help-text text-muted small d-block mt-1">{{ form.name.help_text|safe }}</span>{% endif %}
+                                        {% if form.name.errors %}<span class="text-danger small d-block mt-1">
+                                            {{ form.name.errors|striptags }}</span>{% endif %}   
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="admin-form-row border-0 p-0">
+                                    <div class="admin-label-col mb-1 fw-bold">
+                                        {{ form.model.label_tag }}
+                                    </div>
+                                    <div class="admin-field-col">
+                                        {{ form.model }}
+                                        {% if form.model.help_text %}<span
+                                            class="admin-help-text text-muted small d-block mt-1">
+                                            {{ form.model.help_text|safe }}</span>{% endif %}
+                                            
+                                        {% if form.model.errors %}<span class="text-danger small d-block mt-1">{{ form.model.errors|striptags }}</span>{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="admin-form-row border-0 p-0">
+                                    <div class="admin-label-col mb-1 fw-bold">
+                                        {{ form.view.label_tag }}
+                                    </div>
+                                    <div class="admin-field-col">
+                                        {{ form.view }}
+                                        {% if form.view.help_text %}<span
+                                            class="admin-help-text text-muted small d-block mt-1">{{ form.view.help_text|safe }}</span>{% endif %}
+                                        {% if form.view.errors %}<span class="text-danger small d-block mt-1">{{ form.view.errors|striptags }}</span>{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="admin-form-row border-0 p-0">
+                                    <div class="admin-label-col mb-1 fw-bold">
+                                        {{ form.description.label_tag }}
+                                    </div>
+                                    <div class="admin-field-col">
+                                        {{ form.description }}
+                                        {% if form.description.help_text %}<span
+                                            class="admin-help-text text-muted small d-block mt-1">{{ form.description.help_text|safe }}</span>{% endif %}
+                                        {% if form.description.errors %}<span class="text-danger small d-block mt-1">{{ form.description.errors|striptags }}</span>{% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end p-1 mt-1">
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                Next <i class="fas fa-chevron-right ms-1 small"></i>
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-
-            <!-- Row 2 -->
-            <div class="form-group row mt-3">
-                <div class="col-md-6">
-                    <label>{{ form.view.label }}</label>
-                    {{ form.view }}
-                </div>
-           
-                <div class="col-md-6 mt-3">
-                    <label>{{ form.description.label }}</label>
-                    {{ form.description }}
-                </div>
-            </div>
-            <button class="btn btn-primary btn-sm mt-3" type="submit">
-                Next
-            </button>
-        </form>
-
-    </div>
+        </div>
+    </form>
 </div>
 {% endblock body %}
-{% block Script %}
 
-<!-- jQuery -->
+{% block Script %}
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<!-- Select2 JS -->
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
     $(document).ready(function () {
         $('.select2').select2({
+            theme: 'bootstrap-5', // Integrates with Bootstrap 5 sizing & form fields seamlessly
             width: '100%'
         });
     });
 </script>
-
 {% endblock Script %}

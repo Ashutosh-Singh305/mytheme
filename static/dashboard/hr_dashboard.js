@@ -133,11 +133,11 @@ function selectCandidate(id) {
  */
 function highlightCandidate(id) {
     document.querySelectorAll(".candidate-row")
-        .forEach(r => r.classList.remove("active", "table-primary"));
+        .forEach(r => r.classList.remove("active", "table-info"));
 
     document.querySelectorAll(`[data-id='${id}']`)
         .forEach(row => {
-            row.classList.add("active", "table-primary");
+            row.classList.add("active", "table-info");
         });
 }
 
@@ -205,6 +205,11 @@ function preCandidate() {
         currentIndex--;
         selectCandidate(candidateIds[currentIndex]);
     }
+}
+
+function applySearch() {
+    let val = document.getElementById("searchInput")?.value || "";
+    window.location.href = `?search=${encodeURIComponent(val)}`;
 }
 
 /**
@@ -316,7 +321,7 @@ function resetCandidateForm() {
 
     // REMOVE ACTIVE SELECTIONS
     document.querySelectorAll(".candidate-row")
-        .forEach(r => r.classList.remove("active", "table-primary"));
+        .forEach(r => r.classList.remove("active", "table-info"));
 
     // ENABLE FIELDS
     document.querySelectorAll(
@@ -342,114 +347,119 @@ function resetCandidateForm() {
  * Submit profile attributes via standard Form Requests to Server Route Targets
  */
 function saveCandidate() {
-    const isCreate = !currentCandidateId;
-    const url = isCreate ? "/crm/candidate/create/" : "/crm/candidate/update/";
-    const data = new URLSearchParams();
+        let isCreate = !currentCandidateId;
 
-    if (!isCreate) {
-        data.append("candidate_id", currentCandidateId);
-    }
+        let url = isCreate
+            ? "/crm/candidate/create/"
+            : "/crm/candidate/update/";
 
-    // FIELD VALUE RETRIEVAL VALIDATIONS
-    const calling_date = document.getElementById("ld_calling_date")?.value;
-    if (calling_date && !isValidDate(calling_date)) {
-        alert("Invalid DOB format! Use DD/MM/YYYY");
-        return;
-    }
+        let data = new URLSearchParams();
 
-    const interviewDate = document.getElementById("ld_interview_date")?.value;
-    if (interviewDate && !isValidDate(interviewDate)) {
-        alert("Invalid Interview Date format!");
-        return;
-    }
+        // Only send ID in update mode
+        if (!isCreate) {
+            data.append("candidate_id", currentCandidateId);
+        }
 
-    const doj = document.getElementById("id_doj")?.value;
-    if (doj && !isValidDate(doj)) {
-        alert("Invalid DOJ format!");
-        return;
-    }
-
-    // APPEND REQUEST PAYLOAD DATA
-    data.append("full_name", document.getElementById("ld_name")?.value || "");
-    data.append("applied_for", document.getElementById("ld_applied_for")?.value || "");
-    data.append("experience", document.getElementById("ld_experince")?.value || "");
-    data.append("candidate_status", document.getElementById("ld_candidate_status")?.value || "");
-    data.append("candidate_area", document.getElementById("id_candidate_area")?.value || "");
-    data.append("calling_date", convertToBackendDate(calling_date));
-    data.append("source", document.getElementById("ld_source")?.value || "");
-    data.append("modified_date", document.getElementById("ld_modified_date")?.value || "");
-    data.append("interview_date", convertToBackendDate(interviewDate));
-    data.append("doj", convertToBackendDate(doj));
-    data.append("phone", document.getElementById("ld_mobile_form")?.value || "");
-    data.append("note", document.getElementById("note")?.value || "");
-    data.append("recruiter", document.getElementById("ld_recruiter")?.value || "");
-
-    fetch(url, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "X-CSRFToken": getCSRF()
-        },
-        body: data.toString()
-    })
-    .then(res => {
-        if (!res.ok) throw new Error("Form submission response error context caught.");
-        return res.json();
-    })
-    .then((res) => {
-        if (res.status === "error") {
-            alert(res.message || "Something went wrong");
+        // ===== VALIDATION =====
+        let calling_date = document.getElementById("ld_calling_date").value;
+        if (calling_date && !isValidDate(calling_date)) {
+            alert("Invalid DOB format! Use DD/MM/YYYY");
             return;
         }
 
-        alert(isCreate ? "Created successfully" : "Updated successfully");
-
-        if (isCreate) {
-            location.reload();
+        let interviewDate = document.getElementById("ld_interview_date").value;
+        if (interviewDate && !isValidDate(interviewDate)) {
+            alert("Invalid Interview Date format!");
             return;
         }
 
-        // UPDATE DATA DIRECTLY IN FRONTEND LIST
-        document.querySelectorAll(`[data-id='${currentCandidateId}']`).forEach(row => {
-            let nameCell = row.querySelector("td:first-child, h6");
-            if (nameCell) nameCell.innerText = res.full_name;
+        let doj = document.getElementById("id_doj").value;
+        if (doj && !isValidDate(doj)) {
+            alert("Invalid DOJ format!");
+            return;
+        }
 
-            let badge = row.querySelector(".badge");
-            if (badge) badge.innerText = res.candidate_status_label;
-        });
+        // ===== DATA =====
+        data.append("full_name", document.getElementById("ld_name").value);
+        data.append("applied_for", document.getElementById("ld_applied_for").value);
+        data.append("experience", document.getElementById("ld_experince").value);
+        data.append("candidate_status", document.getElementById("ld_candidate_status").value);
+        data.append("candidate_area", document.getElementById("id_candidate_area").value);
+        data.append("calling_date", convertToBackendDate(calling_date));
+        data.append("source", document.getElementById("ld_source").value);
+        data.append("modified_date", document.getElementById("ld_modified_date").value);
+        data.append("interview_date", convertToBackendDate(interviewDate));
+        data.append("doj", convertToBackendDate(doj));
+        data.append("phone", document.getElementById("ld_mobile_form").value);
+        data.append("note", document.getElementById("note").value);
+        data.append("recruiter", document.getElementById("ld_recruiter").value);
 
-        setValue("ld_status", res.candidate_status_label);
+        // ===== API CALL =====
+        fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "X-CSRFToken": getCSRF()
+            },
+            body: data.toString()
+        })
+        .then(res => res.json())
+        .then((res) => {
 
-        // Turn edit mode back off gracefully
-        document.querySelectorAll(
-            "#id_doj,#ld_calling_date,#ld_interview_date,#ld_modified_date,#ld_source,#id_candidate_area,#ld_experince,#ld_applied_for,#ld_name,#ld_recruiter"
-        ).forEach(el => el.setAttribute("disabled", true));
+            if (res.status === "error") {
+                alert(res.message || "Something went wrong");
+                return;
+            }
 
-        const btn = document.getElementById("editBtn");
-        if (btn) {
+            alert(isCreate ? "Created successfully" : "Updated successfully");
+
+            // ===== CREATE MODE =====
+            if (isCreate) {
+                location.reload();   // simplest + safe
+                return;
+            }
+
+            // ===== UPDATE MODE UI UPDATE =====
+            document.querySelectorAll(`[data-id='${currentCandidateId}']`).forEach(row => {
+
+                let nameCell = row.querySelector("td:first-child, h6");
+                if (nameCell) nameCell.innerText = res.full_name;
+
+                let badge = row.querySelector(".badge");
+                if (badge) {
+                    badge.innerText = res.candidate_status_label;
+                }
+            });
+
+            document.getElementById("ld_status").innerText = res.candidate_status_label;
+
+            // Disable fields again
+            document.querySelectorAll(
+                "#id_doj,#ld_calling_date,#ld_interview_date,#ld_modified_date,#ld_source,#id_candidate_area,#ld_experince,#ld_applied_for,#ld_name,#ld_recruiter"
+            ).forEach(el => el.setAttribute("disabled", true));
+
+            // Reset button
+            const btn = document.getElementById("editBtn");
             btn.innerText = "Edit";
             btn.classList.remove("btn-outline-danger");
             btn.classList.add("btn-outline-primary");
-        }
 
-        isEditMode = false;
+            isEditMode = false;
 
-        const newBtn = document.getElementById("newBtn");
-        if (newBtn) {
+            // 🔓 Re-enable NEW button (FIX)
+            const newBtn = document.getElementById("newBtn");
             newBtn.disabled = false;
             newBtn.classList.remove("disabled");
-        }
 
-        loadCandidate(currentCandidateId);
-    })
-    .catch(err => console.error("Error saving profile details:", err));
-}
+            // Reload current candidate
+            loadCandidate(currentCandidateId);
+        });
+    }
 
 /**
  * Toggles layout editing field status properties
  */
 function toggleEdit() {
-    // CRITICAL BUG FIX APPLIED HERE: "#ld_emp_status" switched to valid query node "#ld_candidate_status"
     const fields = document.querySelectorAll(
         "#id_doj,#ld_recruiter,#ld_calling_date,#ld_interview_date,#ld_modified_date,#id_candidate_area,#ld_candidate_status,#ld_experince,#ld_applied_for,#ld_name"
     );
@@ -548,4 +558,27 @@ function disableNavigationButtons(status) {
     if (editBtn) editBtn.disabled = status;
     if (prevBtn) prevBtn.disabled = status;
     if (nextBtn) nextBtn.disabled = status;
+}
+
+function liveValidateMobile(input) {
+    input.value = input.value.replace(/[^0-9]/g, '');
+
+    //  Prevent typing more than 10 digits
+    if (input.value.length > 10) {
+        input.value = input.value.slice(0, 10);
+    }
+
+    //  Live Bootstrap Color Validation
+    if (input.value.length === 0) {
+        // If empty, remove both colors
+        input.classList.remove('is-invalid', 'is-valid');
+    } else if (input.value.length === 10) {
+        // Exactly 10 digits -> Turn GREEN live
+        input.classList.remove('is-invalid');
+        input.classList.add('is-valid');
+    } else {
+        // Less than 10 digits -> Turn RED live
+        input.classList.remove('is-valid');
+        input.classList.add('is-invalid');
+    }
 }

@@ -244,7 +244,7 @@ def report_wizard(request, slug: str | None = None):
         from .forms import SelectObjectForm, SelectTypeForm
 
         class BasicForm(forms.Form):
-            name = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control"}))
+            name = forms.CharField(widget=forms.TextInput(attrs={"class": "form-control form-control-sm"}), required=True)
             model = SelectObjectForm().fields["model"]
             view = SelectTypeForm().fields["view"]
             description = forms.CharField(
@@ -2073,7 +2073,8 @@ def lead_status_history_api(request):
         "old_status": "prev.status",
         "new_status": "curr.status",
         "changed_by": "u.username",
-        "changed_at": "curr.history_date"
+        "changed_at": "curr.history_date",
+        "assigned_to" : "au.username",
     }
 
     sort_column = sort_map.get(sort, "curr.history_date")
@@ -2100,6 +2101,9 @@ def lead_status_history_api(request):
 
     LEFT JOIN crm_lead l 
         ON curr.id = l.id
+        
+    LEFT JOIN auth_user au
+        ON l.assigned_to_id = au.id
 
     WHERE prev.status IS NOT NULL
     AND prev.status <> curr.status
@@ -2161,6 +2165,14 @@ def lead_status_history_api(request):
                 ELSE u.username
             END
         ) AS changed_by,
+
+        TRIM(
+            CASE
+                WHEN au.first_name IS NOT NULL AND au.first_name != ''
+                THEN au.first_name || ' ' || COALESCE(au.last_name, '')
+                ELSE au.username
+            END
+        ) AS assigned_to,
 
         curr.history_date AS changed_at
 

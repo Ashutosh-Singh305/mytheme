@@ -36,43 +36,6 @@ if (closeSidebar) {
     if (overlay) overlay.classList.remove("show");
   });
 }
-
-
-// ==========================================
-//        GLOBAL CONTENT FILTER SEARCH        
-// ==========================================
-// Query by utility class instead of a single ID to catch both search inputs
-const globalSearchInputs = document.querySelectorAll(".sync-search-value");
-
-globalSearchInputs.forEach(input => {
-  input.addEventListener("keyup", function () {
-    const searchValue = this.value.toLowerCase();
-
-    // SEARCH ONLY CONTENT AREA
-    const searchableItems = document.querySelectorAll(
-      ".content-wrapper .card, \
-       .content-wrapper table tbody tr, \
-       .content-wrapper p, \
-       .content-wrapper h1, \
-       .content-wrapper h2, \
-       .content-wrapper h3, \
-       .content-wrapper h4, \
-       .content-wrapper h5, \
-       .content-wrapper h6"
-    );
-
-    searchableItems.forEach(item => {
-      const text = item.innerText.toLowerCase();
-      if (text.includes(searchValue)) {
-        item.style.display = "";
-      } else {
-        item.style.display = "none";
-      }
-    });
-  });
-});
-
-
 // ==========================================
 //         PERSISTENT BOOTSTRAP TABS         
 // ==========================================
@@ -396,4 +359,123 @@ $(document).ready(function () {
     $('.notif-items').html('<p class="text-center text-muted py-3 mb-0 small">No notifications</p>');
     $('.notif-count').addClass('d-none').text('0');
   });
+});
+
+
+
+/**
+ * Salesforce Global Realtime Autocomplete Engine (Fixed Multi-Layout Integration)
+ */
+$(document).ready(function () {
+    let searchDebounceTracker = null;
+
+    $('.sync-search-value').on('input', function () {
+        const value = $(this).val();
+
+        // 1. Instantly mirror text inputs across all layout variants
+        $('.sync-search-value').not(this).val(value);
+
+        clearTimeout(searchDebounceTracker);
+
+        if (value.trim().length < 3) {
+            $('.search-floating-dropdown').addClass('d-none');
+            return;
+        }
+
+        // 2. Clear out older hits and present the loader in both panels simultaneously
+        $('.search-dropdown-results').html(`
+            <div class="text-center py-3 text-muted small">
+                <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                Searching secure directory...
+            </div>
+        `);
+        $('.search-floating-dropdown').removeClass('d-none');
+
+        // 3. Debounce API request
+        searchDebounceTracker = setTimeout(() => {
+            $.ajax({
+                url: '/crm/api/global-search/',
+                type: 'GET',
+                data: { q: value.trim() },
+                dataType: 'json',
+                success: function (response) {
+                    // Independently loop through and hydrate each dropdown instance cleanly
+                    $('.search-floating-dropdown').each(function() {
+                        const targetPane = $(this).find('.search-dropdown-results');
+                        renderAutocompleteDropdown(response.results, value.trim(), targetPane);
+                    });
+                },
+                error: function () {
+                    $('.search-dropdown-results').html(
+                        '<div class="p-3 text-center text-danger small"><i class="bi bi-exclamation-triangle-fill me-1"></i> Data processing fault.</div>'
+                    );
+                }
+            });
+        }, 300);
+    });
+
+    function renderAutocompleteDropdown(results, rawQuery, targetPane) {
+        targetPane.empty();
+        const models = Object.keys(results);
+
+        if (models.length === 0) {
+            targetPane.html(`<div class="p-3 text-center text-muted small">No matches for "${rawQuery}"</div>`);
+            return;
+        }
+
+        models.forEach(modelKey => {
+            const listRecords = results[modelKey];
+            if (listRecords.length === 0) return;
+
+            const cleanHeader = modelKey.replace(/_/g, ' ');
+
+            let structuralHeader = $(`
+                <div class="dropdown-header text-uppercase text-primary fw-bold tracking-wider small bg-light rounded-2 py-1 px-2 mt-2 mb-1 text-start">
+                    ${cleanHeader}
+                </div>
+            `);
+            targetPane.append(structuralHeader);
+
+            listRecords.forEach(item => {
+                const targetEndpoint = `/crm/${modelKey}/${item.id}/`;
+                let entryLink = $(`
+                    <a class="dropdown-item d-flex align-items-center py-2 px-3 rounded-2 text-wrap text-start" href="${targetEndpoint}">
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="text-dark fw-medium small text-truncate">${item.label}</div>
+                            <span class="text-muted tracking-tight" style="font-size: 0.75rem;">System Reference ID: #${item.id}</span>
+                        </div>
+                        <i class="bi bi-arrow-up-right-short text-muted ms-auto"></i>
+                    </a>
+                `);
+                targetPane.append(entryLink);
+            });
+        });
+
+        let explorationTrigger = $(`
+            <div class="border-top pt-2 mt-2">
+                <a href="/crm/search/?q=${encodeURIComponent(rawQuery)}" class="btn btn-sm btn-primary d-block text-center text-white fw-medium font-sm py-1.5">
+                    Launch Advanced Search Canvas »
+                </a>
+            </div>
+        `);
+        targetPane.append(explorationTrigger);
+    }
+
+    // Hide dropdowns when clicking anywhere outside of a search input component wrapper
+    $(document).on('click', function (event) {
+        if (!$(event.target).closest('.position-relative').find('.search-floating-dropdown').length) {
+            $('.search-floating-dropdown').addClass('d-none');
+        }
+    });
+
+    // Capture the 'Enter' key to redirect to full canvas search
+    $('.sync-search-value').on('keydown', function (e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            const payload = $(this).val().trim();
+            if (payload.length >= 3) {
+                window.location.href = `/crm/search/?q=${encodeURIComponent(payload)}`;
+            }
+        }
+    });
 });

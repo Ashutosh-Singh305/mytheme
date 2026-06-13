@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Company name | {% block title %} {% endblock title %}</title>
+  
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="{% static 'css/base.css' %}">
+  {% block css %} {% endblock css %}
+</head>
+
+<body>
+
+  <!-- Overlay -->
+  <div class="overlay" id="overlay"></div>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+
+    <!-- SIDEBAR HEADER -->
+    <div class="sidebar-header d-flex justify-content-between align-items-center">
+
+      <a href="/" class="logo-wrapper text-decoration-none">
+
+        <!-- LOGO -->
+        <div class="logo-icon">
+          <img src="{% static 'img/logo.jpg' %}" alt="Company Logo">
+        </div>
+
+        <!-- COMPANY NAME -->
+        <div class="logo-text">
+          My Admin
+        </div>
+
+      </a>
+
+      <!-- MOBILE CLOSE -->
+      <button class="btn btn-sm btn-outline-light d-lg-none" id="closeSidebar">
+        <i class="bi bi-x-lg"></i>
+      </button>
+
+    </div>
+
+    <!-- Menu Start  -->
+    <ul class="nav flex-column mt-0">
+
+      <!-- DASHBOARD -->
+      <li class="nav-item nav-category">
+        <span class="nav-link text-info">Navbar</span>
+      </li>
+
+
+
+      <li class="nav-item">
+        <a href="{% url 'topmenu' %}" class="nav-link {% if request.resolver_match.url_name == 'topmenu' %}active{% endif %}">
+          <i class="bi bi-grid-fill"></i>
+          <span>Top Navbar</span>
+        </a>
+      </li>
+
+      {% if request.user.is_superuser %}
+      <li class="nav-item nav-category">
+        <span class="nav-link fw-bold">Admin</span>
+      </li>
+
+      <li class="nav-item">
+        <a href="{% url 'group-list' %}" class="nav-link {% if request.resolver_match.url_name == 'group-list' %}active{% endif %}">
+          <i class="bi bi-people-fill"></i>
+          <span>Group</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{% url 'user-list' %}" class="nav-link {% if request.resolver_match.url_name == 'user-list' %}active{% endif %}">
+          <i class="bi bi-people"></i>
+          <span>User</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{% url 'ip-list' %}" class="nav-link {% if request.resolver_match.url_name == 'ip-list' %}active{% endif %}">
+          <i class="bi bi-globe"></i>
+          <span>Network Management</span>
+        </a>
+      </li>
+
+
+      <li class="nav-item">
+        <a href="{% url 'field_access_control' %}" class="nav-link {% if request.resolver_match.url_name == 'field_access_control' %}active{% endif %}">
+          <i class="bi bi-shield "></i>
+          <span>Field Access Controls</span>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{% url 'crm-data-upload' %}" class="nav-link {% if request.resolver_match.url_name == 'crm-data-upload' %}active{% endif %}">
+          <i class="bi bi-cloud-upload"></i>
+          <span>Data Upload</span>
+        </a>
+      </li>
+      {% endif %}
+      {% if perms.crm.can_access_crm %}
+      <!-- CRM -->
+      <li class="nav-item nav-category">
+        <span class="nav-link text-info fw-bold">CRM</span>
+      </li>
+      {% if perms.crm.can_access_crm_dashboard %}
+      <li class="nav-item">
+        <a href="{% url 'tse_dashboard' %}"
+          class="nav-link {% if request.resolver_match.url_name == 'tse_dashboard' %}active{% endif %}">
+          <i class="bi bi-grid-fill"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+      {% endif %}
+      {% if perms.crm.view_bank %}
+      <li class="nav-item">
+        <a href="/crm/bank" class="nav-link {% if request.path == '/crm/bank/' %}active{% endif %}">
+          <i class="bi bi-credit-card"></i>
+          <span>Bank</span>
+        </a>
+      </li>
+      {% endif %}
+      {% if perms.crm.view_lead %}
+      <li class="nav-item">
+        <a href="/crm/lead" class="nav-link {% if '/crm/lead' in request.path %}active{% endif %}">
+          <i class="bi bi-person"></i>
+          <span>Lead</span>
+        </a>
+      </li>
+      {% endif %}
+      {% if perms.crm.can_access_bulk_assign %}
+      <li class="nav-item">
+        <a href="{% url 'bulk_assign' %}" class="nav-link {% if request.resolver_match.url_name == 'bulk_assign' %}active{% endif %}">
+          <i class="bi bi-layers"></i>
+          <span>Bulk Lead Assignment</span>
+        </a>
+      </li>
+      {% endif %}
+      {% if perms.crm.view_bankfeedback %}
+      <li class="nav-item">
+        <a href="/crm/bankfeedback" class="nav-link {% if request.path == '/crm/bankfeedback/' %}active{% endif %}">
+          <i class="bi bi-chat-dots"></i>
+          <span>Bank Feedbacks</span>
+        </a>
+      </li>
+      {% endif %}
+
+      {% if perms.crm.view_productcategory %}
+      <li class="nav-item">
+        <a href="/crm/productcategory" class="nav-link {% if 'productcategory' in request.path %}active{% endif %}">
+          <i class="bi bi-list menu-icon"></i>
+          <span>Product Categories</span>
+        </a>
+      </li>
+      {% endif %}
+      {% if perms.crm.view_product %}
+      <li class="nav-item">
+        <a href="/crm/product" class="nav-link {% if request.path == '/crm/product/' %}active{% endif %}">
+          <i class="bi bi-basket menu-icon"></i>
+          <span>Products</span>
+        </a>
+      </li>
+      {% endif %}
+
+      {% if perms.crm.can_access_hr_module %}
+      <li class="nav-item nav-category">
+        <span class="nav-link text-info fw-bold">HR</span>
+      </li>
+
+      <!-- Candidate Onboarding -->
+      {% if perms.crm.view_candidateonboarding %}
+      <li class="nav-item">
+        <a href="/crm/candidateonboarding/" class="nav-link {% if 'candidateonboarding' in request.path %}active{% endif %}">
+          <i class="bi bi-shield-lock-fill"></i>
+          <span>Candidate Onboarding</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+        <a href="{% url 'hr_dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'hr_dashboard' %}active{% endif %}">
+          <i class="bi bi-graph-up"></i>
+          <span>Dashboard</span>
+        </a>
+      </li>
+
+      {% endif %}
+      {% endif %}
+      {% endif %}
+      {% if perms.reports.view_report %}
+      <li class="nav-item nav-category">
+        <span class="nav-link text-info fw-bold">Reports</span>
+      </li>
+
+      <li class="nav-item">
+        <a href="/reports" class="nav-link {% if request.resolver_match.url_name == 'reports' or request.resolver_match.app_name == 'reports' %}active{% endif %}">
+          <i class="bi bi-pie-chart-fill"></i>
+          <span>Reports</span>
+        </a>
+      </li>
+
+      <li class="nav-item">
+
+        <!-- TOGGLE -->
+        <a class="nav-link reports-toggle" data-bs-toggle="collapse" href="#reportsMenu" role="button"
+          aria-expanded="false">
+
+          <div class="d-flex align-items-center">
+            <i class="bi bi-bar-chart-line-fill"></i>
+            <span>MTD Reports</span>
+          </div>
+
+          <i class="bi bi-chevron-down submenu-arrow"></i>
+
+        </a>
+
+        <!-- SUBMENU -->
+        <div class="collapse submenu" id="reportsMenu">
+
+          <ul class="nav flex-column sub-menu">
+
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'reports:lead_status_history' %}">
+                Lead Status History
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'reports:mtd_reports' %}">
+                MTD Report
+              </a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'reports:mtd_wip_report' %}">
+                MTD WIP Report
+              </a>
+            </li>
+
+          </ul>
+
+        </div>
+
+      </li>
+
+      {% endif %}
+      <!-- MANAGEMENT -->
+      <!-- <li class="nav-item nav-category">
+        <span class="nav-link text-info">Management</span>
+      </li>
+
+      <li class="nav-item">
+        <a href="{% url 'list' %}" class="nav-link {% if request.resolver_match.url_name == 'tse_dashboard' %}active{% endif %}">
+          <i class="bi bi-people-fill"></i>
+          <span>List</span>
+        </a>
+      </li> -->
+    </ul>
+
+  </div>
+
+  <!-- Main Content -->
+
+  <div class="main-content" id="mainContent">
+
+    <!-- TOP NAVBAR -->
+
+    <div class="top-navbar justify-content-between">
+
+      <!-- LEFT -->
+
+      <div class="d-flex align-items-center">
+
+        <button class="toggle-btn" id="toggleSidebar">
+          <i class="bi bi-list"></i>
+        </button>
+
+        <h5 class="mb-0 ms-3">Dashboard</h5>
+
+      </div>
+
+      <!-- CENTER : GLOBAL SEARCH -->
+
+      <div class="global-search-wrapper flex-grow-1 mx-lg-4 mx-2 d-none d-lg-block">
+
+        <form>
+
+          <div class="input-group global-search">
+
+            <span class="input-group-text border-0 bg-light">
+              <i class="bi bi-search text-muted"></i>
+            </span>
+
+            <input type="text" id="globalSearch" class="form-control border-0 bg-light shadow-none"
+              placeholder="Search anything...">
+
+          </div>
+
+        </form>
+
+      </div>
+
+
+
+      <!-- RIGHT -->
+
+      <div class="d-flex align-items-center gap-1">
+
+        <div class="dropdown">
+          <button class="btn position-relative border-0 bg-transparent p-1" id="notificationBell" type="button"
+            data-bs-toggle="dropdown" aria-expanded="false">
+
+            <i class="bi bi-bell fs-5"></i>
+
+            <span
+              class="position-absolute mt-2 top-0 start-70 translate-middle badge rounded-pill bg-danger count notif-count">
+              0
+            </span>
+          </button>
+
+          <div class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3 pb-0" id="notifDropdown"
+            style="min-width: 280px;">
+
+            <div class="dropdown-header py-2 d-flex justify-content-between align-items-center border-bottom mb-1">
+              <strong class="text-dark">Notifications</strong>
+              <a href="#" id="markAllReadBtn" class="text-primary text-decoration-none small">Mark all as read</a>
+            </div>
+
+            <div id="notifScrollArea" style="max-height: 300px; overflow-y: auto;">
+              <div class="notif-items">
+                <p class="text-center text-muted py-3 mb-0 small">No notifications</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Profile Dropdown -->
+        <div class="dropdown">
+
+          <button class="btn d-flex align-items-center border-0 bg-transparent" data-bs-toggle="dropdown">
+
+            <!-- Profile Image -->
+            <img src="/static/img/profilePic.jfif" class="rounded-circle" width="40" height="40" alt="Profile">
+            <!-- <img src="https://i.pravatar.cc/40" class="rounded-circle" width="40" height="40" alt="Profile"> -->
+
+            <div class="ms-2 text-start d-none d-md-block">
+
+              <div class="fw-semibold small">
+                {{request.user.first_name}} {{request.user.last_name}}
+              </div>
+
+              <div class="text-muted small">
+                {{request.user.userprofile.role}}
+              </div>
+
+            </div>
+
+            <i class="bi bi-chevron-down ms-2 small"></i>
+
+          </button>
+
+          <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+
+            <li>
+              <a class="dropdown-item" href="{% url 'my_profile' %}">
+                <i class="bi bi-person me-2"></i>
+                My Profile
+              </a>
+            </li>
+
+            <li>
+              <hr class="dropdown-divider">
+            </li>
+
+            <li>
+              <form method="post" action="{% url 'logout' %}" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" class="dropdown-item text-danger">
+                  <i class="bi bi-box-arrow-right me-2"></i>
+                  Sign Out
+                </button>
+              </form>
+            </li>
+
+          </ul>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Content -->
+    <div class="content-wrapper container-fluid">
+
+      {% if messages %}
+      <div id="toastContainer" class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+        {% for message in messages %}
+        <div class="toast align-items-center text-white border-0 mb-2 show
+              {% if message.tags == 'success' %}bg-success
+              {% elif message.tags == 'error' or message.tags == 'danger' %}bg-danger
+              {% else %}bg-primary{% endif %}" role="alert" aria-live="assertive" aria-atomic="true">
+
+          <div class="d-flex">
+            <div class="toast-body">
+              {{ message }}
+            </div>
+            <button type="button" class="btn-close btn-close-white m-auto me-2" data-bs-dismiss="toast"
+              aria-label="Close"></button>
+          </div>
+
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% block body %} {% endblock body %}
+    </div>
+
+  </div>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="{% static 'js/base.js' %}"></script>
+  {% block Script %} {% endblock Script %}
+</body>
+
+</html>

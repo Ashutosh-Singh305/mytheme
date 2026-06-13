@@ -1,0 +1,169 @@
+<!-- TABLE -->
+<table class="table custom-table align-middle">
+    <thead>
+        <tr class="table-primary">
+
+            <!-- ID -->
+            <th class="font-weight-bold">
+                <a href="#" class="sort" data-field="id">
+                    ID
+                    <i class="fa fa-sort ml-1 sort-icon"></i>
+                </a>
+            </th>
+
+            <!-- NAME -->
+            <th class="font-weight-bold">
+                <a href="#" class="sort" data-field="first_name">
+                    Name
+                    <i class="fa fa-sort ml-1 sort-icon"></i>
+                </a>
+            </th>
+
+            <!-- USERNAME -->
+            <th class="font-weight-bold">
+                <a href="#" class="sort" data-field="username">
+                    Username
+                    <i class="fa fa-sort ml-1 sort-icon"></i>
+                </a>
+            </th>
+
+            <!-- EMAIL -->
+            <th class="font-weight-bold">
+                <a href="#" class="sort" data-field="userprofile__role__name">
+                    Role
+                    <i class="fa fa-sort ml-1 sort-icon"></i>
+                </a>
+            </th>
+            <th class="font-weight-bold">
+                <a href="#" class="sort" data-field="userprofile__branch__name">
+                    Branch
+                    <i class="fa fa-sort ml-1 sort-icon"></i>
+                </a>
+            </th>
+
+            <!-- STATUS -->
+            <th class="font-weight-bold">
+                <a href="#" class="sort" data-field="is_active">
+                    Status
+                    <i class="fa fa-sort ml-1 sort-icon"></i>
+                </a>
+            </th>
+
+
+
+            <th class="text-center font-weight-bold">Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for user in page_obj %}
+        <tr>
+            <td>
+                <a href="/crm/users/{{ user.pk }}/details" class="text-primary text-decoration-none">
+                    <strong>{{ user.id }}</strong>
+                </a>
+            </td>
+
+            <!-- FULL NAME -->
+            <td>
+                <a href="/crm/users/{{ user.pk }}/details" class="text-primary text-decoration-none">
+                    <strong>{{ user.first_name }} {{ user.last_name }}</strong>
+                </a>
+            </td>
+
+            <td>{{ user.username }}</td>
+
+            <td>
+                {% if user.userprofile %}
+                {{ user.userprofile.role|default:"-" }}
+                {% else %}
+                -
+                {% endif %}
+            </td>
+
+            <td>
+                {% if user.userprofile %}
+                {{ user.userprofile.branch|default:"-" }}
+                {% else %}
+                -
+                {% endif %}
+            </td>
+
+            <!-- STATUS -->
+            <td>
+                {% if user.is_active %}
+                <span class="badge text-bg-success">Active</span>
+                {% else %}
+                <span class="badge text-bg-danger">Inactive</span>
+                {% endif %}
+            </td>
+
+            <!-- DATE -->
+
+            <!-- ACTION -->
+            <td class="text-center">
+                <a href="/crm/users/{{ user.pk }}/edit" class="btn btn-primary btn-sm table-action-btn">
+                    <i class="fa fa-edit"></i>
+                </a>
+                <a href="/crm/users/{{ user.pk }}/delete" class="btn btn-sm btn-danger table-action-btn">
+                    <i class="fa fa-trash"></i>
+                </a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" class="text-center text-muted">
+                No users found
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- PAGINATION -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-center px-2 py-2 border-top gap-2">
+
+    <div>
+        Showing <strong>{{ page_obj.start_index }}</strong> to <strong>{{ page_obj.end_index }}</strong>
+        of <strong>{{ page_obj.paginator.count }}</strong> entries.
+    </div>
+
+    <ul class="pagination mb-0">
+
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a href="#" class="page-link" data-page="1">&laquo;</a>
+        </li>
+        <li class="page-item">
+            <a href="#" class="page-link" data-page="{{ page_obj.previous_page_number }}">
+                Prev
+            </a>
+        </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <li class="page-item active">
+            <span class="page-link">{{ num }}</span>
+        </li>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %} <li class="page-item">
+            <a href="#" class="page-link" data-page="{{ num }}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a href="#" class="page-link" data-page="{{ page_obj.next_page_number }}">
+                    Next
+                </a>
+            </li>
+            <li class="page-item">
+                <a href="#" class="page-link" data-page="{{ page_obj.paginator.num_pages }}">
+                    &raquo;
+                </a>
+            </li>
+            {% endif %}
+
+    </ul>
+</div>

@@ -1,0 +1,515 @@
+{% extends 'crm/base.html' %}
+{% load static %}
+{% load attr %}
+{% block title %}{{ lv.name }}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'css/list.css' %}">
+<link rel="stylesheet" href="{% static 'css/listview.css' %}">
+{% endblock %}
+
+{% block body %}
+<div class="sf-header-container">
+
+    <!-- LEFT SIDE -->
+    <div class="sf-left d-flex align-items-center flex-wrap">
+
+        <!-- Object Icon -->
+        <div class="sf-object-icon flex-shrink-0">
+            {{ lv.object_name|slice:":1" }}
+        </div>
+
+        <!-- Title + Dropdown -->
+        <div class="flex-grow-1 min-width-0">
+
+            <div class="dropdown">
+
+                <button
+                    class="btn p-0 border-0 bg-transparent sf-title-dropdown d-flex align-items-center flex-wrap dropdown-toggle"
+                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+
+                    <span class="text-truncate">
+                        {{ lv.name }}
+                    </span>
+
+                </button>
+
+                <ul class="dropdown-menu shadow-sm">
+                    {% for view in available_listviews %}
+                    <li>
+                        <a class="dropdown-item" href="{% url 'listview_results' model_url %}?filter={{ view.id }}">
+                            {{ view.name }}
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- RIGHT SIDE -->
+    <div class="sf-right">
+
+        <!-- Search + Icons Row -->
+        <div class="sf-search-row d-flex align-items-center flex-wrap">
+
+            <!-- Search -->
+            <div class="sf-search-box position-relative">
+
+                <form method="get" class="position-relative">
+
+                    <i class="icon-search position-absolute text-muted"
+                        style="top:50%; left:12px; transform:translateY(-50%);">
+                    </i>
+
+                    <input type="text" id="live-search" name="q" class="form-control ps-5"
+                        placeholder="Search this list..." value="{{ request.GET.q }}">
+
+                    {% if current_sort %}
+                    <input type="hidden" name="sort" value="{{ current_sort }}">
+                    <input type="hidden" name="dir" value="{{ current_dir }}">
+                    {% endif %}
+
+                </form>
+            </div>
+
+            <!-- Settings Dropdown -->
+            <div class="dropdown">
+
+                <button class="sf-icon btn p-0 d-flex align-items-center justify-content-center" type="button"
+                    data-bs-toggle="dropdown" aria-expanded="false">
+
+                    <i class="bi bi-gear"></i>
+                    <span class="settings-caret ms-1"></span>
+                </button>
+
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+
+                    <li>
+                        <h6 class="dropdown-header">
+                            Filters
+                        </h6>
+                    </li>
+
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+
+                    {% if perms.crm.add_listview %}
+                    <li>
+                        <a class="dropdown-item" href="{% url 'listview_new' model_name %}">
+                            New
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if perms.crm.change_listview %}
+                    <li>
+                        <a class="dropdown-item" href="{% url 'listview_edit' lv.pk %}">
+                            Edit
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% if perms.crm.delete_listview %}
+                    <li>
+                        <form method="post" action="{% url 'listview_delete' lv.pk %}">
+                            {% csrf_token %}
+
+                            <button type="submit" class="dropdown-item"
+                                onclick="return confirm('Are you sure you want to delete this list view?');">
+
+                                Delete
+                            </button>
+                        </form>
+                    </li>
+                    {% endif %}
+
+                </ul>
+            </div>
+
+            <!-- Refresh -->
+            <button class="sf-icon btn p-0" id="refresh-table" type="button">
+
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+
+            <!-- Action Buttons -->
+            <div class="sf-action-buttons d-flex">
+
+                <a class="btn btn-sm btn-light text-primary" href="{% url 'crm_object_create' lv.object_name %}">
+                    New
+                </a>
+
+                {% if perms.crm.can_export_data %}
+                <button type="submit" form="export-form" name="export" value="excel" class="btn btn-sm btn-light text-primary">
+
+                    Export
+                </button>
+                {% endif %}
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+
+<!-- TABLE + EXPORT FORM -->
+<form method="get" id="export-form">
+
+    <input type="hidden" name="filter" value="{{ lv.pk }}">
+    <!-- STATE -->
+    <input type="hidden" name="select_mode" id="select-mode" value="page">
+    <input type="hidden" name="excluded_ids" id="excluded-ids">
+
+    {% if request.GET.q %}
+    <input type="hidden" name="q" value="{{ request.GET.q }}">
+    {% endif %}
+    {% if current_sort %}
+    <input type="hidden" name="sort" value="{{ current_sort }}">
+    <input type="hidden" name="dir" value="{{ current_dir }}">
+    {% endif %}
+
+
+    <div class="card">
+        <div id="table-wrapper" class="table-responsive">
+            <table class="table custom-table align-middle table-sm">
+                <!-- SELECTION BANNER -->
+                <div id="selection-banner" class="alert alert-light d-none mb-2">
+                    <span id="selection-count"></span>
+                    <a href="#" id="select-all-link" class="ms-2 d-none text-primary">
+                        Select all {{ page_obj.paginator.count }}
+                    </a>
+                </div>
+
+                <!-- TABLE HEADER -->
+                <thead>
+                    <tr class="table-primary">
+
+                        <!-- PAGE SELECT -->
+                        {% if perms.crm.can_export_data %}
+                        <th>
+                            <input type="checkbox" id="select-page">
+                        </th>
+                        {% endif %}
+                        <th>
+                            <a class="text-decoration-none"
+                                href="?filter={{ lv.pk }}&sort=id&dir={% if current_sort == 'id' and current_dir == 'asc' %}desc{% else %}asc{% endif %}">
+                                ID
+                                {% if current_sort == 'id' %}
+                                {% if current_dir == 'asc' %}▲{% else %}▼{% endif %}
+                                {% endif %}
+                            </a>
+                        </th>
+
+
+                        {% for f in fields %}
+                        <th class="text-capitalize font-weight-bold">
+
+                            {% if current_sort == f.name %}
+                            {% if current_dir == "asc" %}
+                            <a href="?filter={{ lv.pk }}&sort={{ f.name }}&dir=desc&page={{ page_obj.number }}"
+                                class="text-decoration-none">
+                                {{ f.label }} ▲
+                            </a>
+                            {% else %}
+                            <a href="?filter={{ lv.pk }}&sort={{ f.name }}&dir=asc&page={{ page_obj.number }}"
+                                class="text-decoration-none">
+                                {{ f.label }} ▼
+                            </a>
+                            {% endif %}
+                            {% else %}
+                            <a href="?filter={{ lv.pk }}&sort={{ f.name }}&dir=asc&page={{ page_obj.number }}"
+                                class="text-decoration-none">
+                                {{ f.label }}
+                            </a>
+                            {% endif %}
+
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+
+                <!-- TABLE BODY -->
+                <tbody>
+                    {% for row in rows %}
+                    <tr>
+
+                        <!-- ROW CHECKBOX -->
+                        {% if perms.crm.can_export_data %}
+                        <td>
+                            <input type="checkbox" name="selected_ids" value="{{ row.pk }}" class="row-checkbox">
+                        </td>
+                        {% endif %}
+
+                        <td>
+                            <a href="{% url 'crm_object_detail' lv.object_name row.pk %}" class="text-decoration-none">
+                                {{ row.pk }}
+                            </a>
+                        </td>
+
+                        {% for f in fields %}
+                        {% with value=row|attr:f.name %}
+                        <td>{{ value|default_if_none:""|safe }}</td>
+                        {% endwith %}
+                        {% endfor %}
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        <div class="d-flex p-1 flex-column flex-md-row align-items-center justify-content-between gap-2 mt-2 mb-3">
+
+            <!-- Showing Text -->
+            <p class="text-muted mb-0 small">
+                Showing {{ page_obj.start_index }} to {{ page_obj.end_index }}
+                of {{ page_obj.paginator.count }} entries
+            </p>
+
+            <!-- Pagination -->
+            <nav aria-label="Page navigation">
+                <ul class="pagination pagination-sm mb-0">
+
+                    <!-- Previous -->
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link"
+                            href="?filter={{ lv.pk }}&page={{ page_obj.previous_page_number }}{% if current_sort %}&sort={{ current_sort }}&dir={{ current_dir }}{% endif %}">
+                            <i class="bi bi-chevron-left"></i>
+                        </a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">
+                            <i class="bi bi-chevron-left"></i>
+                        </span>
+                    </li>
+                    {% endif %}
+
+                    <!-- Page Numbers -->
+                    {% for num in page_obj.paginator.page_range %}
+
+                    {% if num <= 10 or num == page_obj.paginator.num_pages %} {% if num == page_obj.number %} <li
+                        class="page-item active">
+                        <span class="page-link">
+                            {{ num }}
+                        </span>
+                        </li>
+                        {% else %}
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="?filter={{ lv.pk }}&page={{ num }}{% if current_sort %}&sort={{ current_sort }}&dir={{ current_dir }}{% endif %}">
+                                {{ num }}
+                            </a>
+                        </li>
+                        {% endif %}
+
+                        {% elif num == 11 %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                        {% endif %}
+
+                        {% endfor %}
+
+                        <!-- Next -->
+                        {% if page_obj.has_next %}
+                        <li class="page-item">
+                            <a class="page-link"
+                                href="?filter={{ lv.pk }}&page={{ page_obj.next_page_number }}{% if current_sort %}&sort={{ current_sort }}&dir={{ current_dir }}{% endif %}">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                        {% else %}
+                        <li class="page-item disabled">
+                            <span class="page-link">
+                                <i class="bi bi-chevron-right"></i>
+                            </span>
+                        </li>
+                        {% endif %}
+
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+</form>
+
+
+{% endblock %}
+
+{% block Script %}
+<!-- For dismissible alert -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const toasts = document.querySelectorAll('.toast');
+        toasts.forEach(t => new bootstrap.Toast(t, { delay: 3000 }).show());
+    });
+</script>
+
+<!-- for excel export -->
+<script>
+    function bindSelectionLogic() {
+
+        const pageCheckbox = document.getElementById("select-page");
+        const rowCheckboxes = document.querySelectorAll(".row-checkbox");
+
+        const banner = document.getElementById("selection-banner");
+        const countText = document.getElementById("selection-count");
+        const selectAllLink = document.getElementById("select-all-link");
+
+        const selectModeInput = document.getElementById("select-mode");
+        const excludedIdsInput = document.getElementById("excluded-ids");
+
+        let excludedIds = new Set(
+            excludedIdsInput.value
+                ? excludedIdsInput.value.split(",")
+                : []
+        );
+
+        if (!pageCheckbox) return;
+
+        /* PAGE SELECT */
+        pageCheckbox.addEventListener("change", function () {
+            rowCheckboxes.forEach(cb => cb.checked = pageCheckbox.checked);
+
+            if (pageCheckbox.checked) {
+                banner.classList.remove("d-none");
+                countText.textContent =
+                    `${rowCheckboxes.length} selected`;
+                selectAllLink.classList.remove("d-none");
+            } else {
+                banner.classList.add("d-none");
+                selectAllLink.classList.add("d-none");
+                selectModeInput.value = "page";
+            }
+        });
+
+        /* SELECT ALL ACROSS PAGES */
+        selectAllLink.addEventListener("click", function (e) {
+            e.preventDefault();
+            selectModeInput.value = "all";
+            excludedIds.clear();
+            excludedIdsInput.value = "";
+            countText.textContent = "All records selected";
+            selectAllLink.classList.add("d-none");
+        });
+
+        /* ROW DESELECT */
+        rowCheckboxes.forEach(cb => {
+            cb.addEventListener("change", function () {
+                if (selectModeInput.value === "all" && !cb.checked) {
+                    excludedIds.add(cb.value);
+                    excludedIdsInput.value = Array.from(excludedIds).join(",");
+                }
+            });
+        });
+    }
+</script>
+<!-- For selection logic -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        bindSelectionLogic();
+    });
+</script>
+
+<!-- For refresh -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const refreshBtn = document.getElementById("refresh-table");
+        const tableWrapper = document.getElementById("table-wrapper");
+
+        refreshBtn.addEventListener("click", function () {
+
+            // Prevent multiple simultaneous clicks
+            if (refreshBtn.classList.contains("spinning")) return;
+
+            // Add spinning animation
+            refreshBtn.classList.add("spinning");
+
+            // same URL with query params (sort, page, q)
+            const url = window.location.href;
+
+            fetch(url)
+                .then(res => res.text())
+                .then(html => {
+
+                    // Parse the returned HTML
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, "text/html");
+
+                    // Extract ONLY the new table section
+                    const newTable = doc.querySelector("#table-wrapper");
+
+                    if (newTable) {
+                        tableWrapper.innerHTML = newTable.innerHTML;
+                        bindSelectionLogic();  // Re-bind selection logic
+                    }
+                })
+                .catch(err => console.error("Refresh failed:", err))
+                .finally(() => {
+                    // Remove spinning animation after fetch completes
+                    refreshBtn.classList.remove("spinning");
+                });
+        });
+
+    });
+</script>
+
+<!-- For search box -->
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+        const searchInput = document.getElementById("live-search");
+        const tableWrapper = document.getElementById("table-wrapper");
+
+        let timer = null;  // debounce timer
+
+        searchInput.addEventListener("keyup", function () {
+
+            clearTimeout(timer);
+
+            timer = setTimeout(function () {
+
+                // Build new URL with search parameter
+                const params = new URLSearchParams(window.location.search);
+                const q = searchInput.value.trim();
+
+                if (q) {
+                    params.set("q", q);
+                } else {
+                    params.delete("q");
+                }
+
+                const url = window.location.pathname + "?" + params.toString();
+
+                // Fetch updated full HTML (no page reload)
+                fetch(url)
+                    .then(res => res.text())
+                    .then(html => {
+                        const parser = new DOMParser();
+                        const doc = parser.parseFromString(html, "text/html");
+
+                        const newTable = doc.querySelector("#table-wrapper");
+                        if (newTable) {
+                            tableWrapper.innerHTML = newTable.innerHTML;
+                            bindSelectionLogic();  // Re-bind selection logic
+                        }
+                    });
+
+            }, 200);
+        });
+
+    });
+</script>
+
+{% endblock %}

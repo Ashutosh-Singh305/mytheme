@@ -1,0 +1,30 @@
+{% extends 'crm/base.html' %}
+
+{% block title %} Delete Bank {% endblock %}
+
+{% block body %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-6">
+    <div class="card shadow-sm border-danger">
+      <div class="card-header bg-danger text-white text-center">
+        <h4 class="mb-0">Confirm Delete</h4>
+      </div>
+      <div class="card-body text-center">
+        <p class="fs-5">
+          Are you sure you want to delete
+          <strong class="text-danger">{{ bank.name }}</strong>?
+        </p>
+        <form method="post" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger btn-sm px-2 me-2">
+            <i class="fas fa-trash-alt me-1"></i> Yes, Delete
+          </button>
+        </form>
+        <a href="{% url 'bank_list' %}" class="btn btn-secondary btn-sm">
+          <i class="fas fa-times me-1"></i> Cancel
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock body %}

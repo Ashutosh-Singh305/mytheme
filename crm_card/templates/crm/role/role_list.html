@@ -1,0 +1,63 @@
+{% extends 'crm/base.html' %}
+{% block title %} Role List{% endblock %}
+{% block body %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h4 class="page-title mb-0">Role Management</h4>
+    </div>
+    <div>
+        <a href="{% url 'role-create' %}" class="btn btn-primary btn-sm d-inline-flex align-items-center gap-1">
+            <i class="bi bi-plus-lg"></i> Add Role
+        </a>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle mb-0">
+            <thead class="table-primary text-uppercase fs-7">
+                <tr>
+                    <th scope="col" class="ps-3">ID</th>
+                    <th scope="col">Name</th>
+                    <th scope="col">Code</th>
+                    <th scope="col">Status</th>
+                    <th scope="col" class="text-end pe-3">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for role in roles %}
+                <tr>
+                    <td class="fw-bold ps-3">{{ role.id }}</td>
+                    <td>{{ role.name }}</td>
+                    <td><code>{{ role.code }}</code></td>
+                    <td>
+                        {% if role.is_active %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-end pe-3">
+                        <div class="d-inline-flex gap-1">
+                            <a href="{% url 'role-update' role.id %}" class="btn btn-sm btn-outline-info">
+                                <i class="bi bi-pencil-square"></i> Edit
+                            </a>
+                            <a href="{% url 'role-delete' role.id %}" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-trash"></i> Delete
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted py-4">
+                        <i class="bi bi-shield-slash display-6 d-block mb-2"></i>
+                        No roles found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -13,6 +13,7 @@
 
 
 <div class="card p-1">
+    <div class="card-body">
     <form method="get" class="mb-3">
 
         <div class="row g-2">
@@ -23,16 +24,12 @@
                     Select Model
                 </label>
 
-                <select name="model"
-                        id="modelSelect"
-                        class="form-select form-select-sm"
-                        onchange="this.form.submit()">
+                <select name="model" id="modelSelect" class="form-select form-select-sm" onchange="this.form.submit()">
 
                     <option value="">-- Select Model --</option>
 
                     {% for name, label in model_choices %}
-                    <option value="{{ name }}"
-                        {% if selected_model == name %}selected{% endif %}>
+                    <option value="{{ name }}" {% if selected_model == name %}selected{% endif %}>
                         {{ label }}
                     </option>
                     {% endfor %}
@@ -45,17 +42,13 @@
                     Select Role
                 </label>
 
-                <select name="role"
-                        id="roleSelect"
-                        class="form-select form-select-sm"
-                        onchange="this.form.submit()">
+                <select name="role" id="roleSelect" class="form-select form-select-sm" onchange="this.form.submit()">
 
                     <option value="">-- Select Role --</option>
 
-                    {% for role in roles %}
-                    <option value="{{ role.id }}"
-                        {% if selected_role == role.id|stringformat:"s" %}selected{% endif %}>
-                        {{ role.name }}
+                    {% for role_key, role_label in roles %}
+                    <option value="{{ role_key }}" {% if selected_role == role_key %}selected{% endif %}>
+                        {{ role_label }}
                     </option>
                     {% endfor %}
                 </select>
@@ -72,8 +65,8 @@
         <input type="hidden" name="role" value="{{ selected_role }}">
 
         <div class="table-responsive">
-            <table class="table table-bordered table-striped">
-                <thead class="thead-dark">
+            <table class="table table-bordered table-sm table-striped">
+                <thead class="table-primary">
                     <tr>
                         <th>Field Name</th>
                         <th>
@@ -112,7 +105,7 @@
     {% endif %}
 
 </div>
-
+</div>
 
 <script>
     function toggleColumn(prefix) {

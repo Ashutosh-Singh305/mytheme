@@ -9,14 +9,14 @@ from django.forms import modelform_factory
 from django.http import HttpResponseNotFound, HttpResponseForbidden, HttpRequest, HttpResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib import admin, messages
-from django.db.models import Model as DjangoModel
+from django.db.models import Q, Model as DjangoModel
 from django.core.cache import cache
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import User
 from crm.choices import LEAD_STATUS_CHOICES
-from crm.utils import apply_audit_logic, get_allowed_user_queryset,get_visible_queryset
+from crm.utils import *
 from crm.views import get_accessible_fields
-from .models import FieldAccessControl, ListView
+from .models import FieldAccessControl, ListView, Product
 from django.core.signals import request_finished
 from django.db.models.signals import post_save, post_delete
 
@@ -340,18 +340,37 @@ def apply_model_validation(form, obj):
     """
     Run model validation and attach errors properly to form.
     """
+
     try:
-        obj.full_clean()
+        obj.full_clean(
+            exclude=[
+                "created_by",
+                "modified_by",
+                "created_at",
+                "modified_at",
+            ]
+        )
+
     except ValidationError as e:
 
-        # Case 1: Field-specific errors
+        # Field-specific errors
         if hasattr(e, "message_dict"):
-            for field, messages in e.message_dict.items():
-                for msg in messages:
-                    form.add_error(field, msg)
 
-        # Case 2: Non-field errors
+            for field, messages in e.message_dict.items():
+
+                for msg in messages:
+
+                    # ONLY attach if field exists in form
+                    if field in form.fields:
+                        form.add_error(field, msg)
+
+                    else:
+                        # fallback to non-field error
+                        form.add_error(None, f"{field}: {msg}")
+
+        # Non-field errors
         elif hasattr(e, "messages"):
+
             for msg in e.messages:
                 form.add_error(None, msg)
 
@@ -386,14 +405,54 @@ def generic_create_object(request: HttpRequest, model: str) -> HttpResponse:
         form = Form(safe_post, request.FILES)
     else:
         form = Form()
-    
+    # Make required only for Lead model
+    if Model.__name__ == "Lead":
+        for field in [
+            "business_head",
+            "business_manager",
+            "sm",
+            "team_lead",
+            "tele_sales_executive",
+            "product",
+        ]:
+            if field in form.fields:
+                form.fields[field].required = True
+        # Show only limited products
+        if "product" in form.fields:
+            allowed_product_ids = [1, 2, 4, 5]
 
+            form.fields["product"].queryset = Product.objects.filter(
+                id__in=allowed_product_ids
+            ).only("id", "name")
+            
+    if Model.__name__ == "CandidateOnboarding":
+        for field in [
+            "recruiter",
+        ]:
+            if field in form.fields:
+                form.fields[field].required = True       
+    # USER QUERYSET LOGIC
     User = get_user_model()
-    allowed_user = get_allowed_user_queryset(request.user)
 
-    for field in form.fields.values():
+    for field_name, field in form.fields.items():
+
         if hasattr(field, "queryset") and getattr(field.queryset, "model", None) == User:
-            field.queryset = allowed_user
+
+            # Lead model → role-based queryset
+            if Model.__name__ == "Lead":
+                queryset = get_lead_allowed_user_queryset(
+                    request.user,
+                    field_name
+                )
+
+            # Other models → normal queryset
+            else:
+                queryset = get_allowed_user_queryset(request.user)
+
+            field.queryset = queryset.order_by(
+                "first_name",
+                "last_name"
+            )
 
     # 🔁 UPDATED BLOCK START-- Avi
     if request.method == "POST" and form.is_valid():
@@ -462,15 +521,65 @@ def generic_update_object(request: HttpRequest, model: str, pk: int) -> HttpResp
         form = Form(safe_post, request.FILES, instance=instance)
     else:
         form = Form(instance=instance) 
-    
+    # Make required only for Lead model
+    if Model.__name__ == "Lead":
+
+        required_fields = [
+            "business_head",
+            "business_manager",
+            "sm",
+            "team_lead",
+            "tele_sales_executive",
+        ]
+
+        for field in required_fields:
+            if field in form.fields:
+                form.fields[field].required = True
+
+        # Product field
+        if "product" in form.fields:
+            form.fields["product"].required = True
+
+            allowed_ids = {1, 2, 4, 5}  # use set directly
+
+            # Include existing selected product
+            if instance.product_id:
+                allowed_ids.add(instance.product_id)
+
+            form.fields["product"].queryset = Product.objects.filter(
+                id__in=allowed_ids
+            ).only("id", "name")
 
     # SAME queryset logic
     User = get_user_model()
-    allowed_user = get_allowed_user_queryset(request.user)
 
-    for field in form.fields.values():
+    for field_name, field in form.fields.items():
+
         if hasattr(field, "queryset") and getattr(field.queryset, "model", None) == User:
-            field.queryset = allowed_user
+
+            # Lead model → role-based queryset
+            if Model.__name__ == "Lead":
+                queryset = get_lead_allowed_user_queryset(
+                    request.user,
+                    field_name
+                )
+
+            # Other models → normal queryset
+            else:
+                queryset = get_allowed_user_queryset(request.user)
+
+            # Include currently selected user while editing
+            current_user_id = getattr(instance, f"{field_name}_id", None)
+
+            if current_user_id:
+                queryset = queryset | User.objects.filter(
+                    id=current_user_id
+                )
+
+            field.queryset = queryset.distinct().order_by(
+                "first_name",
+                "last_name"
+            )
 
     if request.method == "POST" and form.is_valid():
         with transaction.atomic():

@@ -241,7 +241,7 @@ class UploadForm(forms.Form):
     model_name = forms.ChoiceField(
         label="Model to Upload",
         widget=forms.Select(attrs={
-            'class': 'form-select'
+            'class': 'form-control'
         })
     )
 
@@ -338,7 +338,7 @@ class MappingForm(forms.Form):
                 choices=choices,
                 required=False,
                 label=f'Map Excel column: "{col}"',
-                initial=auto_map.get(col, ''),
+                initial=auto_map.get(col, '')
             )
 
     def clean(self):

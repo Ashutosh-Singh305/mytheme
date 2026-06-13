@@ -11,6 +11,7 @@ class GroupForm(forms.ModelForm):
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter group name'}),
         }
+        
 class IPRangeForm(forms.ModelForm):
     class Meta:
         model = IPRange
@@ -44,7 +45,7 @@ class UserRegistrationForm(UserCreationForm):
 
     last_name = forms.CharField(
         label='Last Name',
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
 
@@ -186,7 +187,7 @@ class UpdateUserRegistration(forms.ModelForm):
 
     last_name = forms.CharField(
         label='Last Name',
-        required=True,
+        required=False,
         widget=forms.TextInput(attrs={'class': 'form-control'})
     )
 
@@ -214,7 +215,9 @@ class UserProfileForm(forms.ModelForm):
         
         widgets = {
             'emp_code': forms.TextInput(attrs={'class': 'form-control'}),
-            'role': forms.Select(attrs={'class': 'form-control'}),
+            'role': forms.Select(attrs={'class': 'form-select'}),
+            'manager': forms.Select(attrs={'class': 'form-select'}),
+            'branch': forms.Select(attrs={'class': 'form-select'}),
         }
 
 class LeadForm(forms.ModelForm):
