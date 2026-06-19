@@ -13,7 +13,7 @@
 {% block body %}
 <div class="p-0">
   <div class="card shadow-sm">
-    <div class="card-body p-1">
+    <div class="card-body">
 
       <h3 class="mb-2">{{ lv.name|default:"New List View" }}</h3>
 
@@ -23,8 +23,8 @@
         <!-- STEP 1: View Name + Object -->
         <div class="card mb-1 shadow-sm border-0">
           <!-- Header -->
-          <div class="bg-primary p-1  fw-semibold">
-            STEP 1 — Enter View Name
+          <div class="card-header fw-semibold">
+            <span class="text-dark">STEP 1 — Enter View Name</span>
           </div>
           <!-- Body -->
           <div class="card-body p-2">
@@ -59,8 +59,8 @@
 
         <!-- STEP 2: Filters -->
         <div class="card mb-2">
-          <div class="p-1 bg-primary text-white fw-semibold">
-            STEP 2 — Filters
+          <div class="card-header fw-semibold">
+            <span class="text-dark">STEP 2 — Filters</span>
           </div>
 
 
@@ -169,7 +169,7 @@
 
         <!-- STEP 3: Field Selector -->
         <div class="card mb-2">
-          <div class="p-1 bg-primary text-white fw-semibold">STEP 3 — Select Fields</div>
+          <div class="card-header fw-semibold"><span class="text-dark">STEP 3 — Select Fields</span></div>
           <div class="card-body">
 
             <div class="row align-items-center">
@@ -229,7 +229,7 @@
         </div>
         <!-- STEP 4: Visibility -->
         <div class="card mb-2">
-          <div class="p-1 bg-primary fw-semibold">STEP 4 — Visibility</div>
+          <div class="card-header fw-semibold"><span class="text-dark">STEP 4 — Visibility</span></div>
           <div class="card-body">
 
             <div class="form-check">

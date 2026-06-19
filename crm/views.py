@@ -1,7 +1,7 @@
-import json
+import os
+import calendar
 from django.core.exceptions import PermissionDenied
 from django.http import Http404, HttpResponseForbidden, HttpResponseNotFound
-from numpy import prod
 from crm.admin import LeadAdmin
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required,permission_required
@@ -11,14 +11,10 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.apps import apps
 from crm.choices import *
 import pandas as pd
-import os
 from django.contrib.auth import get_user_model
 from django.core.paginator import Paginator
-from django.db.models import Q, Value
-# for dashboard
-from crm.ip_utils import get_client_ip
+from django.db.models import Q, Value , Count, Sum, Avg,Case, When, F
 from crm.models import *
-from django.db.models import Count, Sum, Avg,Case, When, F
 from django.contrib.auth.views import LoginView
 from django.db.models.functions import Concat, TruncMonth
 from django.utils.dateformat import DateFormat
@@ -32,8 +28,6 @@ from django.http import JsonResponse
 from django.contrib.auth.forms import AdminPasswordChangeForm
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.models import Group, Permission
-from django.views.generic import ListView, CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import PermissionRequiredMixin
 
 
 def group_list(request):
@@ -750,15 +744,31 @@ def leadDashboard(request):
         'totals': totals
     })
 
-# Tse Dashboard View 
+
+
+# TSE LOAN DASHBOARD
 @login_required
 def tse_dashboard(request):
     if not request.user.has_perm("crm.can_access_crm_dashboard"):
         raise PermissionDenied("You do not have permission to access Dashboard.")
+
     user = request.user
     today = timezone.localdate()
 
-    # BASE QUERYSET (NO FILTERS)
+    # ── DATE RANGES 
+    # MTD: 1st of current month → today
+    mtd_start = today.replace(day=1)
+    mtd_end   = today
+
+    # LMTD: 1st of last month → same day of last month
+    last_month      = today.month - 1 if today.month > 1 else 12
+    last_month_year = today.year if today.month > 1 else today.year - 1
+    last_day_of_last_month = calendar.monthrange(last_month_year, last_month)[1]
+    lmtd_day   = min(today.day, last_day_of_last_month)
+    lmtd_start = today.replace(year=last_month_year, month=last_month, day=1)
+    lmtd_end   = today.replace(year=last_month_year, month=last_month, day=lmtd_day)
+
+    # ── BASE QUERYSET 
     base_qs = get_visible_queryset(Lead, user).select_related(
         'tele_sales_executive',
         'team_lead',
@@ -774,13 +784,13 @@ def tse_dashboard(request):
         Q(product__isnull=True)
     )
 
-    # SEARCH / SORT INPUT
-    search = request.GET.get("search", "").strip()
-    sort = request.GET.get("sort", "").strip()
-    status_filter = request.GET.get("status")
+    # ── SEARCH / SORT / FILTER INPUTS 
+    search            = request.GET.get("search", "").strip()
+    sort              = request.GET.get("sort", "").strip()
+    status_filter     = request.GET.get("status")
     lead_source_filter = request.GET.get("lead_source")
 
-    # FILTERED QUERYSET (FOR UI)
+    # ── FILTERED QUERYSET (FOR UI) ─────────────────────────────────────────────
     leads_qs = base_qs
 
     if search:
@@ -798,88 +808,98 @@ def tse_dashboard(request):
     else:
         leads_qs = leads_qs.filter(
             status__in=[
-                'new', 'not_interested', 'waiting_for_docs', 'OTP', 'not_eligible','Future Lead','loan_needed',
-                'Ringing', 'Switched_Off', 'call_back', 'follow_up','reject','invalid_number'
+                'new', 'not_interested', 'waiting_for_docs', 'OTP', 'not_eligible',
+                'Future Lead', 'loan_needed', 'Ringing', 'Switched_Off', 'call_back',
+                'follow_up', 'reject', 'invalid_number'
             ]
         )
 
-   
-    if sort:
-        leads_qs = leads_qs.order_by(sort)
-    else:
-        leads_qs = leads_qs.order_by('-modified_at')
+    leads_qs = leads_qs.order_by(sort) if sort else leads_qs.order_by('-modified_at')
 
-    # KPI (ALWAYS FROM BASE_QS)
-    interested_leads = base_qs.filter(status='interested').count()
+    # ── KPIs (ALWAYS FROM BASE_QS)
+    underwriting_leads = base_qs.filter(status='underwriting').count()
+    approved_leads     = base_qs.filter(status='approved').count()
+    ofb_leads          = base_qs.filter(status='ofb').count()
 
-    disbursed_amount = base_qs.filter(
-        status='disbursed'
+    # Disbursed MTD / LMTD — filtered by dod
+    disbursed_qs = base_qs.filter(status='disbursed')
+
+    mtd_disbursed_amount = disbursed_qs.filter(
+        dod__gte=mtd_start,
+        dod__lte=mtd_end
     ).aggregate(total=Sum('net_disbursed'))['total'] or 0
 
-    hot_leads = base_qs.filter(
-        Q(cibil_score__gte=740),
-        Q(monthly_salary__gte=40000)
-    ).count()
+    lmtd_disbursed_amount = disbursed_qs.filter(
+        dod__gte=lmtd_start,
+        dod__lte=lmtd_end
+    ).aggregate(total=Sum('net_disbursed'))['total'] or 0
 
-    applications = base_qs.filter(
-        status__in=[
-            'ofb', 'OTP', 'Scorecard Approved', 'underwriting',
-            'approved', 'approved_hold', 'reject',
-            'reject_relook', 'UW Hold', 'Declined', 'disbursed'
-        ]
-    ).count()
+    # ── FOLLOWUPS / CALLS
+    followup_qs    = get_visible_queryset(LeadFollowUp, user)
+    calls_today    = base_qs.filter(modified_at__date=today).count()
+    followups_today = followup_qs.filter(follow_up_date__date=today).count()
 
-    # FOLLOWUPS / CALLS (USER BASED)
-    followup_qs = get_visible_queryset(LeadFollowUp, user)
-    
-
-    calls_today = base_qs.filter(
-        modified_at__date=today  
-    ).count()
-
-    followups_today = followup_qs.filter(
-        follow_up_date__date=today
-    ).count()
-
-    # PAGINATION
-    paginator = Paginator(leads_qs, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
+    # ── PAGINATION 
+    paginator  = Paginator(leads_qs, 10)
+    page_obj   = paginator.get_page(request.GET.get('page'))
 
     return render(request, 'crm/dashboard/tse_dashboard.html', {
-        "leads": page_obj,
+        "leads":    page_obj,
         "page_obj": page_obj,
 
         # KPI
-        "calls_today": calls_today,
-        "followups_today": followups_today,
-        "hot_leads": hot_leads,
-        "interested_leads": interested_leads,
-        "applications": applications,
-        "disbursed_amount": disbursed_amount,
+        "calls_today":       calls_today,
+        "followups_today":   followups_today,
+        "ofb_leads":         ofb_leads,
+        "underwriting_leads": underwriting_leads,
+        "approved_leads":    approved_leads,
+
+        # Disbursement MTD / LMTD
+        "mtd_disbursed_amount":  mtd_disbursed_amount,
+        "lmtd_disbursed_amount": lmtd_disbursed_amount,
+
+        # Date ranges (optional — useful for displaying in template)
+        "mtd_start":  mtd_start,
+        "lmtd_start": lmtd_start,
+        "lmtd_end":   lmtd_end,
 
         # Filters
-        "selected_status": status_filter,
+        "selected_status":      status_filter,
         "selected_lead_source": lead_source_filter,
 
         # Choices
-        "LEAD_STATUS_CHOICES": LEAD_STATUS_CHOICES,
-        "lead_type_choices": LEAD_TYPE_CHOICES,
-        "lender_name_choices": Bank.objects.all(),
+        "LEAD_STATUS_CHOICES":  LEAD_STATUS_CHOICES,
+        "lead_type_choices":    LEAD_TYPE_CHOICES,
+        "lender_name_choices":  Bank.objects.all(),
         "product_name_choices": Product.objects.filter(id__in=[1, 2, 4, 5]).only('id', 'name'),
-        "team_leaders": get_lead_allowed_user_queryset(request.user, "team_lead"),
-        "tele_executive": get_lead_allowed_user_queryset(request.user, "tele_sales_executive")   
+        "team_leaders":         get_lead_allowed_user_queryset(request.user, "team_lead"),
+        "tele_executive":       get_lead_allowed_user_queryset(request.user, "tele_sales_executive"),
     })
 
+
+# CARD DASHBOARD
 @login_required
 def card_tse_dashboard(request):
     if not request.user.has_perm("crm.can_access_crm_dashboard"):
         raise PermissionDenied("You do not have permission to access Dashboard.")
+
     user = request.user
     today = timezone.localdate()
 
-    # BASE QUERYSET (NO FILTERS)
+    # ── DATE RANGES 
+    # MTD: 1st of current month → today
+    mtd_start = today.replace(day=1)
+    mtd_end   = today
+
+    # LMTD: 1st of last month → same day of last month
+    last_month      = today.month - 1 if today.month > 1 else 12
+    last_month_year = today.year if today.month > 1 else today.year - 1
+    last_day_of_last_month = calendar.monthrange(last_month_year, last_month)[1]
+    lmtd_day   = min(today.day, last_day_of_last_month)
+    lmtd_start = today.replace(year=last_month_year, month=last_month, day=1)
+    lmtd_end   = today.replace(year=last_month_year, month=last_month, day=lmtd_day)
+
+    # ── BASE QUERYSET 
     base_qs = get_visible_queryset(Lead, user).select_related(
         'tele_sales_executive',
         'team_lead',
@@ -891,17 +911,17 @@ def card_tse_dashboard(request):
         'product',
         'product__product_category'
     ).filter(
-        Q(product__product_category__name__iexact="Card")|
+        Q(product__product_category__name__iexact="Card") |
         Q(status="card_needed")
     )
 
-    # SEARCH / SORT INPUT
-    search = request.GET.get("search", "").strip()
-    sort = request.GET.get("sort", "").strip()
-    status_filter = request.GET.get("status")
+    # ── SEARCH / SORT / FILTER INPUTS 
+    search             = request.GET.get("search", "").strip()
+    sort               = request.GET.get("sort", "").strip()
+    status_filter      = request.GET.get("status")
     lead_source_filter = request.GET.get("lead_source")
 
-    # FILTERED QUERYSET (FOR UI)
+    # ── FILTERED QUERYSET (FOR UI) 
     leads_qs = base_qs
 
     if search:
@@ -909,7 +929,7 @@ def card_tse_dashboard(request):
             Q(name__icontains=search) |
             Q(mobile_number__icontains=search) |
             Q(company_name__icontains=search) |
-            Q(application_no=search) 
+            Q(application_no=search)
         )
 
     if lead_source_filter:
@@ -920,87 +940,68 @@ def card_tse_dashboard(request):
     else:
         leads_qs = leads_qs.filter(
             status__in=[
-                'new', 'not_interested', 'waiting_for_docs','Future Lead','card_needed',
-                'Ringing','vkyc_done', 'follow_up','vkyc_pending','biometric','card_out','Declined'
+                'new', 'not_interested', 'waiting_for_docs', 'Future Lead', 'card_needed',
+                'Ringing', 'vkyc_done', 'follow_up', 'vkyc_pending', 'biometric',
+                'card_out', 'Declined'
             ]
         )
 
-    if sort:
-        leads_qs = leads_qs.order_by(sort)
-    else:
-        leads_qs = leads_qs.order_by('-modified_at')
+    leads_qs = leads_qs.order_by(sort) if sort else leads_qs.order_by('-modified_at')
 
-    # KPI (ALWAYS FROM BASE_QS)
-    interested_leads = base_qs.filter(status='interested').count()
+    underwriting = base_qs.filter(status='underwriting').count()
+    card_approved = base_qs.filter(status='card_approved').count()
 
-    # disbursed_amount = base_qs.filter(
-    #     status='disbursed'
-    # ).aggregate(total=Sum('net_disbursed'))['total'] or 0
+    vkyc_pending = base_qs.filter(status='vkyc_pending').count()
 
-    hot_leads = base_qs.filter(
-        Q(cibil_score__gte=740),
-        Q(monthly_salary__gte=40000)
+    # Card Out MTD / LMTD — filtered by dod
+    card_out_qs = base_qs.filter(status='card_out')
+
+    mtd_card_out = card_out_qs.filter(
+        dod__gte=mtd_start,
+        dod__lte=mtd_end
     ).count()
 
-    applications = base_qs.filter(
-        status__in=[
-            'waiting_for_docs',
-            'OTP',
-            'Approved',
-            'Scorecard Approved',
-            'loan_needed',
-        ]
+    lmtd_card_out = card_out_qs.filter(
+        dod__gte=lmtd_start,
+        dod__lte=lmtd_end
     ).count()
     
-    card_out = base_qs.filter(
-        status__in=[
-            'card_out'
-        ]
-    ).count()
-
-    # FOLLOWUPS / CALLS (USER BASED)
-    followup_qs = get_visible_queryset(LeadFollowUp, user)
-    
-
-    calls_today = base_qs.filter(
-        modified_at__date=today  
-    ).count()
-
-    followups_today = followup_qs.filter(
-        follow_up_date__date=today
-    ).count()
-
-    # PAGINATION
+    calls_today     = base_qs.filter(modified_at__date=today).count()
+    # ── PAGINATION 
     paginator = Paginator(leads_qs, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-
+    page_obj  = paginator.get_page(request.GET.get('page'))
 
     return render(request, 'crm/dashboard/card_tse_dashboard.html', {
-        "leads": page_obj,
+        "leads":    page_obj,
         "page_obj": page_obj,
 
         # KPI
         "calls_today": calls_today,
-        "followups_today": followups_today,
-        "hot_leads": hot_leads,
-        "interested_leads": interested_leads,
-        "applications": applications,
-        "card_out": card_out,
+        "underwriting": underwriting,
+        "card_approved":card_approved,
+        "vkyc_pending":vkyc_pending,
+
+        # Card Out MTD / LMTD
+        "mtd_card_out": mtd_card_out,
+        "lmtd_card_out": lmtd_card_out,
+
+        # Date ranges (optional — useful for displaying in template)
+        "mtd_start":  mtd_start,
+        "lmtd_start": lmtd_start,
+        "lmtd_end":   lmtd_end,
 
         # Filters
-        "selected_status": status_filter,
+        "selected_status":      status_filter,
         "selected_lead_source": lead_source_filter,
 
         # Choices
-        "LEAD_STATUS_CHOICES": LEAD_STATUS_CHOICES,
-        "lead_type_choices": LEAD_TYPE_CHOICES,
-        "employment_type_choices": EMPLOYMENT_TYPE_CHOICES,
-        "lender_name_choices": Bank.objects.all(),
-        "product_name_choices": Product.objects.filter(id__in=[1, 2, 4, 5]).only('id', 'name'),
-        "team_leaders": get_lead_allowed_user_queryset(request.user, "team_lead"),
-        "tele_executive": get_lead_allowed_user_queryset(request.user, "tele_sales_executive")
-        
+        "LEAD_STATUS_CHOICES":      LEAD_STATUS_CHOICES,
+        "lead_type_choices":        LEAD_TYPE_CHOICES,
+        "employment_type_choices":  EMPLOYMENT_TYPE_CHOICES,
+        "lender_name_choices":      Bank.objects.all(),
+        "product_name_choices":     Product.objects.filter(id__in=[1, 2, 4, 5]).only('id', 'name'),
+        "team_leaders":             get_lead_allowed_user_queryset(request.user, "team_lead"),
+        "tele_executive":           get_lead_allowed_user_queryset(request.user, "tele_sales_executive"),
     })
 
 @login_required
@@ -1264,7 +1265,6 @@ def hr_dashboard(request):
         'reporting_manager'
     )
 
-    
     search = request.GET.get("search", "").strip()
     sort = request.GET.get("sort", "").strip()
     status_filter = request.GET.get("status")
@@ -1309,7 +1309,8 @@ def hr_dashboard(request):
     ).count()
 
     joining_soon = base_qs.filter(
-        expected_joining_date__gte=today
+        expected_joining_date__gte=today,
+        training_status="In Process"
     ).count()
     
     training_pending = base_qs.filter(

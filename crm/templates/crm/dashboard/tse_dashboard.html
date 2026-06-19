@@ -46,7 +46,7 @@
 <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-2 mb-3">
 
     <div class="col">
-        <div class="card kpi-metric-card metric-calls shadow-sm border-0">
+        <div class="card kpi-metric-card metric-blue shadow-sm border-0">
             <div class="card-body p-2 d-flex align-items-center">
                 <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
                     <i class="bi bi-telephone-outbound-fill fs-6"></i>
@@ -60,71 +60,70 @@
     </div>
 
     <div class="col">
-        <div class="card kpi-metric-card metric-followup shadow-sm border-0">
+        <div class="card kpi-metric-card metric-amber shadow-sm border-0">
             <div class="card-body p-2 d-flex align-items-center">
                 <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
-                    <i class="bi bi-person-fill-add fs-6"></i>
+                    <i class="bi bi-tags-fill fs-6"></i>
                 </div>
                 <div class="ms-2 text-center">
-                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Follow-UP</h6>
-                    <h5 class="mb-0 fw-bold mt-1" style="font-size: 13px;">{{ followups_today|default:0 }}</h5>
+                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">OFB</h6>
+                    <h5 class="mb-0 fw-bold mt-1" style="font-size: 13px;">{{ ofb_leads|default:0 }}</h5>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="col">
-        <div class="card kpi-metric-card metric-hot shadow-sm border-0">
+        <div class="card kpi-metric-card metric-teal shadow-sm border-0">
             <div class="card-body p-2 d-flex align-items-center">
                 <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
-                    <i class="bi bi-fire fs-6"></i>
+                    <i class="bi bi-patch-check-fill fs-6"></i>
                 </div>
                 <div class="ms-2 text-center">
-                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Hot Lead</h6>
-                    <h4 class="mb-0 fw-bold mt-1" style="font-size: 13px;">{{ hot_leads|default:0 }}</h4>
+                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Approved</h6>
+                    <h4 class="mb-0 fw-bold mt-1" style="font-size: 13px;">{{ approved_leads|default:0 }}</h4>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="col">
-        <div class="card kpi-metric-card metric-interest shadow-sm border-0">
+        <div class="card kpi-metric-card metric-purple  shadow-sm border-0">
             <div class="card-body p-2 d-flex align-items-center">
                 <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
-                    <i class="bi bi-star-fill fs-6"></i>
+                    <i class="bi bi-shield-shaded fs-6"></i>
                 </div>
                 <div class="ms-2 text-center">
-                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Interested</h6>
-                    <h4 class="mb-0 fw-bold mt-1" style="font-size: 13px;">{{ interested_leads|default:0 }}</h4>
+                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Underwriting</h6>
+                    <h4 class="mb-0 fw-bold mt-1" style="font-size: 13px;">{{ underwriting_leads|default:0 }}</h4>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="col">
-        <div class="card kpi-metric-card metric-app shadow-sm border-0">
+        <div class="card kpi-metric-card metric-orange shadow-sm border-0">
             <div class="card-body p-2 d-flex align-items-center">
                 <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
-                    <i class="bi bi-file-earmark-text-fill fs-6"></i>
+                    <i class="bi bi-calendar2-check fs-6"></i>
                 </div>
                 <div class="ms-2 text-center">
-                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Application</h6>
-                    <h4 class="mb-0 fw-bold mt-1" style="font-size: 13px;">{{ applications|default:0 }}</h4>
+                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">LMTD Disb</h6>
+                    <h4 class="mb-0 fw-bold mt-1" style="font-size: 13px;">₹{{ lmtd_disbursed_amount|default:0 }}</h4>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="col">
-        <div class="card kpi-metric-card metric-disb shadow-sm border-0">
+        <div class="card kpi-metric-card metric-green shadow-sm border-0">
             <div class="card-body p-2 d-flex align-items-center">
                 <div class="rounded-circle bg-white p-2 d-flex align-items-center justify-content-center shadow-sm flex-shrink-0" style="width: 38px; height: 38px;">
-                    <i class="bi bi-currency-rupee fs-6"></i>
+                    <i class="bi bi-cash-coin fs-6"></i>
                 </div>
-    
                 <div class="ms-2 text-center">
-                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">Disbursed</h6>
-                    <h5 class="mb-0 fw-bold mt-1" style="font-size: 13px;">{{ disbursed_amount|default:0 }}</h5>
+                    <h6 class="mb-0 small fw-medium text-uppercase opacity-75" style="font-size: 11px; line-height: 1.2;">MTD Disb</h6>
+                    <h5 class="mb-0 fw-bold mt-1" style="font-size: 13px;">₹{{ mtd_disbursed_amount|default:0 }}</h5>
                 </div>
             </div>
         </div>
@@ -595,8 +594,8 @@
         <div class="modal-content">
 
             <!-- HEADER -->
-            <div class="modal-header bg-primary p-2">
-                <h5 class="modal-title text-white">
+            <div class="modal-header p-3">
+                <h5 class="modal-title">
                     Create New Lead
                 </h5>
 

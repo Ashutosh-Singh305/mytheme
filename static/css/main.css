@@ -385,9 +385,45 @@ label {
     transition: transform 0.2s ease;
 }
 
-.metric-calls {
+/* Blue Theme */
+.metric-blue {
     background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
     color: #1d4ed8 !important;
+}
+
+/* Yellow/Amber Theme */
+.metric-amber {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+    color: #b45309 !important;
+}
+
+/* Purple Theme */
+.metric-purple {
+    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%) !important;
+    color: #6b21a8 !important;
+}
+
+/* Teal Theme */
+.metric-teal {
+    background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%) !important;
+    color: #00867a !important;
+}
+
+/* Orange/Coral Theme */
+.metric-orange {
+    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%) !important;
+    color: #c2410c !important;
+}
+
+/* Green Theme */
+.metric-green {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
+    color: #15803d !important;
+}
+
+.metric-indigo {
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%) !important;
+    color: #4338ca !important;
 }
 
 .metric-followup {
@@ -400,15 +436,7 @@ label {
     color: var(--danger-text) !important;
 }
 
-.metric-interest {
-    background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%) !important;
-    color: #00867a !important;
-}
 
-.metric-app {
-    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%) !important;
-    color: #6b21a8 !important;
-}
 
 .metric-disb {
     background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
@@ -717,9 +745,12 @@ label {
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
 }
 
-.modal-header.bg-primary {
-    background: var(--purple-gradient) !important;
-    border-bottom: none;
+.modal-header {
+    background: linear-gradient(135deg, #c7d2fe 0%, #e0e7ff 45%, #f3f4ff 55%, #f5e1ff 75%, #fae8ff 100%);
+    color: #0369a1 !important;
+    /* padding-bottom: 10px; */
+    border-top-left-radius: 1rem !important;
+    border-top-right-radius: 1rem !important;
 }
 
 .overlay {
@@ -1196,7 +1227,6 @@ p {
 .sky-brand img {
     width: 150px;
     object-fit: contain;
-    /* border-radius: 8px; */
     padding-top: 5px;
     font-size: larger;
     overflow: hidden !important;

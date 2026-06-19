@@ -9,6 +9,7 @@ from django.db.models import Q
 from django.http import HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotFound, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from crm.context_processors import get_or_create_default_listview
 from crm.generic_crud import get_rendered_field, is_field_visible
 from crm.models import ListView, ListViewFilter, ListViewField
 from crm.choices import LEAD_STATUS_CHOICES, LEAD_TYPE_CHOICES, OPERATORS
@@ -814,24 +815,39 @@ def listview_results(request, model_name):
         "contact": "Contact",
         "productcategory": "ProductCategory",
         "product": "Product",
+        "branch":"Branch"
     }
 
     model_key = (model_name or "").lower()
-    model_name = MODEL_MAP.get(model_key)
+    model_name_mapped = MODEL_MAP.get(model_key)
 
-    if not model_name:
+    if not model_name_mapped:
         return HttpResponseBadRequest(f"Invalid model name: {model_key}")
 
     model_url = model_key
 
-   
+    # -----------------------------------------------------------------
+    # FETCH OR CREATE LISTVIEW IF PK IS NOT PROVIDED
+    # -----------------------------------------------------------------
     if not pk:
-        default_lv = get_default_listview(model_name, user) or get_available_listviews(model_name, user).first()
-                    
-        if not default_lv:
-            return HttpResponseBadRequest("No ListView available")
+        # 1. Attempt to get an existing default or configured fallback view
+        default_lv = get_default_listview(
+            model_name_mapped, user
+        ) or get_available_listviews(model_name_mapped, user).first()
 
-        # IMPORTANT: Do NOT redirect if export
+        # 2. ✅ FIX: If nothing exists in the DB, invoke the auto-generator
+        if not default_lv:
+            default_lv = get_or_create_default_listview(
+                model_name_mapped, user=user
+            )
+
+        # 3. Last line of defense safety check
+        if not default_lv:
+            return HttpResponseBadRequest(
+                f"No ListView available or could be created for {model_name_mapped}."
+            )
+
+        # IMPORTANT: Do NOT redirect if exporting to Excel
         if request.GET.get("export") != "excel":
             url = reverse("listview_results", kwargs={"model_name": model_url})
             return redirect(f"{url}?filter={default_lv.pk}")
@@ -845,33 +861,35 @@ def listview_results(request, model_name):
 
         lv = get_listview_if_allowed(pk, user)
         if not lv:
-            return HttpResponseForbidden("You do not have access to this ListView.")
+            return HttpResponseForbidden(
+                "You do not have access to this ListView."
+            )
 
-    # ----------------
-    # MODEL & PERMISSION
-    # ----------------
+    # -----------------------------------------------------------------
+    # MODEL & PERMISSION CHECKS
+    # -----------------------------------------------------------------
     model = get_model_cached("crm", lv.object_name)
-
     has_view_access = f"{model._meta.app_label}.view_{model.__name__.lower()}"
 
-    if model_name.lower() == "candidateonboarding":
+    if model_name_mapped.lower() == "candidateonboarding":
         if not (
-            user.has_perm(has_view_access) and
-            user.has_perm("crm.can_access_hr_module")
+            user.has_perm(has_view_access)
+            and user.has_perm("crm.can_access_hr_module")
         ):
-            return HttpResponseForbidden("You do not have permission to view these records.")
+            return HttpResponseForbidden(
+                "You do not have permission to view these records."
+            )
     else:
         if not user.has_perm(has_view_access):
-            return HttpResponseForbidden("You do not have permission to view these records.")
+            return HttpResponseForbidden(
+                "You do not have permission to view these records."
+            )
 
-    # ----------------
-    # BASE QUERYSET
-    # ----------------
+    # -----------------------------------------------------------------
+    # BASE QUERYSET & FIELD CONFIGURATION
+    # -----------------------------------------------------------------
     queryset = apply_filters(lv, get_visible_queryset(model, user))
 
-    # ----------------
-    # FIELD CONFIG
-    # ----------------
     fields = []
     visible_field_names = ["id"]
 
@@ -883,20 +901,20 @@ def listview_results(request, model_name):
 
         meta_field = get_field_cached(model, field_name)
 
-        fields.append({
-            "name": field_name,
-            "label": meta_field.verbose_name.title(),
-        })
-
+        fields.append(
+            {
+                "name": field_name,
+                "label": meta_field.verbose_name.title(),
+            }
+        )
         visible_field_names.append(field_name)
 
     valid_field_names = set(visible_field_names) | {"pk"}
 
-    # ----------------
-    # EXPORT (NOW ALWAYS WORKS)
-    # ----------------
+    # -----------------------------------------------------------------
+    # EXPORT HOOK
+    # -----------------------------------------------------------------
     if request.GET.get("export") == "excel":
-
         select_mode = request.GET.get("select_mode", "page")
         excluded_ids = request.GET.get("excluded_ids", "")
 
@@ -906,7 +924,7 @@ def listview_results(request, model_name):
                 qs = qs.exclude(pk__in=excluded_ids.split(","))
         else:
             ids = request.GET.getlist("selected_ids")
-            ids = [int(i) for i in ids if i.isdigit()]  # safer
+            ids = [int(i) for i in ids if i.isdigit()]
             qs = queryset.filter(pk__in=ids)
 
         return export_queryset_to_excel(
@@ -916,71 +934,47 @@ def listview_results(request, model_name):
             field_names=["id"] + [f["name"] for f in fields],
         )
 
-    # ----------------
-    # GLOBAL SEARCH
-    # ----------------
+    # -----------------------------------------------------------------
+    # GLOBAL SEARCH HANDLING
+    # -----------------------------------------------------------------
     search_query = request.GET.get("q", "").strip()
-    
+
     if model.__name__ == "Lead":
-        # Fast searchable text fields only
         SEARCH_FIELDS = [
-            'id',
-            'name',
-            'mobile_number',
-            'application_no',
-            'lender_name__name',
-
-            # Assigned To
-            'assigned_to__username',
-
-            # TSE
-            'tele_sales_executive__username',
-            'team_lead__username',
+            "id",
+            "name",
+            "mobile_number",
+            "application_no",
+            "lender_name__name",
+            "assigned_to__username",
+            "tele_sales_executive__username",
+            "team_lead__username",
         ]
 
-        # Status label → db value
         STATUS_LABEL_MAP = {
-            label.lower(): value
-            for value, label in LEAD_STATUS_CHOICES
+            label.lower(): value for value, label in LEAD_STATUS_CHOICES
         }
-
-        # Lead source label → db value
         LEAD_SOURCE_LABEL_MAP = {
-            label.lower(): value
-            for value, label in LEAD_TYPE_CHOICES
+            label.lower(): value for value, label in LEAD_TYPE_CHOICES
         }
 
         if search_query:
-
             search_lower = search_query.lower()
             q_final = Q()
 
-            # TEXT SEARCH
             for field in SEARCH_FIELDS:
                 q_final |= Q(**{f"{field}__icontains": search_query})
 
-            # STATUS SEARCH
             for label, value in STATUS_LABEL_MAP.items():
-
-                # Full label match
-                if search_lower == label:
+                if search_lower == label or search_lower in label:
                     q_final |= Q(status=value)
 
-                # Partial label match
-                elif search_lower in label:
-                    q_final |= Q(status=value)
-
-            # LEAD SOURCE SEARCH
             for label, value in LEAD_SOURCE_LABEL_MAP.items():
-
-                if search_lower == label:
-                    q_final |= Q(lead_source=value)
-
-                elif search_lower in label:
+                if search_lower == label or search_lower in label:
                     q_final |= Q(lead_source=value)
 
             queryset = queryset.filter(q_final)
-    
+
     if search_query and model.__name__ != "Lead":
         terms = search_query.split()
         q_final = Q()
@@ -993,13 +987,21 @@ def listview_results(request, model_name):
                 meta_field = get_field_cached(model, field_name)
                 field_type = meta_field.get_internal_type()
 
-                if field_type in ("CharField", "TextField", "EmailField", "SlugField"):
+                if field_type in (
+                    "CharField",
+                    "TextField",
+                    "EmailField",
+                    "SlugField",
+                ):
                     q_term |= Q(**{f"{field_name}__icontains": term})
 
                 elif field_type in (
-                    "IntegerField", "BigIntegerField",
-                    "PositiveIntegerField", "PositiveSmallIntegerField",
-                    "AutoField", "BigAutoField"
+                    "IntegerField",
+                    "BigIntegerField",
+                    "PositiveIntegerField",
+                    "PositiveSmallIntegerField",
+                    "AutoField",
+                    "BigAutoField",
                 ):
                     if is_int:
                         q_term |= Q(**{field_name: int(term)})
@@ -1019,8 +1021,11 @@ def listview_results(request, model_name):
 
             q_final &= q_term
 
-        queryset = queryset.filter(q_final) 
-    
+        queryset = queryset.filter(q_final)
+
+    # -----------------------------------------------------------------
+    # SORTING & QUERY PERFORMANCE HOOKS
+    # -----------------------------------------------------------------
     sort_field = request.GET.get("sort", "id")
     sort_dir = request.GET.get("dir", "desc")
 
@@ -1030,95 +1035,86 @@ def listview_results(request, model_name):
         order_by = "-id"
 
     queryset = queryset.order_by(order_by)
-    
-    if model.__name__ == "Lead":
 
+    if model.__name__ == "Lead":
         queryset = queryset.select_related(
-            'assigned_to',
-            'tele_sales_executive',
-            'sm',
-            'team_lead',
-            'business_manager',
-            'business_head',
-            'bank',
-            'lender_name',
+            "assigned_to",
+            "tele_sales_executive",
+            "sm",
+            "team_lead",
+            "business_manager",
+            "business_head",
+            "bank",
+            "lender_name",
         ).defer(
-            'description',
-            'existing_loan_details',
-            'existing_cc_details',
-            'reference_details_friend',
-            'reference_details_relative',
-            'nominee_details',
-            'final_remarks',
+            "description",
+            "existing_loan_details",
+            "existing_cc_details",
+            "reference_details_friend",
+            "reference_details_relative",
+            "nominee_details",
+            "final_remarks",
         )
 
+    # -----------------------------------------------------------------
+    # LIGHTWEIGHT PAGINATION SYSTEM
+    # -----------------------------------------------------------------
     page_size = lv.count or 10
     page = int(request.GET.get("page", 1))
 
-    # TOTAL COUNT (single lightweight query)
     total_count = queryset.values("pk").count()
 
-    # PAGINATION
     start = (page - 1) * page_size
     end = start + page_size
 
     rows = list(queryset[start:end])
-
     has_next = end < total_count
 
     page_obj = SimpleNamespace(
-
         object_list=rows,
-
-        # Current page
         number=page,
-
-        # Navigation
         has_next=lambda: has_next,
         has_previous=lambda: page > 1,
-
         next_page_number=lambda: page + 1,
         previous_page_number=lambda: max(page - 1, 1),
-
-        # Display
         start_index=lambda: start + 1 if rows else 0,
         end_index=lambda: start + len(rows),
-
         paginator=SimpleNamespace(
             count=total_count,
             num_pages=ceil(total_count / page_size),
-            page_range=range(
-                1,
-                ceil(total_count / page_size) + 1
-            )
-        )
+            page_range=range(1, ceil(total_count / page_size) + 1),
+        ),
     )
-    # ----------------
-    # RENDER ROWS
-    # ----------------
-    rendered_rows = []
 
+    # -----------------------------------------------------------------
+    # DATA RENDERING PIPELINE
+    # -----------------------------------------------------------------
+    rendered_rows = []
     for obj in page_obj.object_list:
         row = {"pk": obj.pk}
-
         for f in fields:
             _, value = get_rendered_field(model, obj, f["name"])
             row[f["name"]] = value
-
         rendered_rows.append(row)
 
-    
-    return render(request, "listviews/results.html", {
-        "lv": lv,
-        "rows": rendered_rows,
-        "fields": fields,
-        "page_obj": page_obj,
-        "available_listviews": get_available_listviews(lv.object_name, user),
-        "current_sort": sort_field,
-        "current_dir": sort_dir,
-        "model_name": model_name,
-        "model_url": model_url,
-    })
+    return render(
+        request,
+        "listviews/results.html",
+        {
+            "lv": lv,
+            "rows": rendered_rows,
+            "fields": fields,
+            "page_obj": page_obj,
+            "available_listviews": get_available_listviews(
+                lv.object_name, user
+            ),
+            "current_sort": sort_field,
+            "current_dir": sort_dir,
+            "model_name": model_name_mapped,
+            "model_url": model_url,
+        },
+    )
+
 
 # For exporting to excel by Ashutosh
 ILLEGAL_CHARACTERS_RE = re.compile(r'[\x00-\x08\x0B-\x0C\x0E-\x1F]')

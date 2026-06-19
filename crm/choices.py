@@ -223,6 +223,8 @@ CHANNEL_CHOICES = [
     ('StarPower', 'StarPower'),
     ('Cateye','Cateye'),
     ('Profincare','Profincare'),
+    ('Credilio','Credilio'),
+    ('Squarefin','Squarefin'),
 ]
 
 LOAN_TYPE_CHOICES = [
